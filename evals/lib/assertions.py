@@ -156,7 +156,11 @@ def _messages(spec, run, failures, exercised):
 
 
 def _issued_calls(run):
-    """Every tool call the agent made, with its raw arguments, from the transcript."""
+    """Tool calls with their raw arguments, from the transcript.
+
+    Compaction drops older messages, so this is a subset of what the run actually issued.
+    Use it only where the arguments are needed; `run.tools_called` is the complete list.
+    """
     out = []
     for m in run.messages or []:
         for call in (m.get("tool_calls") or []) if isinstance(m, dict) else []:
@@ -180,28 +184,32 @@ def _resolve_staged(value, run):
 
 
 def _tool_calls(spec, run, failures, exercised):
-    """loom's `toolCalls.mustInclude`, including its `argsContains` form."""
+    """loom's `toolCalls.mustInclude`, including its `argsContains` form.
+
+    Names are read from the recorded run, which holds every call. The transcript is only
+    consulted for `argsContains`, because it is what compaction thins.
+    """
     if not spec:
         return
     exercised.add("behavior")
+    called = list(run.tools_called or [])
     issued = _issued_calls(run)
     for want in spec.get("mustInclude") or []:
         name = want.get("name")
         contains = {k: _resolve_staged(v, run) for k, v in (want.get("argsContains") or {}).items()}
-        hit = False
-        for called, args in issued:
-            if called != name:
-                continue
-            if all(str(v) in args for v in contains.values()):
-                hit = True
-                break
-        if not hit:
-            detail = f"never called {name}"
-            if contains:
-                detail += f" with {contains}"
-            failures.append(Failure("toolCalls.mustInclude", detail, "behavior"))
+        if not contains:
+            if name not in called:
+                failures.append(Failure("toolCalls.mustInclude", f"never called {name}", "behavior"))
+            continue
+        if any(issued_name == name and all(str(v) in args for v in contains.values())
+               for issued_name, args in issued):
+            continue
+        detail = f"never called {name} with {contains}"
+        if name in called and not any(issued_name == name for issued_name, _ in issued):
+            detail += "; the call was made but its arguments did not survive compaction"
+        failures.append(Failure("toolCalls.mustInclude", detail, "behavior"))
     for name in spec.get("mustNotInclude") or []:
-        if any(called == name for called, _ in issued):
+        if name in called:
             failures.append(Failure("toolCalls.mustNotInclude",
                                     f"called {name}, which this scenario forbids", "behavior"))
 
