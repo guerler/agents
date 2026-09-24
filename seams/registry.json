@@ -883,7 +883,7 @@
         "olit": {
           "keep_recent_tokens": 20000,
           "max_steps": 100,
-          "max_tool_result_bytes": 65536,
+          "max_tool_result_bytes": 262144,
           "reserve_tokens": 16384,
           "row_bytes_cap": 32768,
           "row_cap": 100,
