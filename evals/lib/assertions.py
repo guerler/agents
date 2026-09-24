@@ -569,7 +569,7 @@ def _history(spec, run, failures, exercised):
             if ext in banned:
                 failures.append(Failure(
                     "history.landedDataset",
-                    f"{c.get('name')!r} landed as {ext!r}; the fetch got a page, not the file",
+                    f"{c.get('name')!r} landed as {ext!r}, which cannot hold this file",
                     "behavior"))
         min_bytes = landed.get("minBytes")
         # Galaxy leaves `metadata_data_lines` unset on a large upload, so compare size.
@@ -595,6 +595,22 @@ def _history(spec, run, failures, exercised):
                 failures.append(Failure(
                     "history.landedDataset",
                     f"largest arrived dataset has {best} data lines, wanted at least {minimum}",
+                    "behavior"))
+
+        min_columns = landed.get("minColumns")
+        # A declared datatype whose delimiter the file does not use parses into one column.
+        if min_columns is not None:
+            widest = 0
+            for c in arrived:
+                full = staged["galaxy"].call(f"api/datasets/{c['id']}") or {}
+                columns = (full.get("metadata_columns")
+                           or (full.get("metadata") or {}).get("columns") or 0)
+                widest = max(widest, int(columns or 0))
+            if widest < min_columns:
+                failures.append(Failure(
+                    "history.landedDataset",
+                    f"widest arrived dataset has {widest} column(s), wanted at least "
+                    f"{min_columns}; Galaxy cannot address the fields",
                     "behavior"))
 
     if spec.get("lineageIntact"):
