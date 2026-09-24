@@ -1,0 +1,2 @@
+# Session state for the loom arm, including a config file that carries the Galaxy API key.
+loom-session-state/
