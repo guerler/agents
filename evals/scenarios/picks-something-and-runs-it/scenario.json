@@ -1,0 +1,48 @@
+{
+  "name": "open: pick something simple to run, and run it",
+  "description": "One open prompt, and the agent chooses the work. Every other discovery scenario names its target: workflow-runs-end-to-end says which saved workflow, and both gtn scenarios name the tutorial. Nothing measured what happens when the choice is the agent's, which is how a new user actually arrives, and nothing exercised IWC at all. Because the target is unknown, the grading is on shape: something was launched, and the history it left behind holds finished work with nothing still pending. The route is recorded rather than required, so a run also answers which of iwc search, iwc recommendation, GTN or the instance's own workflows the agent reaches for first. It deliberately does not require every job to succeed: the agent picks tools whose success depends on the instance, and a wrapper that cannot run here says nothing about the agent. Narrating success over a failure is graded by the staged-failure scenarios, where the expected answer is known.",
+  "tier": 3,
+  "substrate": "live",
+  "emptyHistory": "pick and run $run",
+  "inputs": [
+    "Find a simple workflow or GTN tutorial I could run on this Galaxy, then run it end to end. Bring in whatever test data it needs."
+  ],
+  "timeoutMs": 2400000,
+  "assertions": {
+    "events": {
+      "mustInclude": [
+        "turn_start"
+      ]
+    },
+    "messages": {
+      "repliesInChat": true
+    },
+    "anyOf": [
+      {
+        "toolCalls": {
+          "mustInclude": [
+            {
+              "name": "invoke_workflow"
+            }
+          ]
+        }
+      },
+      {
+        "toolCalls": {
+          "mustInclude": [
+            {
+              "name": "run_tool"
+            }
+          ]
+        }
+      }
+    ],
+    "history": {
+      "producedDatasets": 2
+    },
+    "budget": {
+      "maxSteps": 60,
+      "maxRepeatedCall": 6
+    }
+  }
+}
