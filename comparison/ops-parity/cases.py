@@ -23,24 +23,25 @@ CASES = [
         "op": "get_tool_run_examples",
         "py": {"tool_id": "$tool"},
         "ts": {"toolId": "$tool"},
-        "expect": {"data": UPSTREAM},
-        "why": "The control case. Python additionally echoes requested_version, which tells a "
-               "caller which version it actually got when it pinned none.",
+        "expect": {"data": COSMETIC},
+        "why": "The control case. Python spells an unasked-for version as requested_version: null "
+               "where the ops op omits the key; a caller learns the same either way.",
     },
     {
         "op": "get_histories",
         "py": {"limit": 2},
         "ts": {"limit": 2},
-        "expect": {"pagination": UPSTREAM},
-        "why": "Python reports the account's real total; the ops project() reports the page size.",
+        "expect": {},
+        "why": "Both report the account's real total. The ops op reads /api/histories/count, which "
+               "is cheaper than the unpaged re-listing Python counts.",
     },
     {
         "op": "list_pages",
         "py": {"limit": 2},
         "ts": {"limit": 2},
-        "expect": {"pagination": UPSTREAM},
-        "why": "total_matches rides a response header the ops project() does not read. "
-               "Upstream's own standing example of a real difference it does not track.",
+        "expect": {},
+        "why": "Both report total_matches. The ops op reads it off the response header, which only "
+               "its run() can see.",
     },
     {
         "op": "get_history_contents",
