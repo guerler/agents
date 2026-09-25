@@ -754,6 +754,23 @@ def _asks_for_information(chat):
     return "?" in (chat or "") or bool(_ASKS_FOR_INFORMATION.search(chat or ""))
 
 
+def _encoded_fields(spec):
+    """Every field the chart plots, including inside a layered spec.
+
+    A fit is drawn as two layers with no encoding of its own at the top, so reading only
+    `spec.encoding` sees nothing and would call a real chart empty.
+    """
+    fields = set()
+    for block in [spec, *(spec.get("layer") or []), *(spec.get("concat") or [])]:
+        if not isinstance(block, dict):
+            continue
+        for channel in (block.get("encoding") or {}).values():
+            for entry in channel if isinstance(channel, list) else [channel]:
+                if isinstance(entry, dict) and entry.get("field"):
+                    fields.add(entry["field"])
+    return fields
+
+
 def _mark_of(artifact):
     """Shells write mark as a bare string or {"type": ...}; both name the same chart."""
     raw = (artifact.get("spec") or {}).get("mark")
@@ -819,15 +836,14 @@ def _artifacts(spec, run, failures, exercised):
             failures.append(
                 Failure("artifacts.embedsRows", f"{kind} references the dataset; expected embedded rows", "artifacts")
             )
+        encoded = _encoded_fields(matches[0].get("spec") or {})
         for field in want.get("encodes") or []:
-            encoded = {
-                e.get("field")
-                for ch in ((matches[0].get("spec") or {}).get("encoding") or {}).values()
-                for e in (ch if isinstance(ch, list) else [ch])
-                if isinstance(e, dict)
-            }
             if field not in encoded:
-                failures.append(Failure("artifacts.encodes", f"{kind} does not encode {field}", "artifacts"))
+                failures.append(
+                    Failure(
+                        "artifacts.encodes", f"{kind} does not encode {field}; it plots {sorted(encoded)}", "artifacts"
+                    )
+                )
 
     if spec.get("count") is not None and len(made) != spec["count"]:
         failures.append(Failure("artifacts.count", f"expected {spec['count']} artifacts, got {len(made)}", "artifacts"))
