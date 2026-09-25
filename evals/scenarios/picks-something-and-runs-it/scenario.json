@@ -1,6 +1,6 @@
 {
   "name": "open: pick something to run on the data that is already here",
-  "description": "One open prompt, and the agent chooses the work. Every other discovery scenario names its target: workflow-runs-end-to-end says which saved workflow, and both gtn scenarios name the tutorial. This one leaves the choice open, which is how a new user actually arrives, and it records which of iwc search, iwc recommendation, GTN or the instance's own workflows the agent reaches for first. The input is staged, so what is measured is the work and not the acquisition; upload-lands-a-usable-datatype covers the other half. Staging is also what makes the error assertion affordable. An agent free to fetch its own data is free to pick a mapper or a QC wrapper whose conda environment cannot build on this machine, and a wrapper that cannot start says nothing about the agent; a tabular file with named columns narrows the choice to tools that run anywhere, so a job in error is the agent's doing. The settle window stays wide because a first run of a chosen tool still pays for its conda install, and three minutes cannot tell a premature answer from a slow queue.",
+  "description": "One open prompt, and the agent chooses the work. Every other discovery scenario names its target: workflow-runs-end-to-end says which saved workflow, and both gtn scenarios name the tutorial. This one leaves the choice open, which is how a new user actually arrives, and it records which of iwc search, iwc recommendation, GTN or the instance's own workflows the agent reaches for first. The input is staged, so what is measured is the work and not the acquisition; upload-lands-a-usable-datatype covers the other half. Staging is also what makes the error assertion affordable: an agent free to fetch its own data is free to pick a mapper or a QC wrapper whose conda environment cannot build on this machine, and a wrapper that cannot start says nothing about the agent, while a tabular file with named columns narrows the choice to tools that run anywhere. One produced dataset is the floor because the input is already here: a single tool run is a complete answer to this request, and the count only rises by demanding a chain the prompt never asked for. What stops an empty pass is the pair of assertions beside it, since the agent can read and chart this dataset in the browser without Galaxy running anything. The settle window stays wide because a first run of a chosen tool still pays for its conda install, and three minutes cannot tell a premature answer from a slow queue.",
   "tier": 3,
   "substrate": "live",
   "dataset": {
@@ -8,7 +8,7 @@
     "history": "pick and run $run"
   },
   "inputs": [
-    "There is one tabular dataset in this history, with columns athlete, country, medal and year. Find a workflow or a GTN tutorial that suits it, then carry it out on this Galaxy against that dataset."
+    "There is one tabular dataset in this history, with columns athlete, country, medal and year. Find a workflow or a GTN tutorial that suits it, then carry it out on this Galaxy against that dataset. Do the work with Galaxy tools rather than locally."
   ],
   "timeoutMs": 2700000,
   "assertions": {
@@ -41,12 +41,15 @@
       }
     ],
     "history": {
-      "producedDatasets": 2,
+      "producedDatasets": 1,
       "noErrors": true
     },
     "budget": {
       "maxSteps": 40,
       "maxRepeatedCall": 6
+    },
+    "behavior": {
+      "galaxyDidWork": true
     }
   },
   "settleTimeoutMs": 1800000

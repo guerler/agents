@@ -366,7 +366,10 @@ def _galaxy_did_work(run, failures):
     evidence that an answer derives from a Galaxy output.
     """
     called = run.tools_called or []
-    if "run_python" not in called:
+    # Both routes compute in the browser: run_python in Pyodide, vintent_dataset over a
+    # dataset it reads directly.
+    local = [t for t in ("run_python", "vintent_dataset") if t in called]
+    if not local:
         return
     staged = getattr(run, "staged", None)
     if not staged:
@@ -380,7 +383,7 @@ def _galaxy_did_work(run, failures):
                 and not c.get("deleted") and c.get("state") == "ok"]
     if produced:
         return
-    detail = "answered with run_python while Galaxy produced nothing"
+    detail = f"answered with {' and '.join(local)} while Galaxy produced nothing"
     if "download_dataset" in called:
         detail += "; the dataset was pulled into the browser first"
     failures.append(Failure("behavior.galaxyDidWork", detail, "behavior"))
