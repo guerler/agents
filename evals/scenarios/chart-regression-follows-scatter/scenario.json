@@ -1,0 +1,57 @@
+{
+  "name": "chart: a scatter, then a regression computed over the same columns",
+  "description": "The first chart scenario that spans two turns and two artifacts. Every other one asks for a single plot, so nothing measured a session that charts, computes, and charts again -- the shape a real exploratory session takes, and the one a live session was observed to complete cleanly. The second turn names the title because an assertion must not depend on wording the model invented: with the title established by the request, titleContains selects the regression without guessing, and the scatter is selected by its mark instead. Graded on two artifacts rather than one, so a run that overwrites its first chart fails. run_python is required because the fit is a computation, not a chart option, and a regression that appears without it was not computed here. Deliberately not asserting that the regression references the dataset: a fit computed in the browser legitimately embeds the rows it plots, while the scatter is expected to reference, which is what separates the two.",
+  "tier": 3,
+  "substrate": "live",
+  "dataset": {
+    "file": "health.csv",
+    "history": "scatter then regression $run"
+  },
+  "inputs": [
+    "Plot Glucose against BMI from the dataset in this history as a scatter plot, using vintent.",
+    "Now fit a linear regression between those same two columns and chart the fit as a second plot titled \"Linear Regression\"."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "events": {
+      "mustInclude": [
+        "turn_start"
+      ]
+    },
+    "messages": {
+      "repliesInChat": true
+    },
+    "toolCalls": {
+      "mustInclude": [
+        {
+          "name": "vintent_dataset",
+          "argsContains": {
+            "dataset_id": "$staged:health.csv"
+          }
+        },
+        {
+          "name": "run_python"
+        }
+      ]
+    },
+    "artifacts": {
+      "count": 2,
+      "mustInclude": [
+        {
+          "kind": "vega-lite",
+          "mark": "point",
+          "referencesDataset": true,
+          "datasetId": "$staged:health.csv"
+        },
+        {
+          "kind": "vega-lite",
+          "titleContains": "regression"
+        }
+      ]
+    },
+    "budget": {
+      "maxSteps": 30,
+      "maxRepeatedCall": 5
+    }
+  }
+}

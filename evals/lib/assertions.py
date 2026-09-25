@@ -750,6 +750,23 @@ def _asks_for_information(chat):
     return "?" in (chat or "") or bool(_ASKS_FOR_INFORMATION.search(chat or ""))
 
 
+def _mark_of(artifact):
+    """Shells write mark as a bare string or {"type": ...}; both name the same chart."""
+    raw = (artifact.get("spec") or {}).get("mark")
+    return raw.get("type") if isinstance(raw, dict) else raw
+
+
+def _described(want):
+    parts = [f"mark={want['mark']!r}"] if want.get("mark") else []
+    if want.get("titleContains"):
+        parts.append(f"title containing {want['titleContains']!r}")
+    return " and ".join(parts) or "that description"
+
+
+def _inventory(made):
+    return [{"kind": a.get("kind"), "mark": _mark_of(a), "title": a.get("title")} for a in made] or "nothing"
+
+
 def _artifacts(spec, run, failures, exercised):
     """Charts routed to the shell: kind, and whether the spec references or embeds."""
     if not spec:
@@ -761,6 +778,22 @@ def _artifacts(spec, run, failures, exercised):
         matches = [a for a in made if not kind or a.get("kind") == kind]
         if not matches:
             failures.append(Failure("artifacts.kind", f"no {kind or 'any'} artifact was produced", "artifacts"))
+            continue
+        # Each entry picks the artifact meeting its own description, so a turn that charted
+        # twice is graded per chart rather than twice over the first one.
+        if want.get("mark"):
+            matches = [a for a in matches if _mark_of(a) == want["mark"]]
+        if want.get("titleContains"):
+            needle = want["titleContains"].lower()
+            matches = [a for a in matches if needle in (a.get("title") or "").lower()]
+        if not matches:
+            failures.append(
+                Failure(
+                    "artifacts.mustInclude",
+                    f"no {kind or 'any'} artifact matched {_described(want)}; produced {_inventory(made)}",
+                    "artifacts",
+                )
+            )
             continue
         data = (matches[0].get("spec") or {}).get("data") or {}
         if want.get("referencesDataset"):
@@ -792,14 +825,6 @@ def _artifacts(spec, run, failures, exercised):
             if field not in encoded:
                 failures.append(Failure("artifacts.encodes", f"{kind} does not encode {field}", "artifacts"))
 
-        # Shells write mark as a bare string or {"type": ...}; both name the same chart.
-        if want.get("mark"):
-            raw = (matches[0].get("spec") or {}).get("mark")
-            got = raw.get("type") if isinstance(raw, dict) else raw
-            if got != want["mark"]:
-                failures.append(
-                    Failure("artifacts.mark", f"charted as {got!r}, expected {want['mark']!r}", "artifacts")
-                )
     if spec.get("count") is not None and len(made) != spec["count"]:
         failures.append(Failure("artifacts.count", f"expected {spec['count']} artifacts, got {len(made)}", "artifacts"))
 
