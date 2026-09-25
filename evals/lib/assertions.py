@@ -1376,3 +1376,22 @@ def _invocation(spec, run, failures, exercised):
                     "behavior",
                 )
             )
+
+    wanted_params = spec.get("parameterValues")
+    if wanted_params:
+        supplied = {}
+        for invocation in invocations:
+            detail = galaxy.call(f"api/invocations/{invocation.get('id')}") or {}
+            for label, entry in (detail.get("input_step_parameters") or {}).items():
+                value = entry.get("parameter_value") if isinstance(entry, dict) else entry
+                supplied[label] = value
+        for label, expected in wanted_params.items():
+            actual = supplied.get(label)
+            if actual != expected:
+                failures.append(
+                    Failure(
+                        "invocation.parameterValues",
+                        f"step {label!r} ran with {actual!r}, wanted {expected!r}",
+                        "behavior",
+                    )
+                )
