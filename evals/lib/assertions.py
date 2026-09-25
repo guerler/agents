@@ -913,10 +913,12 @@ def _record(spec, run, failures, exercised):
         page = next((p for p in pages if p.get("slug") == slug), None)
         missing = f"no page with slug {slug!r}"
     else:
-        history_id = staged["history_id"]
-        pages = galaxy.call(f"api/pages?history_id={history_id}") or []
-        page = next((p for p in pages if p.get("history_id") == history_id and not p.get("deleted")), None)
-        missing = f"no record page attached to history {history_id}"
+        # The session owns one standalone page under a slug derived from its id, so this
+        # names it rather than searching a history that no longer holds it.
+        slug = f"olit-{staged.get('session_id')}"
+        pages = galaxy.call(f"api/pages?search=slug:{slug}") or []
+        page = next((p for p in pages if p.get("slug") == slug and not p.get("deleted")), None)
+        missing = f"this session opened no record page (looked for slug {slug!r})"
     if not page:
         failures.append(Failure("record.exists", missing, "record"))
         return

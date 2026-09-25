@@ -8,13 +8,13 @@ import pathlib
 import runpy
 import sys
 import time
+import uuid
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
 
 subject.importable()
 
-from olit.drivers.loop import notebook  # noqa: E402
 from olit.runtime import Session  # noqa: E402
 from olit.substrate.llm import REGISTRY  # noqa: E402
 
@@ -113,6 +113,9 @@ def _api_key(model):
 
 async def _run(scenario, model):
     config = build_config(model, scenario.get("capabilities"))
+    # A run is a session, and a session owns its record page; the browser shell supplies
+    # this from the saved document.
+    config["session_id"] = str(uuid.uuid4())
     session = await Session(config).init()
 
     staged = None
@@ -128,8 +131,9 @@ async def _run(scenario, model):
         staged = stage_tool_test(config, scenario["toolTest"])
 
     bound_history = staged["history_id"] if staged else _empty_history(config, scenario)
+    # No record page is staged: the session makes its own, as it does in the browser.
     transcripts = await session.prepare(
-        [{"role": "system", "content": scenario.get("systemPrompt", "You are olit.")}], bound_history
+        [{"role": "system", "content": scenario.get("systemPrompt", "You are olit.")}], None, bound_history
     )
 
     tools_called = []
@@ -277,40 +281,28 @@ def stage_tool_test(config, spec):
     tool_id = spec["tool"]
     index = spec.get("testIndex", 0)
     history_id, ids, test = tooltests.stage(galaxy, tool_id, index)
-    _resume_record(galaxy, history_id)
     return {
         "galaxy": galaxy,
         "history_id": history_id,
         "dataset_ids": ids,
         "test": test,
         "tool_id": tool_id,
+        "session_id": config["session_id"],
     }
-
-
-def _resume_record(galaxy, history_id):
-    """Give the staged history its record page.
-
-    `notebook.excerpt` returns nothing without one, so the binding block never reaches
-    the agent and it asks which history it is in instead of working.
-    """
-    galaxy.call(
-        "api/pages",
-        "POST",
-        {
-            "history_id": history_id,
-            "title": notebook.title_for_history(history_id),
-            "content": notebook.STARTER,
-            "content_format": "markdown",
-        },
-    )
 
 
 def stage_empty(config, name):
     """An empty history, in the shape the assertions read. For acquisition scenarios."""
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     history_id = galaxy.new_history(name or "olit eval")
-    _resume_record(galaxy, history_id)
-    return {"galaxy": galaxy, "history_id": history_id, "dataset_ids": {}, "test": None, "tool_id": None}
+    return {
+        "galaxy": galaxy,
+        "history_id": history_id,
+        "dataset_ids": {},
+        "test": None,
+        "tool_id": None,
+        "session_id": config["session_id"],
+    }
 
 
 def _empty_history(config, scenario):
@@ -335,7 +327,6 @@ def stage_workflows(config, spec):
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     ids = import_workflows(galaxy, spec)
     history_id = galaxy.new_history(spec.get("history") or "olit eval")
-    _resume_record(galaxy, history_id)
     return {
         "galaxy": galaxy,
         "history_id": history_id,
@@ -343,6 +334,7 @@ def stage_workflows(config, spec):
         "workflow_ids": ids,
         "test": None,
         "tool_id": None,
+        "session_id": config["session_id"],
     }
 
 
@@ -383,8 +375,14 @@ def stage_dataset(config, spec):
     history_id = galaxy.new_history(spec.get("history") or "olit eval")
     dataset_ids = {(f.get("name") or f["file"]): _stage_file(galaxy, history_id, f) for f in wanted}
     dataset_id = dataset_ids[wanted[0].get("name") or wanted[0]["file"]]
-    _resume_record(galaxy, history_id)
-    staged = {"galaxy": galaxy, "history_id": history_id, "dataset_ids": dataset_ids, "test": None, "tool_id": None}
+    staged = {
+        "galaxy": galaxy,
+        "history_id": history_id,
+        "dataset_ids": dataset_ids,
+        "test": None,
+        "tool_id": None,
+        "session_id": config["session_id"],
+    }
     if spec.get("thenRuns"):
         staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id, spec["thenRuns"])
     if spec.get("thenInvokes"):

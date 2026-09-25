@@ -34,12 +34,12 @@ def test_not_empty_fails_a_page_that_is_actually_empty():
 
         def call(self, path):
             if path.startswith("api/pages?"):
-                return [{"id": "p1", "history_id": "h1"}]
+                return [{"id": "p1", "slug": "olit-s1"}]
             return {"content": "", "content_editor": self._content}
 
     class Run:
         def __init__(self, content):
-            self.staged = {"galaxy": FakeGalaxy(content), "history_id": "h1"}
+            self.staged = {"galaxy": FakeGalaxy(content), "history_id": "h1", "session_id": "s1"}
 
     def grade(content):
         failures, _ = [], set()
@@ -66,12 +66,12 @@ def test_not_empty_accepts_content_appended_below_the_starter():
 
         def call(self, path):
             if path.startswith("api/pages?"):
-                return [{"id": "p1", "history_id": "h1"}]
+                return [{"id": "p1", "slug": "olit-s1"}]
             return {"content": "", "content_editor": self._c}
 
     class Run:
         def __init__(self, content):
-            self.staged = {"galaxy": FakeGalaxy(content), "history_id": "h1"}
+            self.staged = {"galaxy": FakeGalaxy(content), "history_id": "h1", "session_id": "s1"}
 
     def grade(content):
         failures = []
