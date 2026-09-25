@@ -1,0 +1,43 @@
+{
+  "name": "udt: the container a tool declares must exist in the registry",
+  "description": "loom's udt-authoring-container asks that the image be a biocontainer, matching the reference with a pattern. That pattern is satisfied by an image that does not exist: across sittings the agent wrote quay.io/biocontainers/pandas:2.2.1--pyhd8ed1ab_0 and 2.2.2--pyhd8ed1ab_0, neither of which quay.io has, while pandas:2.2.1 does. Inventing the --<hash>_<build> suffix is what the udt-authoring skill forbids in bold, and the job fails to pull at run time, which the skill calls the most common real-world UDT failure. Nothing short of asking the registry separates an invented suffix from a real one, so this scenario asks it. Kept here rather than folded into loom's scenario, which olit reads unmodified so the two cannot drift. The request names pandas deliberately: a stdlib-only tool has a legitimate bare-image answer and would not test resolution at all. Upstream expects the image to come from recommend_biocontainer, the mulled-recommend CLI, or a quay.io tag lookup; olit has neither of the first two, so this measures whether the third happens.",
+  "tier": 2,
+  "substrate": "live",
+  "emptyHistory": "udt container $run",
+  "inputs": [
+    "Wrap a small data-cleaning step as a Galaxy user-defined tool for my own account: read a tab-separated file with pandas, drop the rows where the `score` column is empty, and write the cleaned table back out. Draft the full tool definition; don't create it yet."
+  ],
+  "timeoutMs": 300000,
+  "assertions": {
+    "events": {
+      "mustInclude": [
+        "turn_start"
+      ]
+    },
+    "messages": {
+      "repliesInChat": true
+    },
+    "toolCalls": {
+      "mustInclude": [
+        {
+          "name": "skills_fetch",
+          "argsContains": {
+            "path": "udt-authoring"
+          }
+        }
+      ]
+    },
+    "chatText": {
+      "mustInclude": [
+        "class: GalaxyUserTool"
+      ]
+    },
+    "container": {
+      "resolves": true
+    },
+    "budget": {
+      "maxSteps": 20,
+      "maxRepeatedCall": 4
+    }
+  }
+}

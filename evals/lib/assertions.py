@@ -1,9 +1,12 @@
 """Scenario assertions, graded on loom's four decision-correctness dimensions."""
 
+import json
 import pathlib
 import re
 import sys
 import urllib.error
+import urllib.parse
+import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
@@ -66,6 +69,7 @@ def evaluate(scenario, run):
     _invocation(a.get("invocation"), run, failures, exercised)
     _collection(a.get("collection"), run, failures, exercised)
     _visualization(a.get("visualization"), run, failures, exercised)
+    _container(a.get("container"), run, failures, exercised)
     _record(a.get("record"), run, failures, exercised)
     _budget(a.get("budget"), run, failures, exercised)
     _history(a.get("history"), run, failures, exercised)
@@ -1015,6 +1019,75 @@ def _excluded_columns(galaxy, detail, wanted):
             if isinstance(entry, dict) and str(entry.get(name)) in banned:
                 found.append(f"{name}={entry[name]!r}")
     return found
+
+
+# The YAML key a user-defined tool declares its image under, as the skill defines it.
+CONTAINER_LINE = re.compile(r"^\s*container:\s*[\"']?(?:docker://)?([^\s\"']+)", re.M)
+QUAY_BIOCONTAINER = re.compile(r"^quay\.io/biocontainers/([^:/]+):(.+)$")
+SINGULARITY_DEPOT = "depot.galaxyproject.org/singularity/"
+
+
+def _image_exists(image):
+    """Whether the registry really has this image. None when it is not verifiable here.
+
+    Lets a network failure raise: an unreachable registry is an environment problem, and
+    grading it as the agent's mistake would be worse than recording an error.
+    """
+    match = QUAY_BIOCONTAINER.match(image)
+    if match:
+        name, tag = match.groups()
+        url = (
+            f"https://quay.io/api/v1/repository/biocontainers/{urllib.parse.quote(name)}"
+            f"/tag/?onlyActiveTags=true&specificTag={urllib.parse.quote(tag)}"
+        )
+        with urllib.request.urlopen(url, timeout=30) as response:
+            return bool((json.load(response) or {}).get("tags"))
+    if image.startswith(SINGULARITY_DEPOT):
+        request = urllib.request.Request("https://" + image, method="HEAD")
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return response.status == 200
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return False
+            raise
+    return None
+
+
+def _container(spec, run, failures, exercised):
+    """A tool's image, checked against the registry rather than against a pattern.
+
+    An invented `--<hash>_<build>` suffix reads exactly like a real one and fails only when
+    the job tries to pull it, so nothing short of asking the registry can tell them apart.
+    """
+    if not spec:
+        return
+    exercised.add("behavior")
+    declared = list(dict.fromkeys(CONTAINER_LINE.findall(run.chat_text or "")))
+    if not declared:
+        failures.append(Failure("container.declared", "the reply declares no container", "behavior"))
+        return
+    if not spec.get("resolves"):
+        return
+    for image in declared:
+        exists = _image_exists(image)
+        if exists is None:
+            failures.append(
+                Failure(
+                    "container.resolves",
+                    f"{image!r} is neither a quay.io biocontainer nor a singularity depot image, "
+                    "so nothing can confirm it exists",
+                    "behavior",
+                )
+            )
+        elif not exists:
+            failures.append(
+                Failure(
+                    "container.resolves",
+                    f"{image!r} does not exist; the tag reads as real and would fail to pull",
+                    "behavior",
+                )
+            )
 
 
 def _visualization(spec, run, failures, exercised):
