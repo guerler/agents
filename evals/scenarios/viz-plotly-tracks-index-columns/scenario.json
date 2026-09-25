@@ -1,0 +1,61 @@
+{
+  "name": "visualizations: plotly tracks index their columns, and still do after a removal",
+  "description": "A data_column stores a zero-based column index as a string, or `auto`; a column's header is never a legal value. A live session asked for one track per property and got a config whose tracks read x='Aminoacid' and y='Buried', which Galaxy stored without complaint and the plugin rendered as a single unlabelled track. Nothing in the chat or the artifact pane showed it, and viz-plotly-binds-columns did not either: its scalarValues check rejects an option entry stored where a scalar belongs, and a header is already a scalar string. So this grades the values themselves, across several tracks, because one track can be right by luck. The fixture carries a commented header naming all eight columns, which is what makes a name look like an answer. The two removals are the harder half. Dropping columns 4 and 5 leaves the survivors at 1, 2, 3, 6 and 7, and renumbering them to a contiguous run is the natural mistake once tracks are treated as a list rather than as offsets into the file. That error plots the removed data under the remaining names and passes every other check here: the values are indices, the count is right, the reply reads correctly. columnsExclude names the two columns that must not appear rather than the whole expected set, so a legitimate reordering of tracks is not graded as a failure. A wrong first chart masks the removals, which is accepted: that turn would be fixed first anyway.",
+  "tier": 3,
+  "substrate": "live",
+  "dataset": {
+    "file": "aminos.tabular",
+    "history": "plotly tracks $run"
+  },
+  "inputs": [
+    "In this history there is a tabular dataset of amino acid properties, with a commented header row. Use plotly to chart each numeric property against the amino acid name, one track per property, and save it so I can come back to it.",
+    "remove the buried column from the plot",
+    "now remove the volume column as well"
+  ],
+  "timeoutMs": 900000,
+  "assertions": {
+    "events": {
+      "mustInclude": [
+        "turn_start"
+      ]
+    },
+    "messages": {
+      "repliesInChat": true
+    },
+    "toolCalls": {
+      "mustInclude": [
+        {
+          "name": "save_visualization",
+          "argsContains": {
+            "dataset_id": "$staged:aminos.tabular"
+          }
+        }
+      ]
+    },
+    "artifacts": {
+      "mustInclude": [
+        {
+          "kind": "visualization"
+        }
+      ]
+    },
+    "visualization": {
+      "referencesDataset": "$staged:aminos.tabular",
+      "type": [
+        "plotly"
+      ],
+      "scalarValues": true,
+      "columnsAreIndices": true,
+      "columnsExclude": {
+        "y": [
+          "4",
+          "5"
+        ]
+      }
+    },
+    "budget": {
+      "maxSteps": 40,
+      "maxRepeatedCall": 6
+    }
+  }
+}

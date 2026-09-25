@@ -971,6 +971,52 @@ def _object_valued_scalars(galaxy, detail):
     ]
 
 
+# What a data_column stores, stated here rather than read from the agent's own vendored
+# contract: a wrong contract must not be able to hide behind a check that trusts it.
+COLUMN_VALUE = re.compile(r"^(auto|\d+)$")
+
+
+def _named_columns(galaxy, detail):
+    """data_column values naming a column instead of indexing one.
+
+    Read from the plugin declaration for the same reason _object_valued_scalars does.
+    """
+    config = (detail.get("latest_revision") or {}).get("config") or {}
+    plugin = galaxy.call(f"api/plugins/{detail.get('type')}") or {}
+    declared = {}
+    for group in ("settings", "tracks"):
+        for param in plugin.get(group) or []:
+            if isinstance(param, dict) and param.get("name"):
+                declared[param["name"]] = param.get("type")
+
+    entries = [config.get("settings") or {}, *(config.get("tracks") or [])]
+    return [
+        f"{key}={value!r}"
+        for entry in entries
+        if isinstance(entry, dict)
+        for key, value in entry.items()
+        if declared.get(key) == "data_column" and isinstance(value, str) and not COLUMN_VALUE.match(value)
+    ]
+
+
+def _excluded_columns(galaxy, detail, wanted):
+    """Inputs holding a column the request asked to drop.
+
+    An index that looks valid can still name the wrong column. Renumbering the survivors of
+    a removal to a contiguous run is the way that happens, and it is invisible to every
+    other check here: the values are indices, the count is right, the reply reads correctly.
+    """
+    config = (detail.get("latest_revision") or {}).get("config") or {}
+    entries = [config.get("settings") or {}, *(config.get("tracks") or [])]
+    found = []
+    for name, banned in wanted.items():
+        banned = {str(b) for b in banned}
+        for entry in entries:
+            if isinstance(entry, dict) and str(entry.get(name)) in banned:
+                found.append(f"{name}={entry[name]!r}")
+    return found
+
+
 def _visualization(spec, run, failures, exercised):
     """Did a saved visualization land in Galaxy, pointing at the intended dataset.
 
@@ -1068,6 +1114,30 @@ def _visualization(spec, run, failures, exercised):
                     Failure(
                         "visualization.scalarValues",
                         f"saved config stores an entry where the plugin declares a scalar: " f"{', '.join(wrong)}",
+                        "behavior",
+                    )
+                )
+
+    if spec.get("columnsAreIndices"):
+        for v in matching:
+            named = _named_columns(galaxy, v)
+            if named:
+                failures.append(
+                    Failure(
+                        "visualization.columnsAreIndices",
+                        f"saved config names columns where the plugin indexes them: {', '.join(named)}",
+                        "behavior",
+                    )
+                )
+
+    for spec_name, banned in (spec.get("columnsExclude") or {}).items():
+        for v in matching:
+            held = _excluded_columns(galaxy, v, {spec_name: banned})
+            if held:
+                failures.append(
+                    Failure(
+                        "visualization.columnsExclude",
+                        f"saved config still charts a column the request removed: {', '.join(held)}",
                         "behavior",
                     )
                 )
