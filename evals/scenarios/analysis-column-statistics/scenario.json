@@ -1,0 +1,49 @@
+{
+  "name": "analysis: two statistics per column of a tabular dataset",
+  "description": "Pyodide over Galaxy tabular, the counterpart to analysis-csv-columns: same tool pair, different parse. The fixture is tab-delimited and its header is a comment line, so a run that treats `# Aminoacid` as data, or splits on commas, shifts every figure. Graded on two statistics rather than one because mean and median differ in every column here -- Buried is 151.82 against 158.1, Volume 86.69 against 87.4 -- so reporting one where the other was asked fails instead of passing quietly. Two columns rather than one, so a single lucky number cannot carry the run. Four figures rather than all fourteen: each survives rounding to one or two decimals, which keeps the assertion about the computation rather than about formatting.",
+  "tier": 3,
+  "substrate": "live",
+  "dataset": {
+    "file": "aminos.tabular",
+    "history": "column statistics $run"
+  },
+  "inputs": [
+    "Tell me the average value of each numeric column in the dataset in this history, and also their medians."
+  ],
+  "timeoutMs": 420000,
+  "assertions": {
+    "events": {
+      "mustInclude": [
+        "turn_start"
+      ]
+    },
+    "messages": {
+      "repliesInChat": true
+    },
+    "toolCalls": {
+      "mustInclude": [
+        {
+          "name": "download_dataset",
+          "argsContains": {
+            "dataset_id": "$staged:aminos.tabular"
+          }
+        },
+        {
+          "name": "run_python"
+        }
+      ]
+    },
+    "chatText": {
+      "mustMatch": [
+        "\\b151[.,]8",
+        "\\b158[.,]1",
+        "\\b86[.,][67]",
+        "\\b87[.,]4"
+      ]
+    },
+    "budget": {
+      "maxSteps": 20,
+      "maxRepeatedCall": 4
+    }
+  }
+}
