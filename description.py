@@ -23,8 +23,9 @@ def load(source=None, agent="olit"):
     if path.is_file():
         return json.loads(path.read_text())
     package, module = DESCRIBE[agent]
-    out = subprocess.run([sys.executable, "-m", module, "--root", str(path)],
-                         cwd=path / package, capture_output=True, text=True)
+    out = subprocess.run(
+        [sys.executable, "-m", module, "--root", str(path)], cwd=path / package, capture_output=True, text=True
+    )
     if out.returncode:
         raise SystemExit(f"{agent} could not describe itself:\n{out.stderr}")
     return json.loads(out.stdout)
@@ -50,8 +51,7 @@ def tool_requests(description):
 
 
 def tool_contracts(description):
-    return {name: {"params": tool["params"], "prose": tool["prose"]}
-            for name, tool in description["tools"].items()}
+    return {name: {"params": tool["params"], "prose": tool["prose"]} for name, tool in description["tools"].items()}
 
 
 def policy(description, name):

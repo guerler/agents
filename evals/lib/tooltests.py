@@ -35,8 +35,8 @@ class Galaxy:
         url = f"{self.base}/{path}{sep}key={self.key}"
         data = json.dumps(body).encode() if body is not None else None
         req = urllib.request.Request(
-            url, data=data, method=method,
-            headers={"Content-Type": "application/json"} if data else {})
+            url, data=data, method=method, headers={"Content-Type": "application/json"} if data else {}
+        )
         with urllib.request.urlopen(req, timeout=timeout) as r:
             payload = r.read()
         return payload if raw else json.loads(payload or b"null")
@@ -63,17 +63,19 @@ class Galaxy:
         targets = json.dumps([{"destination": {"type": "hdas"}, "elements": [element]}])
         parts = []
         for k, v in (("history_id", history_id), ("targets", targets)):
-            parts.append(
-                f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
+            parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
         parts.append(
             f'--{boundary}\r\nContent-Disposition: form-data; name="files_0|file_data"; '
-            f'filename="{name}"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode()
-            + payload + b"\r\n")
+            f'filename="{name}"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode() + payload + b"\r\n"
+        )
         parts.append(f"--{boundary}--\r\n".encode())
         body = b"".join(parts)
         req = urllib.request.Request(
-            f"{self.base}/api/tools/fetch?key={self.key}", data=body, method="POST",
-            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+            f"{self.base}/api/tools/fetch?key={self.key}",
+            data=body,
+            method="POST",
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        )
         with urllib.request.urlopen(req, timeout=180) as r:
             return json.loads(r.read())["outputs"][0]["id"]
 
@@ -82,10 +84,14 @@ class Galaxy:
         element = {"src": "url", "url": url, "name": name}
         if datatype:
             element["ext"] = datatype
-        got = self.call("api/tools/fetch", "POST", {
-            "history_id": history_id,
-            "targets": [{"destination": {"type": "hdas"}, "elements": [element]}],
-        })
+        got = self.call(
+            "api/tools/fetch",
+            "POST",
+            {
+                "history_id": history_id,
+                "targets": [{"destination": {"type": "hdas"}, "elements": [element]}],
+            },
+        )
         return got["outputs"][0]["id"]
 
     def await_dataset(self, dataset_id, timeout=600):
@@ -122,7 +128,8 @@ def expected_bytes(name, extra_dirs=()):
             return (pathlib.Path(d) / name).read_bytes()
     raise ToolTestError(
         f"expected output {name!r} not found; add it to {VENDORED_EXPECTATIONS.name}/ "
-        f"or clone {TEST_DATA_REPO} and set GALAXY_TEST_DATA")
+        f"or clone {TEST_DATA_REPO} and set GALAXY_TEST_DATA"
+    )
 
 
 def stage(galaxy, tool_id, test_index=0, history_name=None):
@@ -151,8 +158,11 @@ def resolve_inputs(spec, ids):
         if not isinstance(value, list):
             resolved[key] = value
         elif value and all(isinstance(n, str) and n in ids for n in value):
-            resolved[key] = ({"src": "hda", "id": ids[value[0]]} if len(value) == 1
-                             else [{"src": "hda", "id": ids[n]} for n in value])
+            resolved[key] = (
+                {"src": "hda", "id": ids[value[0]]}
+                if len(value) == 1
+                else [{"src": "hda", "id": ids[n]} for n in value]
+            )
         elif len(value) == 1:
             resolved[key] = value[0]
         else:

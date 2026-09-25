@@ -3,12 +3,11 @@
 import asyncio
 import json
 import logging
-import time
 import os
 import pathlib
-import re
 import runpy
 import sys
+import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
@@ -19,15 +18,28 @@ from olit.drivers.loop import notebook  # noqa: E402
 from olit.runtime import Session  # noqa: E402
 from olit.substrate.llm import REGISTRY  # noqa: E402
 
-from . import tooltests
+from . import tooltests  # noqa: E402
+from .plan import parse_latest_plan  # noqa: E402
 
 # The eval substrate is a real Galaxy, deliberately.
 
 
 class RunResult:
-    def __init__(self, messages, logs, tools_called, error=None, status_code=None, events=None,
-                 artifacts=None, exhausted=False, staged=None, steps=0, max_steps=0,
-                 refused=None):
+    def __init__(
+        self,
+        messages,
+        logs,
+        tools_called,
+        error=None,
+        status_code=None,
+        events=None,
+        artifacts=None,
+        exhausted=False,
+        staged=None,
+        steps=0,
+        max_steps=0,
+        refused=None,
+    ):
         self.messages = messages
         # Charts and diagrams routed to the shell, never into the model's context.
         self.artifacts = artifacts or []
@@ -134,6 +146,7 @@ async def _run(scenario, model):
     restart_after = scenario.get("restartAfter")
     opening = list(messages)
     graded = list(messages)
+    approval = scenario.get("approveWhenPlanned")
     for index, turn in enumerate(scenario["inputs"], start=1):
         if restart_after and index == restart_after + 1:
             messages = list(opening)
@@ -162,8 +175,7 @@ async def _run(scenario, model):
                 messages = [*messages, {"role": "user", "content": text}]
                 graded.append({"role": "user", "content": text})
                 events.append("turn_start")
-                result = await session.turn(
-                    messages, lambda ev: _note(ev, tools_called, events, refused))
+                result = await session.turn(messages, lambda ev: _note(ev, tools_called, events, refused))
                 messages = result.get("messages") or messages
                 graded.extend(result.get("new_messages") or [])
                 logs.extend(result.get("logs") or [])
@@ -173,10 +185,51 @@ async def _run(scenario, model):
                 cap = int(result.get("max_steps") or 0) or cap
                 events.append("turn_end")
                 landed = _settle_pending(staged, events, timeout=wait)
-    return RunResult(graded if restart_after else messages,
-                     logs, tools_called, events=events, artifacts=artifacts,
-                     exhausted=exhausted, staged=staged, steps=steps, max_steps=cap,
-                     refused=refused)
+        # One approval, only for a run that stopped at the gate; the gate itself is untouched.
+        if approval and _awaiting_approval(result.get("new_messages")):
+            approval, text = None, scenario["approveWhenPlanned"]
+            messages = [*messages, {"role": "user", "content": text}]
+            graded.append({"role": "user", "content": text})
+            events.append("approval_sent")
+            events.append("turn_start")
+            result = await session.turn(messages, lambda ev: _note(ev, tools_called, events, refused))
+            messages = result.get("messages") or messages
+            graded.extend(result.get("new_messages") or [])
+            logs.extend(result.get("logs") or [])
+            artifacts.extend(result.get("artifacts") or [])
+            exhausted = exhausted or bool(result.get("exhausted"))
+            steps = max(steps, int(result.get("steps") or 0))
+            cap = int(result.get("max_steps") or 0) or cap
+            events.append("turn_end")
+            if staged:
+                _settle_pending(staged, events, timeout=scenario.get("settleTimeoutMs", 180_000) / 1000)
+    return RunResult(
+        graded if restart_after else messages,
+        logs,
+        tools_called,
+        events=events,
+        artifacts=artifacts,
+        exhausted=exhausted,
+        staged=staged,
+        steps=steps,
+        max_steps=cap,
+        refused=refused,
+    )
+
+
+def _awaiting_approval(new_messages):
+    """True when the turn ended holding a plan whose steps are all still pending.
+
+    Structural, not a reading of the prose: the gate defines the `## Plan` heading and the
+    `- [ ]` checkbox states, and parse_latest_plan matches only those.
+    """
+    text = "\n\n".join(
+        m["content"]
+        for m in new_messages or []
+        if isinstance(m, dict) and m.get("role") == "assistant" and m.get("content")
+    )
+    plan = parse_latest_plan(text)
+    return bool(plan and plan.steps and len(plan.pending_steps) == len(plan.steps))
 
 
 def _note(event, sink, events=None, refused=None):
@@ -200,9 +253,7 @@ def run_scenario(scenario, model):
     except asyncio.TimeoutError:
         return RunResult([], [], [], error=f"timed out after {timeout:.0f}s")
     except Exception as e:  # a provider error is a run outcome, not a harness crash
-        return RunResult(
-            [], [], [], error=f"{type(e).__name__}: {e}", status_code=getattr(e, "status_code", None)
-        )
+        return RunResult([], [], [], error=f"{type(e).__name__}: {e}", status_code=getattr(e, "status_code", None))
 
 
 def load_scenarios(root, only=None):
@@ -242,12 +293,16 @@ def _resume_record(galaxy, history_id):
     `notebook.excerpt` returns nothing without one, so the binding block never reaches
     the agent and it asks which history it is in instead of working.
     """
-    galaxy.call("api/pages", "POST", {
-        "history_id": history_id,
-        "title": notebook.title_for_history(history_id),
-        "content": notebook.STARTER,
-        "content_format": "markdown",
-    })
+    galaxy.call(
+        "api/pages",
+        "POST",
+        {
+            "history_id": history_id,
+            "title": notebook.title_for_history(history_id),
+            "content": notebook.STARTER,
+            "content_format": "markdown",
+        },
+    )
 
 
 def stage_empty(config, name):
@@ -255,8 +310,7 @@ def stage_empty(config, name):
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     history_id = galaxy.new_history(name or "olit eval")
     _resume_record(galaxy, history_id)
-    return {"galaxy": galaxy, "history_id": history_id, "dataset_ids": {},
-            "test": None, "tool_id": None}
+    return {"galaxy": galaxy, "history_id": history_id, "dataset_ids": {}, "test": None, "tool_id": None}
 
 
 def _empty_history(config, scenario):
@@ -273,8 +327,7 @@ def import_workflows(galaxy, spec):
     for w in galaxy.call("api/workflows") or []:
         if w.get("name") in wanted:
             galaxy.call(f"api/workflows/{w['id']}", "DELETE")
-    return {name: galaxy.call("api/workflows", "POST", {"workflow": d})["id"]
-            for name, d in definitions.items()}
+    return {name: galaxy.call("api/workflows", "POST", {"workflow": d})["id"] for name, d in definitions.items()}
 
 
 def stage_workflows(config, spec):
@@ -283,8 +336,14 @@ def stage_workflows(config, spec):
     ids = import_workflows(galaxy, spec)
     history_id = galaxy.new_history(spec.get("history") or "olit eval")
     _resume_record(galaxy, history_id)
-    return {"galaxy": galaxy, "history_id": history_id, "dataset_ids": {},
-            "workflow_ids": ids, "test": None, "tool_id": None}
+    return {
+        "galaxy": galaxy,
+        "history_id": history_id,
+        "dataset_ids": {},
+        "workflow_ids": ids,
+        "test": None,
+        "tool_id": None,
+    }
 
 
 def _fixture_path(name):
@@ -309,8 +368,7 @@ def _stage_file(galaxy, history_id, spec):
     if landed.get("state") != "ok":
         raise tooltests.ToolTestError(f"{name} landed in state {landed.get('state')}")
     if datatype and landed.get("extension") != datatype:
-        raise tooltests.ToolTestError(
-            f"{name} asked for datatype {datatype} and landed as {landed.get('extension')}")
+        raise tooltests.ToolTestError(f"{name} asked for datatype {datatype} and landed as {landed.get('extension')}")
     return dataset_id
 
 
@@ -323,20 +381,14 @@ def stage_dataset(config, spec):
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     wanted = spec.get("files") or [spec]
     history_id = galaxy.new_history(spec.get("history") or "olit eval")
-    dataset_ids = {
-        (f.get("name") or f["file"]): _stage_file(galaxy, history_id, f)
-        for f in wanted
-    }
+    dataset_ids = {(f.get("name") or f["file"]): _stage_file(galaxy, history_id, f) for f in wanted}
     dataset_id = dataset_ids[wanted[0].get("name") or wanted[0]["file"]]
     _resume_record(galaxy, history_id)
-    staged = {"galaxy": galaxy, "history_id": history_id,
-              "dataset_ids": dataset_ids, "test": None, "tool_id": None}
+    staged = {"galaxy": galaxy, "history_id": history_id, "dataset_ids": dataset_ids, "test": None, "tool_id": None}
     if spec.get("thenRuns"):
-        staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id,
-                                                   spec["thenRuns"])
+        staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id, spec["thenRuns"])
     if spec.get("thenInvokes"):
-        staged["invocation_id"] = _stage_invocation(galaxy, history_id, dataset_id,
-                                                    spec["thenInvokes"])
+        staged["invocation_id"] = _stage_invocation(galaxy, history_id, dataset_id, spec["thenInvokes"])
     return staged
 
 
@@ -352,8 +404,9 @@ def _stage_run(galaxy, history_id, dataset_id, spec):
     for key, value in list(inputs.items()):
         if value == "$dataset":
             inputs[key] = {"src": "hda", "id": dataset_id}
-    submitted = galaxy.call("api/tools", method="POST", body={
-        "history_id": history_id, "tool_id": spec["tool_id"], "inputs": inputs})
+    submitted = galaxy.call(
+        "api/tools", method="POST", body={"history_id": history_id, "tool_id": spec["tool_id"], "inputs": inputs}
+    )
     outputs = submitted.get("outputs") or []
     if not outputs:
         raise tooltests.ToolTestError(f"{spec['tool_id']} produced no output to fail")
@@ -363,7 +416,8 @@ def _stage_run(galaxy, history_id, dataset_id, spec):
     if state != wanted:
         raise tooltests.ToolTestError(
             f"{spec['tool_id']} was expected to land in state {wanted!r} but landed in "
-            f"{state!r}; the scenario would not be testing what it claims")
+            f"{state!r}; the scenario would not be testing what it claims"
+        )
     return produced_id
 
 
@@ -371,10 +425,13 @@ def _stage_run(galaxy, history_id, dataset_id, spec):
 RUNNING_STATES = ("new", "queued", "running", "paused", "upload", "setting_metadata")
 # What Galaxy advances on its own; `paused` waits on a failed input or on the user.
 ADVANCING_STATES = ("new", "queued", "running", "upload", "setting_metadata")
+
+
 # How many turns the shell will continue by itself once work lands.
 def max_auto_follow_ups():
     """How many turns the shell will continue by itself once work lands."""
     return (subject.describe().get("shell") or {}).get("max_auto_follow_ups") or 3
+
 
 # Galaxy 26 moves a settled invocation from `scheduled` to `completed`, so pinning either
 # word races the scheduler. What the staging asserts is the job outcome below.
@@ -404,18 +461,23 @@ def _stage_invocation(galaxy, history_id, dataset_id, spec):
     """
     workflow = spec["workflow"]
     workflow_id = import_workflows(galaxy, {"files": [workflow]})[workflow]
-    invocation = galaxy.call(f"api/workflows/{workflow_id}/invocations", "POST", {
-        "history_id": history_id,
-        "inputs": {str(spec.get("inputStep", 0)): {"src": "hda", "id": dataset_id}},
-        "inputs_by": "step_index",
-    })
+    invocation = galaxy.call(
+        f"api/workflows/{workflow_id}/invocations",
+        "POST",
+        {
+            "history_id": history_id,
+            "inputs": {str(spec.get("inputStep", 0)): {"src": "hda", "id": dataset_id}},
+            "inputs_by": "step_index",
+        },
+    )
     settled, states = _await_invocation(galaxy, invocation["id"])
     wanted_job = spec.get("expectJobState", "error")
     if settled.get("state") not in INVOCATION_TERMINAL or not states.get(wanted_job):
         raise tooltests.ToolTestError(
             f"{workflow} was expected to settle with a {wanted_job!r} job, and reached "
             f"{settled.get('state')!r} with jobs {states}; the scenario would not be testing "
-            f"what it claims")
+            f"what it claims"
+        )
     return invocation["id"]
 
 
@@ -442,11 +504,19 @@ def _settle_pending(staged, events, timeout=180, interval=10):
     if not watched:
         return []
     events.append("work_settled")
-    landed = {c.get("id"): c for c in
-              (galaxy.call(f"api/histories/{history_id}/contents") or []) if isinstance(c, dict)}
-    return [{"kind": "job", "id": str(i), "label": str(landed.get(i, {}).get("name") or i),
-             "outcome": "failed" if landed.get(i, {}).get("state") == "error" else "completed"}
-            for i in watched if landed.get(i, {}).get("state") in ("ok", "error")]
+    landed = {
+        c.get("id"): c for c in (galaxy.call(f"api/histories/{history_id}/contents") or []) if isinstance(c, dict)
+    }
+    return [
+        {
+            "kind": "job",
+            "id": str(i),
+            "label": str(landed.get(i, {}).get("name") or i),
+            "outcome": "failed" if landed.get(i, {}).get("state") == "error" else "completed",
+        }
+        for i in watched
+        if landed.get(i, {}).get("state") in ("ok", "error")
+    ]
 
 
 def resume_prompt():

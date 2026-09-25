@@ -61,7 +61,9 @@ def test_not_empty_accepts_content_appended_below_the_starter():
     from olit.drivers.loop.notebook import STARTER
 
     class FakeGalaxy:
-        def __init__(self, content): self._c = content
+        def __init__(self, content):
+            self._c = content
+
         def call(self, path):
             if path.startswith("api/pages?"):
                 return [{"id": "p1", "history_id": "h1"}]
@@ -90,9 +92,12 @@ def test_chat_text_includes_what_finish_said():
     from lib.harness import RunResult
 
     run = RunResult(
-        [{"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "finish"}}]},
-         {"role": "tool", "name": "finish", "content": "The histogram shows a normal spread."}],
-        [], [],
+        [
+            {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "finish"}}]},
+            {"role": "tool", "name": "finish", "content": "The histogram shows a normal spread."},
+        ],
+        [],
+        [],
     )
     assert "normal spread" in run.chat_text
 
@@ -102,8 +107,11 @@ def test_chat_text_ignores_other_tool_results():
     from lib.harness import RunResult
 
     run = RunResult(
-        [{"role": "assistant", "content": "Here is the answer."},
-         {"role": "tool", "name": "get_history_contents", "content": "[{\"id\": \"abc\"}]"}],
-        [], [],
+        [
+            {"role": "assistant", "content": "Here is the answer."},
+            {"role": "tool", "name": "get_history_contents", "content": '[{"id": "abc"}]'},
+        ],
+        [],
+        [],
     )
     assert run.chat_text == "Here is the answer."

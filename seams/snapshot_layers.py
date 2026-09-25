@@ -13,8 +13,9 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
-import description  # noqa: E402
 import layers  # noqa: E402
+
+import description  # noqa: E402
 
 REGISTRY = pathlib.Path(__file__).resolve().parent / "registry.json"
 LOOM = os.environ.get("LOOM_ROOT", str(pathlib.Path.home() / "loom"))
@@ -29,9 +30,9 @@ POLICY_UPSTREAM = {
         "label": "PORTED",
         "upstream": {"sampling": {"max_tokens": None, "temperature": None, "tool_choice": None, "top_p": None}},
         "note": "pi-ai emits temperature and max_tokens only when set (api/openai-completions.js:589,595) "
-                "and reaches top_p only through the samplingParams bag; loom sets none of them, so an "
-                "Orbit request runs at the provider's own defaults. Olit must not impose its own or a "
-                "benchmark measures the defaults rather than the runtime.",
+        "and reaches top_p only through the samplingParams bag; loom sets none of them, so an "
+        "Orbit request runs at the provider's own defaults. Olit must not impose its own or a "
+        "benchmark measures the defaults rather than the runtime.",
     },
     "loop": {
         "source": "brain/olit/drivers/loop/agent.py, brain/olit/compaction.py, brain/olit/drivers/loop/paging.py",
@@ -58,22 +59,22 @@ POLICY_UPSTREAM = {
         "notes": {
             "max_steps": "A backstop for an unattended tab; pi's loop is `while (true)`. Raised 40 -> 100 on 2026-09-24: cryptic-exon-q1 spent 40 steps on a real RNA-seq analysis and was still working. Configurable, and a spent budget appends a `max-steps` entry to the run's `guards`.",
             "max_tool_result_bytes": "pi caps bash and read only and never truncates an MCP result. Olit "
-                                     "discards a single oversized result rather than losing the turn.",
+            "discards a single oversized result rather than losing the turn.",
             "row_cap": "With row_bytes_cap, the two limits pi's truncate uses, applied to Galaxy list reads.",
             "row_bytes_cap": "A row count alone does not bound cost when the rows are fat.",
             "tool_execution": "KNOWN LIMITATION. pi runs a batch through executeToolCallsParallel unless a "
-                              "tool declares executionMode sequential. Olit dispatches in call order, so a "
-                              "batch of five reads costs five round-trips. Closing it means splitting "
-                              "`dispatch` into pi's sequential prepare and concurrent execute phases; the "
-                              "gates, the destructive-op modal and the single Pyodide namespace all sit in "
-                              "the prepare half. Tracked separately, not forced for parity.",
+            "tool declares executionMode sequential. Olit dispatches in call order, so a "
+            "batch of five reads costs five round-trips. Closing it means splitting "
+            "`dispatch` into pi's sequential prepare and concurrent execute phases; the "
+            "gates, the destructive-op modal and the single Pyodide namespace all sit in "
+            "the prepare half. Tracked separately, not forced for parity.",
         },
     },
     "guards": {
         "source": "brain/olit/drivers/loop/tools.py, brain/olit/drivers/loop/agent.py",
         "label": "ADDED",
         "note": "Olit's own refusals. pi has none of them. Each names itself in the run's `guards` list so "
-                "an eval can tell a trajectory a guard shaped from one the model chose.",
+        "an eval can tell a trajectory a guard shaped from one the model chose.",
     },
 }
 
@@ -83,9 +84,9 @@ ALLOWED_TOOL_DIVERGENCE = {
     "upload_file": "no access to the user's disk",
     "get_workflow_input_template": "drops the optional `verbose` parameter",
     "invoke_workflow": "drops the optional `parameters_normalized` parameter",
-    "get_history_contents": 'DIVERGES: galaxy-mcp fetches every item in the history and pages client-side, so it can report `total_items`; an 8,000-dataset history makes that untenable. olit lets Galaxy page, asks for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope. Also omits `dataset_id` from each item (see the agent-safe projection principle).',
+    "get_history_contents": "DIVERGES: galaxy-mcp fetches every item in the history and pages client-side, so it can report `total_items`; an 8,000-dataset history makes that untenable. olit lets Galaxy page, asks for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope. Also omits `dataset_id` from each item (see the agent-safe projection principle).",
     "upload_file_from_url": "DIVERGES: passes `auto_decompress: true` on the fetch element. Galaxy's own uploader defaults it to true (client/src/composables/upload/uploadOptionModel.ts:67); the API defaults to false (lib/galaxy/schema/fetch_data.py:46) and galaxy-mcp passes nothing, so a `.gz` URL declared as its uncompressed type lands as gzip bytes wearing the wrong label. Observed on 4/4 cryptic-exon-q1 runs: the model names the logical format and drops the `.gz`, and every downstream tool then fails.",
-    "get_histories": 'DIVERGES: galaxy-mcp returns every history by default and adds a `pagination` block with `total_items` only when a limit is given, paying for a second unbounded fetch to count. olit always bounds the page at ROW_CAP, asks Galaxy for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope it already uses for list_workflows and get_tool_panel. No `total`: the server was never asked for one.',
+    "get_histories": "DIVERGES: galaxy-mcp returns every history by default and adds a `pagination` block with `total_items` only when a limit is given, paying for a second unbounded fetch to count. olit always bounds the page at ROW_CAP, asks Galaxy for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope it already uses for list_workflows and get_tool_panel. No `total`: the server was never asked for one.",
     "get_job_details": "DIVERGES: galaxy-mcp fetches api/jobs/{id}; olit adds full=true so a failed job's stderr is readable, which is what invocation_outcome tells the model to reach for. That flag also carries tool_stdout/tool_stderr/job_stdout/job_stderr/stdout/stderr, hundreds of KB for a chatty tool, so each log field is trimmed to its last 4 KB on a line boundary with a notice naming the full size.",
 }
 
@@ -116,13 +117,13 @@ MODULE_CLASSIFICATION = {
     "tools": "PORTED: the tool surface",
     "tools-sync": "PORTED: the tool surface is built at load",
     "evidence-gate": "NA: loom's model owns the checkbox and its poller owns a separate "
-                     "status block, so the two can contradict. olit's watcher writes the "
-                     "checkbox itself (applyJobOutcome), and no recorded run has the model "
-                     "flipping a step that carries an id. Revisit if the flip ever moves to "
-                     "the model.",
+    "status block, so the two can contradict. olit's watcher writes the "
+    "checkbox itself (applyJobOutcome), and no recorded run has the model "
+    "flipping a step that carries an id. Revisit if the flip ever moves to "
+    "the model.",
     "auto-resume": "PORTED: bounded automatic Galaxy follow-up in src/auto-resume.ts. Was labelled NA on the reasoning that olit starts no turn, which described the gap rather than a constraint: the browser does not prevent it, and the watcher and submit lifecycle were already there. onSettled used to tell the user to ask; loom's own prompt forbids asking them to ask."
-                   "posts a message and edits the record; it starts no turn, so there is no "
-                   "automatic continuation to bound.",
+    "posts a message and edits the record; it starts no turn, so there is no "
+    "automatic continuation to bound.",
     "invocation-failure-hint": "PARTIAL: the imperative rides the result as `outcome_note` (see the tool.get_invocations.outcome seam); the pointer to loom's two vendored failure references is not ported, because they live in its foundry bundle rather than in the shared galaxy-skills repo",
     "galaxy-cred-drift": "NA: the browser session is the credential; nothing to reconnect",
     "confusables-hint": "NA: upstream calls it a stopgap; olit folds names at dispatch",
@@ -171,13 +172,13 @@ def main():
         "eval_lib": {
             "source": "loom evals/lib",
             "note": "grading and normalization; a change here is eval parity even when it "
-                    "does not move a recorded run",
+            "does not move a recorded run",
             "fingerprints": layers.loom_eval_lib(LOOM),
         },
         "loom_modules": {
             "source": "loom extensions/loom",
             "note": "inventory, not a parity list: an added or changed module must be "
-                    "classified as relevant, NA, or needing investigation",
+            "classified as relevant, NA, or needing investigation",
             "classified": MODULE_CLASSIFICATION,
             "fingerprints": layers.loom_modules(LOOM),
         },

@@ -83,8 +83,9 @@ def mcp_shaped_returns(server_py):
                 continue
             for kw in call.keywords:
                 if kw.arg == "data" and isinstance(kw.value, ast.Dict):
-                    keys = sorted(k.value for k in kw.value.keys
-                                  if isinstance(k, ast.Constant) and isinstance(k.value, str))
+                    keys = sorted(
+                        k.value for k in kw.value.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)
+                    )
                     if keys:
                         out[node.name] = keys
     return out

@@ -7,8 +7,8 @@ import json
 import logging
 import os
 import sys
-import uuid
 import time
+import uuid
 
 # The brain logs every tool call and a parse warning for a corpus SKILL.md whose
 logging.basicConfig(level=logging.ERROR)
@@ -22,10 +22,9 @@ import subject  # noqa: E402
 
 subject.importable()
 
+from lib import loom_scenarios  # noqa: E402
 from lib.assertions import DIMENSIONS, evaluate, validate_patterns  # noqa: E402
 from lib.harness import load_scenarios, run_scenario  # noqa: E402
-from lib import loom_scenarios  # noqa: E402
-
 
 # HTTP 429 means out of budget, not a behavioural failure; graded separately.
 QUOTA_STATUS = 429
@@ -68,12 +67,24 @@ def main():
     ap.add_argument("scenario", nargs="?", help="substring filter on scenario directory")
     ap.add_argument("--model", help="substring filter on model id")
     ap.add_argument("--json", dest="json_out", help="write raw results here")
-    ap.add_argument("--delay", type=float, default=0.0,
-                    help="extra seconds between runs; the provider's own rate limit already applies")
-    ap.add_argument("--repeat", type=int, default=0, metavar="N",
-                    help="override the run count; scenarios shared with loom carry their own")
-    ap.add_argument("--loom", default=os.environ.get("LOOM_SCENARIOS", os.path.expanduser("~/loom/evals/scenarios")),
-                    help="loom's scenario directory, the source of truth for shared scenarios")
+    ap.add_argument(
+        "--delay",
+        type=float,
+        default=0.0,
+        help="extra seconds between runs; the provider's own rate limit already applies",
+    )
+    ap.add_argument(
+        "--repeat",
+        type=int,
+        default=0,
+        metavar="N",
+        help="override the run count; scenarios shared with loom carry their own",
+    )
+    ap.add_argument(
+        "--loom",
+        default=os.environ.get("LOOM_SCENARIOS", os.path.expanduser("~/loom/evals/scenarios")),
+        help="loom's scenario directory, the source of truth for shared scenarios",
+    )
     ap.add_argument("--only-local", action="store_true", help="skip the scenarios shared with loom")
     args = ap.parse_args()
 
@@ -119,59 +130,58 @@ def main():
     results = []
     for model in models:
         for scenario in scenarios:
-          runs = repeat or max(1, int(scenario.get("runs") or 1))
-          for run_index in range(runs):
-              if args.delay and results:
-                  time.sleep(args.delay)
-              scenario = _resolve_run_tokens(scenario)
-              run = run_scenario(scenario, model)
-              if run.error:
-                  failures, exercised = [], set()
-                  verdict = "quota" if is_quota(run) else "ERROR"
-                  note = run.error.replace("\n", " ")
-              else:
-                  try:
-                      failures, exercised = evaluate(scenario, run)
-                      verdict = "pass" if not failures else "FAIL"
-                      note = "" if not failures else failures[0].detail
-                  except Exception as exc:
-                      failures, exercised = [], set()
-                      verdict = "ERROR"
-                      note = f"could not grade: {type(exc).__name__}: {exc}"
-                      run.error = run.error or note
-              # Flushed per result: a full matrix runs for many minutes, and Python
-              tag = f" #{run_index + 1}" if runs > 1 else ""
-              budget = f" {run.steps}/{run.max_steps} steps" if run.max_steps else ""
-              print(f"  [{verdict:5s}] {model['id']:24s} {scenario['id']:34s}{tag}{budget} {note[:52]}", flush=True)
-              for f in failures[1:]:
-                  print(f"          {f}")
-              results.append(
-                  {
-                      "model": model["id"],
-                      "scenario": scenario["id"],
-                      "run": run_index + 1,
-                      "error": run.error,
-                      "statusCode": run.status_code,
-                      "dimensions": sorted(exercised),
-                      "failures": [
-                          {"assertion": f.assertion, "detail": f.detail, "dimension": f.dimension} for f in failures
-                      ],
-                      "steps": run.steps,
-                      "maxSteps": run.max_steps,
-                      "toolsCalled": run.tools_called,
-                      "events": run.events,
-                      "artifacts": run.artifacts,
-                      # A pass is the artifact worth keeping, not just the verdict.
-                      "chatText": run.chat_text if run.messages else "",
-                      "messages": run.messages or [],
-                      "logs": run.logs or [],
-                  }
-              )
-              # A killed suite otherwise loses every result; the file is rewritten each time.
-              if args.json_out:
-                  with open(args.json_out, "w") as f:
-                      json.dump(results, f, indent=2)
-
+            runs = repeat or max(1, int(scenario.get("runs") or 1))
+            for run_index in range(runs):
+                if args.delay and results:
+                    time.sleep(args.delay)
+                scenario = _resolve_run_tokens(scenario)
+                run = run_scenario(scenario, model)
+                if run.error:
+                    failures, exercised = [], set()
+                    verdict = "quota" if is_quota(run) else "ERROR"
+                    note = run.error.replace("\n", " ")
+                else:
+                    try:
+                        failures, exercised = evaluate(scenario, run)
+                        verdict = "pass" if not failures else "FAIL"
+                        note = "" if not failures else failures[0].detail
+                    except Exception as exc:
+                        failures, exercised = [], set()
+                        verdict = "ERROR"
+                        note = f"could not grade: {type(exc).__name__}: {exc}"
+                        run.error = run.error or note
+                # Flushed per result: a full matrix runs for many minutes, and Python
+                tag = f" #{run_index + 1}" if runs > 1 else ""
+                budget = f" {run.steps}/{run.max_steps} steps" if run.max_steps else ""
+                print(f"  [{verdict:5s}] {model['id']:24s} {scenario['id']:34s}{tag}{budget} {note[:52]}", flush=True)
+                for f in failures[1:]:
+                    print(f"          {f}")
+                results.append(
+                    {
+                        "model": model["id"],
+                        "scenario": scenario["id"],
+                        "run": run_index + 1,
+                        "error": run.error,
+                        "statusCode": run.status_code,
+                        "dimensions": sorted(exercised),
+                        "failures": [
+                            {"assertion": f.assertion, "detail": f.detail, "dimension": f.dimension} for f in failures
+                        ],
+                        "steps": run.steps,
+                        "maxSteps": run.max_steps,
+                        "toolsCalled": run.tools_called,
+                        "events": run.events,
+                        "artifacts": run.artifacts,
+                        # A pass is the artifact worth keeping, not just the verdict.
+                        "chatText": run.chat_text if run.messages else "",
+                        "messages": run.messages or [],
+                        "logs": run.logs or [],
+                    }
+                )
+                # A killed suite otherwise loses every result; the file is rewritten each time.
+                if args.json_out:
+                    with open(args.json_out, "w") as f:
+                        json.dump(results, f, indent=2)
 
     print_leaderboard(results, models)
     print_instability(results)

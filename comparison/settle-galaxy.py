@@ -24,8 +24,8 @@ def main():
     while time.time() < deadline:
         try:
             with urllib.request.urlopen(
-                    f"{base}/api/histories/{history}/contents?v=dev&keys=state&key={key}",
-                    timeout=60) as r:
+                f"{base}/api/histories/{history}/contents?v=dev&keys=state&key={key}", timeout=60
+            ) as r:
                 rows = json.loads(r.read())
         except Exception as exc:  # one dropped poll must not end a long wait
             print(f"  settle: poll failed, retrying ({type(exc).__name__})", flush=True)
@@ -36,7 +36,7 @@ def main():
             break
         waited = True
         print(f"  settle: {len(live)} advancing", flush=True)
-        time.sleep(10)          # the shell watcher's own rate (src/invocations.ts)
+        time.sleep(10)  # the shell watcher's own rate (src/invocations.ts)
     print("  settle: nothing advancing" if not waited else "  settle: work landed", flush=True)
 
 

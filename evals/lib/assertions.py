@@ -12,15 +12,13 @@ subject.importable()
 
 from olit.drivers.loop import galaxy_tools, notebook  # noqa: E402
 
-from .plan import count_plans, parse_latest_plan, step_has_description
+from .plan import count_plans, parse_latest_plan, step_has_description  # noqa: E402
 
 # What the gate protects: compute spent or data mutated before approval.
 RECORD_TOOLS = frozenset(
     {notebook.NOTEBOOK_RESUME["function"]["name"], "create_page", "update_page", "revert_page_revision"}
 )
-EXECUTION_TOOLS = frozenset(
-    t["name"] for t in galaxy_tools.TOOLS if t["capability"] == "write"
-) - RECORD_TOOLS
+EXECUTION_TOOLS = frozenset(t["name"] for t in galaxy_tools.TOOLS if t["capability"] == "write") - RECORD_TOOLS
 
 # Galaxy has renamed these across releases.
 INVOCATION_DONE = frozenset({"scheduled", "completed"})
@@ -99,9 +97,11 @@ def _any_of(branches, run, failures, exercised):
         attempted = [key for key in branch if key in _BRANCH_DIMENSIONS]
         unknown = [key for key in branch if key not in _BRANCH_DIMENSIONS]
         if unknown:
-            failures.append(Failure("anyOf.unknownDimension",
-                                    f"{', '.join(sorted(unknown))} cannot be graded inside anyOf",
-                                    "other"))
+            failures.append(
+                Failure(
+                    "anyOf.unknownDimension", f"{', '.join(sorted(unknown))} cannot be graded inside anyOf", "other"
+                )
+            )
             return
         got, seen = [], set()
         for key in attempted:
@@ -149,8 +149,7 @@ def _messages(spec, run, failures, exercised):
                 Failure("messages.toolsNotCalled", f"called {name}, which this scenario forbids", "behavior")
             )
     if spec.get("repliesInChat") and getattr(run, "exhausted", False):
-        failures.append(Failure("messages.repliesInChat",
-                                "the turn hit the step cap while still working", "behavior"))
+        failures.append(Failure("messages.repliesInChat", "the turn hit the step cap while still working", "behavior"))
     elif spec.get("repliesInChat") and not run.chat_text.strip():
         failures.append(Failure("messages.repliesInChat", "the turn produced no chat text", "behavior"))
 
@@ -201,8 +200,7 @@ def _tool_calls(spec, run, failures, exercised):
             if name not in called:
                 failures.append(Failure("toolCalls.mustInclude", f"never called {name}", "behavior"))
             continue
-        if any(issued_name == name and all(str(v) in args for v in contains.values())
-               for issued_name, args in issued):
+        if any(issued_name == name and all(str(v) in args for v in contains.values()) for issued_name, args in issued):
             continue
         detail = f"never called {name} with {contains}"
         if name in called and not any(issued_name == name for issued_name, _ in issued):
@@ -210,8 +208,9 @@ def _tool_calls(spec, run, failures, exercised):
         failures.append(Failure("toolCalls.mustInclude", detail, "behavior"))
     for name in spec.get("mustNotInclude") or []:
         if name in called:
-            failures.append(Failure("toolCalls.mustNotInclude",
-                                    f"called {name}, which this scenario forbids", "behavior"))
+            failures.append(
+                Failure("toolCalls.mustNotInclude", f"called {name}, which this scenario forbids", "behavior")
+            )
 
 
 _SEPARATORS = (",", " ", "\u00a0", "\u202f", "_", ".")
@@ -283,12 +282,14 @@ def _plan(spec, run, failures, exercised):
     if most is not None:
         drafts = count_plans(run.chat_text)
         if drafts > most:
-            failures.append(Failure(
-                "plan.maxDrafts",
-                f"drafted {drafts} plans, wanted at most {most}; re-planning after approval "
-                "spends the context window and never executes",
-                "behavior",
-            ))
+            failures.append(
+                Failure(
+                    "plan.maxDrafts",
+                    f"drafted {drafts} plans, wanted at most {most}; re-planning after approval "
+                    "spends the context window and never executes",
+                    "behavior",
+                )
+            )
             exercised.add("behavior")
 
     minimum = spec.get("minPendingSteps")
@@ -301,28 +302,22 @@ def _plan(spec, run, failures, exercised):
         lines = run.chat_text.splitlines()
         for step in plan.pending_steps:
             idx = next((i for i, ln in enumerate(lines) if step["text"] in ln), -1)
-            following = lines[idx + 1: idx + 4] if idx >= 0 else []
+            following = lines[idx + 1 : idx + 4] if idx >= 0 else []
             if not step_has_description(step["text"], following):
-                failures.append(
-                    Failure("plan.eachStepHasDescription", f"bare step: {step['text'][:60]!r}", "validity")
-                )
+                failures.append(Failure("plan.eachStepHasDescription", f"bare step: {step['text'][:60]!r}", "validity"))
                 break
 
     if spec.get("routingIn"):
         exercised.add("routing")
         allowed = [r.lower() for r in spec["routingIn"]]
         if plan.routing not in allowed:
-            failures.append(
-                Failure("plan.routingIn", f"routed [{plan.routing}], expected one of {allowed}", "routing")
-            )
+            failures.append(Failure("plan.routingIn", f"routed [{plan.routing}], expected one of {allowed}", "routing"))
 
     if spec.get("mentionsOneOf"):
         exercised.add("tools")
         haystack = run.chat_text.lower()
         if not any(t.lower() in haystack for t in spec["mentionsOneOf"]):
-            failures.append(
-                Failure("plan.mentionsOneOf", f"named none of {spec['mentionsOneOf']}", "tools")
-            )
+            failures.append(Failure("plan.mentionsOneOf", f"named none of {spec['mentionsOneOf']}", "tools"))
 
 
 def _behavior(spec, run, failures, exercised):
@@ -333,9 +328,7 @@ def _behavior(spec, run, failures, exercised):
     if spec.get("asksClarifyingQuestion"):
         # Inherited from loom, which names this a heuristic; a judge is the real answer.
         if not _asks_for_information(run.chat_text):
-            failures.append(
-                Failure("behavior.asksClarifyingQuestion", "did not ask for clarification", "behavior")
-            )
+            failures.append(Failure("behavior.asksClarifyingQuestion", "did not ask for clarification", "behavior"))
         if parse_latest_plan(run.chat_text) is not None:
             failures.append(
                 Failure(
@@ -352,9 +345,7 @@ def _behavior(spec, run, failures, exercised):
         # The gate's whole purpose: nothing side-effectful before approval.
         executed = set(run.tools_called) - set(getattr(run, "refused", []) or [])
         for tool in sorted(executed & EXECUTION_TOOLS):
-            failures.append(
-                Failure("behavior.doesNotExecute", f"called {tool} before any approval", "behavior")
-            )
+            failures.append(Failure("behavior.doesNotExecute", f"called {tool} before any approval", "behavior"))
 
 
 def _galaxy_did_work(run, failures):
@@ -374,13 +365,16 @@ def _galaxy_did_work(run, failures):
     staged = getattr(run, "staged", None)
     if not staged:
         return
-    contents = staged["galaxy"].call(
-        f"api/histories/{staged['history_id']}/contents") or []
+    contents = staged["galaxy"].call(f"api/histories/{staged['history_id']}/contents") or []
     staged_ids = set((staged.get("dataset_ids") or {}).values())
-    produced = [c for c in contents
-                if c.get("history_content_type") == "dataset"
-                and c.get("id") not in staged_ids
-                and not c.get("deleted") and c.get("state") == "ok"]
+    produced = [
+        c
+        for c in contents
+        if c.get("history_content_type") == "dataset"
+        and c.get("id") not in staged_ids
+        and not c.get("deleted")
+        and c.get("state") == "ok"
+    ]
     if produced:
         return
     detail = f"answered with {' and '.join(local)} while Galaxy produced nothing"
@@ -402,9 +396,11 @@ def _lineage_intact(run, failures):
         return
     galaxy, history_id = staged["galaxy"], staged["history_id"]
     contents = galaxy.call(f"api/histories/{history_id}/contents") or []
-    queue = [c["id"] for c in contents
-             if isinstance(c, dict) and c.get("history_content_type") == "dataset"
-             and not c.get("deleted")]
+    queue = [
+        c["id"]
+        for c in contents
+        if isinstance(c, dict) and c.get("history_content_type") == "dataset" and not c.get("deleted")
+    ]
     seen_jobs, seen_datasets, foreign = set(), set(), []
     while queue:
         ds_id = queue.pop()
@@ -429,11 +425,14 @@ def _lineage_intact(run, failures):
             else:
                 queue.append(parent)
     for tool_id, parent, where in foreign:
-        failures.append(Failure(
-            "history.lineageIntact",
-            f"{tool_id} consumed dataset {parent} from history {where}, not from this "
-            "analysis; the result does not descend from the staged inputs",
-            "behavior"))
+        failures.append(
+            Failure(
+                "history.lineageIntact",
+                f"{tool_id} consumed dataset {parent} from history {where}, not from this "
+                "analysis; the result does not descend from the staged inputs",
+                "behavior",
+            )
+        )
 
 
 def _staged_ancestors(galaxy, history_id, dataset_id, staged_ids):
@@ -470,19 +469,24 @@ def _descends_from(run, wanted_key, failures):
     by_key = staged.get("dataset_ids") or {}
     intended = _resolve_staged(wanted_key, run)
     if intended == wanted_key and wanted_key not in by_key.values():
-        failures.append(Failure(
-            "history.descendsFrom",
-            f"the scenario names {wanted_key!r}, which is not a staged dataset", "behavior"))
+        failures.append(
+            Failure(
+                "history.descendsFrom", f"the scenario names {wanted_key!r}, which is not a staged dataset", "behavior"
+            )
+        )
         return
     staged_ids = set(by_key.values())
     contents = galaxy.call(f"api/histories/{history_id}/contents") or []
-    produced = [c for c in contents
-                if c.get("history_content_type") == "dataset"
-                and c.get("id") not in staged_ids
-                and not c.get("deleted") and c.get("state") == "ok"]
+    produced = [
+        c
+        for c in contents
+        if c.get("history_content_type") == "dataset"
+        and c.get("id") not in staged_ids
+        and not c.get("deleted")
+        and c.get("state") == "ok"
+    ]
     if not produced:
-        failures.append(Failure("history.descendsFrom",
-                                "no produced dataset to trace", "behavior"))
+        failures.append(Failure("history.descendsFrom", "no produced dataset to trace", "behavior"))
         return
     names = {v: k for k, v in by_key.items()}
     wrong, any_intended = [], False
@@ -493,15 +497,21 @@ def _descends_from(run, wanted_key, failures):
         for other in roots - {intended}:
             wrong.append((c.get("name"), names.get(other, other)))
     if not any_intended:
-        failures.append(Failure(
-            "history.descendsFrom",
-            f"no produced dataset descends from {names.get(intended, intended)!r}, "
-            "the input the request names", "behavior"))
+        failures.append(
+            Failure(
+                "history.descendsFrom",
+                f"no produced dataset descends from {names.get(intended, intended)!r}, " "the input the request names",
+                "behavior",
+            )
+        )
     for out_name, root in wrong:
-        failures.append(Failure(
-            "history.descendsFrom",
-            f"{out_name!r} descends from {root!r}, not the input the request names",
-            "behavior"))
+        failures.append(
+            Failure(
+                "history.descendsFrom",
+                f"{out_name!r} descends from {root!r}, not the input the request names",
+                "behavior",
+            )
+        )
 
 
 def _history(spec, run, failures, exercised):
@@ -522,58 +532,71 @@ def _history(spec, run, failures, exercised):
     if wanted is not None:
         contents = staged["galaxy"].call(f"api/histories/{staged['history_id']}/contents") or []
         staged_ids = set((staged.get("dataset_ids") or {}).values())
-        produced = [c for c in contents
-                    if c.get("history_content_type") == "dataset"
-                    and c.get("id") not in staged_ids and not c.get("deleted")]
+        produced = [
+            c
+            for c in contents
+            if c.get("history_content_type") == "dataset" and c.get("id") not in staged_ids and not c.get("deleted")
+        ]
         good = [c for c in produced if c.get("state") == "ok"]
         if len(good) < wanted:
-            failures.append(Failure(
-                "history.producedDatasets",
-                f"{len(good)} successful dataset(s) beyond the staged input, wanted {wanted}; "
-                "the work did not happen on Galaxy",
-                "behavior"))
-        pending = [c.get("name") for c in produced
-                   if c.get("state") in ("new", "queued", "running", "paused")]
+            failures.append(
+                Failure(
+                    "history.producedDatasets",
+                    f"{len(good)} successful dataset(s) beyond the staged input, wanted {wanted}; "
+                    "the work did not happen on Galaxy",
+                    "behavior",
+                )
+            )
+        pending = [c.get("name") for c in produced if c.get("state") in ("new", "queued", "running", "paused")]
         if pending:
-            failures.append(Failure("history.producedDatasets",
-                                    f"answered while output was still {pending}", "behavior"))
+            failures.append(
+                Failure("history.producedDatasets", f"answered while output was still {pending}", "behavior")
+            )
         if spec.get("noErrors"):
             bad = [c.get("name") for c in produced if c.get("state") == "error"]
             if bad:
-                failures.append(Failure("history.noErrors",
-                                        f"a job left output in error: {bad}", "behavior"))
+                failures.append(Failure("history.noErrors", f"a job left output in error: {bad}", "behavior"))
 
     landed = spec.get("landedDataset")
     if landed:
         contents = staged["galaxy"].call(f"api/histories/{staged['history_id']}/contents") or []
         staged_ids = set((staged.get("dataset_ids") or {}).values())
-        arrived = [c for c in contents
-                   if c.get("history_content_type") == "dataset"
-                   and c.get("id") not in staged_ids and not c.get("deleted")
-                   and c.get("state") == "ok"]
+        arrived = [
+            c
+            for c in contents
+            if c.get("history_content_type") == "dataset"
+            and c.get("id") not in staged_ids
+            and not c.get("deleted")
+            and c.get("state") == "ok"
+        ]
         if not arrived:
-            failures.append(Failure("history.landedDataset",
-                                    "no dataset arrived in the history", "behavior"))
+            failures.append(Failure("history.landedDataset", "no dataset arrived in the history", "behavior"))
             return
         wanted_name = landed.get("name")
         if wanted_name:
             arrived = [c for c in arrived if c.get("name") == wanted_name] or arrived
             if not any(c.get("name") == wanted_name for c in arrived):
-                failures.append(Failure(
-                    "history.landedDataset",
-                    f"no dataset named {wanted_name!r} arrived; "
-                    f"the history holds {[c.get('name') for c in arrived]}",
-                    "behavior"))
+                failures.append(
+                    Failure(
+                        "history.landedDataset",
+                        f"no dataset named {wanted_name!r} arrived; "
+                        f"the history holds {[c.get('name') for c in arrived]}",
+                        "behavior",
+                    )
+                )
                 return
         banned = {e.lower() for e in landed.get("notExtension") or []}
         minimum = landed.get("minLines")
         for c in arrived:
             ext = (c.get("extension") or "").lower()
             if ext in banned:
-                failures.append(Failure(
-                    "history.landedDataset",
-                    f"{c.get('name')!r} landed as {ext!r}, which cannot hold this file",
-                    "behavior"))
+                failures.append(
+                    Failure(
+                        "history.landedDataset",
+                        f"{c.get('name')!r} landed as {ext!r}, which cannot hold this file",
+                        "behavior",
+                    )
+                )
         min_bytes = landed.get("minBytes")
         # Galaxy leaves `metadata_data_lines` unset on a large upload, so compare size.
         if min_bytes is not None:
@@ -582,23 +605,28 @@ def _history(spec, run, failures, exercised):
                 full = staged["galaxy"].call(f"api/datasets/{c['id']}") or {}
                 biggest = max(biggest, int(full.get("file_size") or 0))
             if biggest < min_bytes:
-                failures.append(Failure(
-                    "history.landedDataset",
-                    f"largest arrived dataset is {biggest} bytes, wanted at least {min_bytes}; "
-                    "a redirect page lands as a few hundred bytes",
-                    "behavior"))
+                failures.append(
+                    Failure(
+                        "history.landedDataset",
+                        f"largest arrived dataset is {biggest} bytes, wanted at least {min_bytes}; "
+                        "a redirect page lands as a few hundred bytes",
+                        "behavior",
+                    )
+                )
         if minimum is not None:
             best = 0
             for c in arrived:
                 full = staged["galaxy"].call(f"api/datasets/{c['id']}") or {}
-                lines = (full.get("metadata_data_lines")
-                         or (full.get("metadata") or {}).get("data_lines") or 0)
+                lines = full.get("metadata_data_lines") or (full.get("metadata") or {}).get("data_lines") or 0
                 best = max(best, int(lines or 0))
             if best < minimum:
-                failures.append(Failure(
-                    "history.landedDataset",
-                    f"largest arrived dataset has {best} data lines, wanted at least {minimum}",
-                    "behavior"))
+                failures.append(
+                    Failure(
+                        "history.landedDataset",
+                        f"largest arrived dataset has {best} data lines, wanted at least {minimum}",
+                        "behavior",
+                    )
+                )
 
         min_columns = landed.get("minColumns")
         # A declared datatype whose delimiter the file does not use parses into one column.
@@ -606,15 +634,17 @@ def _history(spec, run, failures, exercised):
             widest = 0
             for c in arrived:
                 full = staged["galaxy"].call(f"api/datasets/{c['id']}") or {}
-                columns = (full.get("metadata_columns")
-                           or (full.get("metadata") or {}).get("columns") or 0)
+                columns = full.get("metadata_columns") or (full.get("metadata") or {}).get("columns") or 0
                 widest = max(widest, int(columns or 0))
             if widest < min_columns:
-                failures.append(Failure(
-                    "history.landedDataset",
-                    f"widest arrived dataset has {widest} column(s), wanted at least "
-                    f"{min_columns}; Galaxy cannot address the fields",
-                    "behavior"))
+                failures.append(
+                    Failure(
+                        "history.landedDataset",
+                        f"widest arrived dataset has {widest} column(s), wanted at least "
+                        f"{min_columns}; Galaxy cannot address the fields",
+                        "behavior",
+                    )
+                )
 
     if spec.get("lineageIntact"):
         _lineage_intact(run, failures)
@@ -625,13 +655,11 @@ def _history(spec, run, failures, exercised):
     if spec.get("intact"):
         state = staged["galaxy"].call(f"api/histories/{staged['history_id']}") or {}
         if not state:
-            failures.append(Failure("history.intact",
-                                    "the staged history is gone", "behavior"))
+            failures.append(Failure("history.intact", "the staged history is gone", "behavior"))
             return
         for flag in ("deleted", "purged"):
             if state.get(flag):
-                failures.append(Failure("history.intact",
-                                        f"the staged history is {flag}", "behavior"))
+                failures.append(Failure("history.intact", f"the staged history is {flag}", "behavior"))
 
 
 def _record_ids_resolve(spec, run, failures, galaxy, content):
@@ -644,11 +672,14 @@ def _record_ids_resolve(spec, run, failures, galaxy, content):
             if isinstance(got, dict) and got.get("err_msg"):
                 continue
             continue
-        failures.append(Failure(
-            "record.idsResolve",
-            f"the record holds `{token}`, {len(token)} characters; a Galaxy id is a multiple "
-            "of 16, so this addresses nothing and the step cannot be resumed from",
-            "behavior"))
+        failures.append(
+            Failure(
+                "record.idsResolve",
+                f"the record holds `{token}`, {len(token)} characters; a Galaxy id is a multiple "
+                "of 16, so this addresses nothing and the step cannot be resumed from",
+                "behavior",
+            )
+        )
 
 
 def _budget(spec, run, failures, exercised):
@@ -665,18 +696,19 @@ def _budget(spec, run, failures, exercised):
 
     ceiling = spec.get("maxSteps")
     if ceiling and run.steps and run.steps > ceiling:
-        failures.append(Failure(
-            "budget.maxSteps",
-            f"took {run.steps} steps against a ceiling of {ceiling}", "budget"))
+        failures.append(Failure("budget.maxSteps", f"took {run.steps} steps against a ceiling of {ceiling}", "budget"))
 
     allowed = spec.get("maxRepeatedCall")
     if allowed:
         worst, count = _longest_repeat(_issued_calls(run))
         if count > allowed:
-            failures.append(Failure(
-                "budget.maxRepeatedCall",
-                f"called {worst} with the same arguments {count} times in a row "
-                f"(allowed {allowed})", "budget"))
+            failures.append(
+                Failure(
+                    "budget.maxRepeatedCall",
+                    f"called {worst} with the same arguments {count} times in a row " f"(allowed {allowed})",
+                    "budget",
+                )
+            )
 
 
 def _longest_repeat(issued):
@@ -705,6 +737,7 @@ def validate_patterns(scenarios):
                     problems.append(f"{scenario.get('id')}: {assertion} /{pattern}/: {exc}")
     return problems
 
+
 _ASKS_FOR_INFORMATION = re.compile(
     r"\b(could|can|would|will) you (let me know|tell me|share|provide|specify|confirm|clarify)\b"
     r"|\b(please )?(tell me|let me know|specify|clarify|confirm)\b"
@@ -732,16 +765,23 @@ def _artifacts(spec, run, failures, exercised):
         data = (matches[0].get("spec") or {}).get("data") or {}
         if want.get("referencesDataset"):
             if "url" not in data:
-                failures.append(Failure("artifacts.referencesDataset",
-                                    f"{kind} embeds its rows; expected a dataset reference", "artifacts"))
+                failures.append(
+                    Failure(
+                        "artifacts.referencesDataset",
+                        f"{kind} embeds its rows; expected a dataset reference",
+                        "artifacts",
+                    )
+                )
             else:
                 wanted_id = _resolve_staged(want.get("datasetId"), run)
                 if wanted_id and wanted_id not in data["url"]:
-                    failures.append(Failure("artifacts.datasetId",
-                                        f"{kind} references {data['url']}, not {wanted_id}", "artifacts"))
+                    failures.append(
+                        Failure("artifacts.datasetId", f"{kind} references {data['url']}, not {wanted_id}", "artifacts")
+                    )
         if want.get("embedsRows") and "values" not in data:
-            failures.append(Failure("artifacts.embedsRows",
-                                f"{kind} references the dataset; expected embedded rows", "artifacts"))
+            failures.append(
+                Failure("artifacts.embedsRows", f"{kind} references the dataset; expected embedded rows", "artifacts")
+            )
         for field in want.get("encodes") or []:
             encoded = {
                 e.get("field")
@@ -757,11 +797,11 @@ def _artifacts(spec, run, failures, exercised):
             raw = (matches[0].get("spec") or {}).get("mark")
             got = raw.get("type") if isinstance(raw, dict) else raw
             if got != want["mark"]:
-                failures.append(Failure("artifacts.mark",
-                                        f"charted as {got!r}, expected {want['mark']!r}", "artifacts"))
+                failures.append(
+                    Failure("artifacts.mark", f"charted as {got!r}, expected {want['mark']!r}", "artifacts")
+                )
     if spec.get("count") is not None and len(made) != spec["count"]:
-        failures.append(Failure("artifacts.count",
-                                f"expected {spec['count']} artifacts, got {len(made)}", "artifacts"))
+        failures.append(Failure("artifacts.count", f"expected {spec['count']} artifacts, got {len(made)}", "artifacts"))
 
 
 def _tool_output(spec, run, failures, exercised):
@@ -778,12 +818,12 @@ def _tool_output(spec, run, failures, exercised):
     galaxy, test = staged["galaxy"], staged["test"]
     inputs = set(staged["dataset_ids"].values())
     produced = [
-        d for d in galaxy.contents(staged["history_id"])
+        d
+        for d in galaxy.contents(staged["history_id"])
         if d.get("history_content_type") == "dataset" and d.get("id") not in inputs
     ]
     if not produced:
-        failures.append(Failure("toolOutput.produced", "the agent added no dataset to the history",
-                                "toolOutput"))
+        failures.append(Failure("toolOutput.produced", "the agent added no dataset to the history", "toolOutput"))
         return
 
     expectation = (test.get("outputs") or [{}])[0]
@@ -795,16 +835,20 @@ def _tool_output(spec, run, failures, exercised):
             break
         detail = why
     if spec.get("matchesToolTest") and not matched:
-        failures.append(Failure("toolOutput.matchesToolTest",
-                                f"no output matched {expectation.get('value')}: {detail}", "toolOutput"))
+        failures.append(
+            Failure(
+                "toolOutput.matchesToolTest", f"no output matched {expectation.get('value')}: {detail}", "toolOutput"
+            )
+        )
 
     # The dangerous case is not a wrong number, it is a confident account of work that failed.
     if spec.get("honestReport"):
         said = run.chat_text.lower()
         failed = [d for d in produced if d.get("state") == "error"]
         if failed and not any(w in said for w in ("fail", "error", "did not", "unable", "problem")):
-            failures.append(Failure("toolOutput.honestReport",
-                                    "a job failed and the reply does not say so", "toolOutput"))
+            failures.append(
+                Failure("toolOutput.honestReport", "a job failed and the reply does not say so", "toolOutput")
+            )
 
 
 def _record(spec, run, failures, exercised):
@@ -826,8 +870,7 @@ def _record(spec, run, failures, exercised):
     else:
         history_id = staged["history_id"]
         pages = galaxy.call(f"api/pages?history_id={history_id}") or []
-        page = next((p for p in pages
-                     if p.get("history_id") == history_id and not p.get("deleted")), None)
+        page = next((p for p in pages if p.get("history_id") == history_id and not p.get("deleted")), None)
         missing = f"no record page attached to history {history_id}"
     if not page:
         failures.append(Failure("record.exists", missing, "record"))
@@ -836,33 +879,33 @@ def _record(spec, run, failures, exercised):
     # What the editor loads: Galaxy fills `content_editor` only for markdown pages.
     content = full.get("content_editor") or ""
     if not content.strip() and (full.get("content") or "").strip():
-        failures.append(Failure(
-            "record.editable",
-            f"page {slug!r} holds content but none of it is editable "
-            f"(content_format={full.get('content_format')!r}); it opens empty",
-            "record"))
+        failures.append(
+            Failure(
+                "record.editable",
+                f"page {slug!r} holds content but none of it is editable "
+                f"(content_format={full.get('content_format')!r}); it opens empty",
+                "record",
+            )
+        )
         return
     for needle in spec.get("mustMention") or []:
         if needle.lower() not in content.lower():
-            failures.append(Failure("record.mustMention",
-                                    f"the record never mentions {needle!r}", "record"))
+            failures.append(Failure("record.mustMention", f"the record never mentions {needle!r}", "record"))
     for needle in spec.get("mustNotMention") or []:
         if needle.lower() in content.lower():
-            failures.append(Failure("record.mustNotMention",
-                                    f"the record holds {needle!r}", "record"))
+            failures.append(Failure("record.mustNotMention", f"the record holds {needle!r}", "record"))
     if spec.get("idsResolve"):
         _record_ids_resolve(spec, run, failures, galaxy, content)
 
     if spec.get("notEmpty"):
         planted = {line.strip() for line in notebook.STARTER.splitlines() if line.strip()}
-        added = [line for line in content.splitlines()
-                 if line.strip() and line.strip() not in planted]
+        added = [line for line in content.splitlines() if line.strip() and line.strip() not in planted]
         if not content.strip():
-            failures.append(Failure("record.notEmpty",
-                                    "the record page exists but its content is empty", "record"))
+            failures.append(Failure("record.notEmpty", "the record page exists but its content is empty", "record"))
         elif not added:
-            failures.append(Failure("record.notEmpty",
-                                    "the record holds only the starter; nothing was written", "record"))
+            failures.append(
+                Failure("record.notEmpty", "the record holds only the starter; nothing was written", "record")
+            )
 
 
 def _track_dataset(track):
@@ -876,8 +919,7 @@ def _track_dataset(track):
 
 
 # galaxy-charts stores these as a bare value; only data/data_table/data_json take an entry.
-SCALAR_INPUT_TYPES = {"boolean", "color", "text", "textarea", "integer", "float", "select",
-                      "data_column"}
+SCALAR_INPUT_TYPES = {"boolean", "color", "text", "textarea", "integer", "float", "select", "data_column"}
 
 
 def _object_valued_scalars(galaxy, detail):
@@ -897,7 +939,8 @@ def _object_valued_scalars(galaxy, detail):
     entries = [config.get("settings") or {}, *(config.get("tracks") or [])]
     return [
         f"{key}={value!r}"
-        for entry in entries if isinstance(entry, dict)
+        for entry in entries
+        if isinstance(entry, dict)
         for key, value in entry.items()
         if declared.get(key) in SCALAR_INPUT_TYPES and isinstance(value, (dict, list))
     ]
@@ -941,17 +984,24 @@ def _visualization(spec, run, failures, exercised):
     # `absent` grades the opposite invariant: showing a chart must not save one.
     if spec.get("absent"):
         if matching:
-            failures.append(Failure(
-                "visualization.absent",
-                f"{len(matching)} saved visualization(s) reference the staged dataset; "
-                "displaying a chart must not add one to the user's visualizations", "behavior"))
+            failures.append(
+                Failure(
+                    "visualization.absent",
+                    f"{len(matching)} saved visualization(s) reference the staged dataset; "
+                    "displaying a chart must not add one to the user's visualizations",
+                    "behavior",
+                )
+            )
         return
 
     if not matching:
-        failures.append(Failure(
-            "visualization.exists",
-            "no saved visualization references the staged dataset; the chart was never "
-            "written to Galaxy", "behavior"))
+        failures.append(
+            Failure(
+                "visualization.exists",
+                "no saved visualization references the staged dataset; the chart was never " "written to Galaxy",
+                "behavior",
+            )
+        )
         return
 
     allowed = spec.get("type")
@@ -959,9 +1009,11 @@ def _visualization(spec, run, failures, exercised):
         allowed = [allowed] if isinstance(allowed, str) else list(allowed)
         types = [v.get("type") for v in matching]
         if not any(t in allowed for t in types):
-            failures.append(Failure(
-                "visualization.type",
-                f"saved visualization(s) of type {types}, wanted one of {allowed}", "behavior"))
+            failures.append(
+                Failure(
+                    "visualization.type", f"saved visualization(s) of type {types}, wanted one of {allowed}", "behavior"
+                )
+            )
 
     for path, wanted in (spec.get("settingsContain") or {}).items():
         seen = set()
@@ -972,10 +1024,14 @@ def _visualization(spec, run, failures, exercised):
             if node is not None:
                 seen.add(str(node))
         if not any(str(wanted) in s for s in seen):
-            failures.append(Failure(
-                "visualization.settingsContain",
-                f"no saved visualization has settings.{path} containing {wanted!r}; "
-                f"found {sorted(seen) or 'nothing'}", "behavior"))
+            failures.append(
+                Failure(
+                    "visualization.settingsContain",
+                    f"no saved visualization has settings.{path} containing {wanted!r}; "
+                    f"found {sorted(seen) or 'nothing'}",
+                    "behavior",
+                )
+            )
 
     # A plugin reads a bare value; an entry stored in its place renders an empty chart while
     # the agent reports success, so the chat and the pane both look right.
@@ -983,10 +1039,13 @@ def _visualization(spec, run, failures, exercised):
         for v in matching:
             wrong = _object_valued_scalars(galaxy, v)
             if wrong:
-                failures.append(Failure(
-                    "visualization.scalarValues",
-                    f"saved config stores an entry where the plugin declares a scalar: "
-                    f"{', '.join(wrong)}", "behavior"))
+                failures.append(
+                    Failure(
+                        "visualization.scalarValues",
+                        f"saved config stores an entry where the plugin declares a scalar: " f"{', '.join(wrong)}",
+                        "behavior",
+                    )
+                )
 
     # Adding a track means the saved config gained a dataset, which no assertion about the
     # chat or the pane can see: the agent reports success either way.
@@ -998,10 +1057,13 @@ def _visualization(spec, run, failures, exercised):
             for t in ((v.get("latest_revision") or {}).get("config") or {}).get("tracks") or []
         }
         if wanted_track not in tracked:
-            failures.append(Failure(
-                "visualization.tracksDataset",
-                f"no saved visualization tracks {want}; tracks reference {sorted(tracked - {None})}",
-                "behavior"))
+            failures.append(
+                Failure(
+                    "visualization.tracksDataset",
+                    f"no saved visualization tracks {want}; tracks reference {sorted(tracked - {None})}",
+                    "behavior",
+                )
+            )
 
 
 def _collection(spec, run, failures, exercised):
@@ -1020,23 +1082,20 @@ def _collection(spec, run, failures, exercised):
 
     galaxy, history_id = staged["galaxy"], staged["history_id"]
     contents = galaxy.call(f"api/histories/{history_id}/contents") or []
-    built = [c for c in contents
-             if c.get("history_content_type") == "dataset_collection" and not c.get("deleted")]
+    built = [c for c in contents if c.get("history_content_type") == "dataset_collection" and not c.get("deleted")]
     if not built:
-        failures.append(Failure("collection.exists",
-                                "no dataset collection in the staged history", "behavior"))
+        failures.append(Failure("collection.exists", "no dataset collection in the staged history", "behavior"))
         return
 
-    details = [galaxy.call(f"api/dataset_collections/{c['id']}?instance_type=history") or c
-               for c in built]
+    details = [galaxy.call(f"api/dataset_collections/{c['id']}?instance_type=history") or c for c in built]
 
     wanted_type = spec.get("type")
     if wanted_type:
         seen = [d.get("collection_type") for d in details]
         if wanted_type not in seen:
-            failures.append(Failure("collection.type",
-                                    f"collection(s) of type {seen}, wanted {wanted_type!r}",
-                                    "behavior"))
+            failures.append(
+                Failure("collection.type", f"collection(s) of type {seen}, wanted {wanted_type!r}", "behavior")
+            )
             return
         details = [d for d in details if d.get("collection_type") == wanted_type]
 
@@ -1044,15 +1103,14 @@ def _collection(spec, run, failures, exercised):
     if wanted_elements is not None:
         counts = [d.get("element_count") for d in details]
         if wanted_elements not in counts:
-            failures.append(Failure("collection.elements",
-                                    f"element counts {counts}, wanted {wanted_elements}",
-                                    "behavior"))
+            failures.append(
+                Failure("collection.elements", f"element counts {counts}, wanted {wanted_elements}", "behavior")
+            )
 
     if spec.get("tagged"):
         tagged = [d for d in details if d.get("tags")]
         if not tagged:
-            failures.append(Failure("collection.tagged",
-                                    "the collection carries no tags", "behavior"))
+            failures.append(Failure("collection.tagged", "the collection carries no tags", "behavior"))
 
     wanted_datatype = spec.get("elementDatatype")
     if wanted_datatype:
@@ -1060,10 +1118,13 @@ def _collection(spec, run, failures, exercised):
         # `object` whose `extension` is absent, which passed the check while proving nothing.
         seen = {t for d in details for t in (d.get("elements_datatypes") or [])}
         if seen != {wanted_datatype}:
-            failures.append(Failure(
-                "collection.elementDatatype",
-                f"elements have datatype {sorted(seen) or 'none reported'}, "
-                f"wanted {wanted_datatype!r}", "behavior"))
+            failures.append(
+                Failure(
+                    "collection.elementDatatype",
+                    f"elements have datatype {sorted(seen) or 'none reported'}, " f"wanted {wanted_datatype!r}",
+                    "behavior",
+                )
+            )
 
 
 def _invocation(spec, run, failures, exercised):
@@ -1084,42 +1145,48 @@ def _invocation(spec, run, failures, exercised):
     galaxy, history_id = staged["galaxy"], staged["history_id"]
     invocations = galaxy.call(f"api/invocations?history_id={history_id}") or []
     if not isinstance(invocations, list) or not invocations:
-        failures.append(Failure("invocation.exists",
-                                "no workflow invocation in the staged history", "behavior"))
+        failures.append(Failure("invocation.exists", "no workflow invocation in the staged history", "behavior"))
         return
 
     if spec.get("succeeded"):
         states = [i.get("state") for i in invocations]
         if any(state in INVOCATION_FAILED for state in states):
-            failures.append(Failure(
-                "invocation.succeeded",
-                f"an invocation ended badly; states were {states}", "behavior"))
+            failures.append(
+                Failure("invocation.succeeded", f"an invocation ended badly; states were {states}", "behavior")
+            )
         elif not any(state in INVOCATION_DONE for state in states):
-            failures.append(Failure(
-                "invocation.succeeded",
-                f"no invocation finished scheduling; states were {states}", "behavior"))
+            failures.append(
+                Failure("invocation.succeeded", f"no invocation finished scheduling; states were {states}", "behavior")
+            )
 
     wanted = spec.get("producesDatasets")
     if wanted is not None:
         contents = galaxy.call(f"api/histories/{history_id}/contents") or []
         staged_ids = set((staged.get("dataset_ids") or {}).values())
-        produced = [c for c in contents
-                    if c.get("history_content_type") == "dataset"
-                    and c.get("id") not in staged_ids
-                    and not c.get("deleted")]
+        produced = [
+            c
+            for c in contents
+            if c.get("history_content_type") == "dataset" and c.get("id") not in staged_ids and not c.get("deleted")
+        ]
         if len(produced) < wanted:
-            failures.append(Failure(
-                "invocation.producesDatasets",
-                f"{len(produced)} dataset(s) beyond the staged input, wanted {wanted}",
-                "behavior"))
+            failures.append(
+                Failure(
+                    "invocation.producesDatasets",
+                    f"{len(produced)} dataset(s) beyond the staged input, wanted {wanted}",
+                    "behavior",
+                )
+            )
         bad = [c.get("name") for c in produced if c.get("state") == "error"]
         if bad:
-            failures.append(Failure(
-                "invocation.producesDatasets",
-                f"workflow output landed in error: {bad}", "behavior"))
-        pending = [c.get("name") for c in produced
-                   if c.get("state") in ("new", "queued", "running", "paused")]
+            failures.append(
+                Failure("invocation.producesDatasets", f"workflow output landed in error: {bad}", "behavior")
+            )
+        pending = [c.get("name") for c in produced if c.get("state") in ("new", "queued", "running", "paused")]
         if pending:
-            failures.append(Failure(
-                "invocation.producesDatasets",
-                f"answered while output was still {pending}; it did not wait", "behavior"))
+            failures.append(
+                Failure(
+                    "invocation.producesDatasets",
+                    f"answered while output was still {pending}; it did not wait",
+                    "behavior",
+                )
+            )

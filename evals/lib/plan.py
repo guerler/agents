@@ -45,7 +45,7 @@ def parse_latest_plan(content):
         return None
 
     steps = []
-    for line in lines[start + 1:]:
+    for line in lines[start + 1 :]:
         if PLAN_HEADING.match(line.strip()):
             break  # the next plan starts here
         m = STEP.match(line)

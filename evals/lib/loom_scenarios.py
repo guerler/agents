@@ -84,9 +84,7 @@ def _adapt_tool_calls(spec):
     out = dict(spec)
     wanted = out.get("mustInclude")
     if wanted:
-        out["mustInclude"] = [
-            {**w, "name": TOOL_NAMES.get(w.get("name"), w.get("name"))} for w in wanted
-        ]
+        out["mustInclude"] = [{**w, "name": TOOL_NAMES.get(w.get("name"), w.get("name"))} for w in wanted]
     banned = out.get("mustNotInclude")
     if banned:
         out["mustNotInclude"] = [TOOL_NAMES.get(n, n) for n in banned]
