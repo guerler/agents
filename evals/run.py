@@ -167,6 +167,10 @@ def main():
                       "logs": run.logs or [],
                   }
               )
+              # A killed suite otherwise loses every result; the file is rewritten each time.
+              if args.json_out:
+                  with open(args.json_out, "w") as f:
+                      json.dump(results, f, indent=2)
 
 
     print_leaderboard(results, models)
