@@ -67,7 +67,10 @@ def ops_side(cases, got):
     payload = json.dumps({"baseUrl": URL, "apiKey": KEY, "opsEntry": entry, "calls": calls})
     proc = subprocess.run(
         ["node", str(HERE / "ops_driver.mjs")],
-        input=payload, capture_output=True, text=True, cwd=str(OPS),
+        input=payload,
+        capture_output=True,
+        text=True,
+        cwd=str(OPS),
     )
     if proc.returncode != 0:
         sys.exit(f"ops driver failed:\n{proc.stderr[-2000:]}")
@@ -79,9 +82,7 @@ def main():
     import galaxy_mcp.server as server
     from bioblend.galaxy import GalaxyInstance
 
-    server.galaxy_state.update(
-        {"url": URL, "api_key": KEY, "gi": GalaxyInstance(url=URL, key=KEY), "connected": True}
-    )
+    server.galaxy_state.update({"url": URL, "api_key": KEY, "gi": GalaxyInstance(url=URL, key=KEY), "connected": True})
     got = fixtures(server)
     print(f"galaxy {URL} | fixtures {json.dumps({k: bool(v) for k, v in got.items()})}\n")
 
@@ -94,12 +95,16 @@ def main():
         py = python_side(server, case, got)
         side = ops.get(op, {})
         ts = side.get("envelope") or {"absent": side.get("absent"), "threw": side.get("threw")}
-        (RESULTS / f"{op}.json").write_text(
-            json.dumps({"case": case, "python": py, "ops": ts}, indent=1, default=str)
-        )
+        (RESULTS / f"{op}.json").write_text(json.dumps({"case": case, "python": py, "ops": ts}, indent=1, default=str))
         if side.get("absent") or py.get("absent") or py.get("threw") or side.get("threw"):
-            rows.append((op, "call", case.get("expect", {}).get("call", "UNREVIEWED"),
-                         py.get("threw") or side.get("threw") or "operation absent on one side"))
+            rows.append(
+                (
+                    op,
+                    "call",
+                    case.get("expect", {}).get("call", "UNREVIEWED"),
+                    py.get("threw") or side.get("threw") or "operation absent on one side",
+                )
+            )
             continue
         diffs = cmp.compare(py, ts)
         if not diffs:
@@ -114,7 +119,9 @@ def main():
     print(f"{'operation':30} {'field':11} {'verdict':17} detail")
     for op, field, verdict, detail in rows:
         print(f"  {op:28} {field:11} {verdict:17} {detail}")
-    print(f"\n{len(case_book.CASES)} cases | raw pairs in {RESULTS.relative_to(pathlib.Path.cwd()) if str(RESULTS).startswith(str(pathlib.Path.cwd())) else RESULTS}")
+    here = pathlib.Path.cwd()
+    where = RESULTS.relative_to(here) if str(RESULTS).startswith(str(here)) else RESULTS
+    print(f"\n{len(case_book.CASES)} cases | raw pairs in {where}")
     if unreviewed:
         print(f"{unreviewed} undeclared difference(s): read the pair, then record it in cases.py")
     return 1 if unreviewed else 0

@@ -10,8 +10,7 @@ import re
 
 # Identity and timing: present on both sides, never the same, never what the model reasons on.
 VOLATILE = re.compile(
-    r"(^|_)(id|uuid|create_time|update_time|created|updated|url|slug|username|email|"
-    r"tool_request_id|encoded_id)$"
+    r"(^|_)(id|uuid|create_time|update_time|created|updated|url|slug|username|email|" r"tool_request_id|encoded_id)$"
 )
 
 
@@ -112,13 +111,18 @@ def _align(a, b):
     unwrappable would hide a difference on the side that happens to name two things.
     """
     for first, second, who in ((a, b, "python"), (b, a, "ops")):
-        if isinstance(first, dict) and not isinstance(second, dict) or (
-            isinstance(first, dict) and isinstance(second, dict) and len(first) == 1 != len(second)
+        if (
+            isinstance(first, dict)
+            and not isinstance(second, dict)
+            or (isinstance(first, dict) and isinstance(second, dict) and len(first) == 1 != len(second))
         ):
             inner = [k for k, v in first.items() if isinstance(v, (list, dict))]
             if len(inner) == 1 and type(first[inner[0]]) is type(second):
                 unwrapped = first[inner[0]]
                 pair = (unwrapped, second) if who == "python" else (second, unwrapped)
-                return pair[0], pair[1], {"python": inner[0] if who == "python" else None,
-                                          "ops": inner[0] if who == "ops" else None}
+                return (
+                    pair[0],
+                    pair[1],
+                    {"python": inner[0] if who == "python" else None, "ops": inner[0] if who == "ops" else None},
+                )
     return a, b, None
