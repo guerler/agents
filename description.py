@@ -46,6 +46,21 @@ def passthrough_handlers(description):
     return {name for name, tool in description["tools"].items() if tool["passthrough"]}
 
 
+def delegated_tools(description):
+    """Tools the agent does not run itself, so no static read of its code sees the result."""
+    return {name for name, tool in description["tools"].items() if tool.get("runner") != "olit"}
+
+
+def write_tools(description):
+    """Tools a read-back cannot verify: checking the result would mean performing the change."""
+    return {name for name, tool in description["tools"].items() if tool.get("capability") == "write"}
+
+
+def promised_fields(description):
+    """name -> the result fields the agent declares and reads back off a live result."""
+    return {name: tool.get("promised_fields") or [] for name, tool in description["tools"].items()}
+
+
 def tool_requests(description):
     return {name: tool["query"] for name, tool in description["tools"].items() if tool["query"]}
 

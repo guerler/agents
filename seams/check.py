@@ -188,17 +188,33 @@ def check_layers(data, agent):
         shaped = surface.get("shaped_returns") or {}
         if shaped:
             passthrough = description.passthrough_handlers(agent)
-            for name in sorted(set(shaped) & passthrough):
+            delegated = description.delegated_tools(agent)
+            covered = description.promised_fields(agent)
+            writes = description.write_tools(agent)
+            for name in sorted(shaped):
                 if name in allowed:
                     continue
                 keys = ", ".join(shaped[name])
-                out.append(
-                    (
-                        "SHAPE",
-                        f"layer.tool-return/{name}",
-                        f"galaxy-mcp returns {{{keys}}}; the agent passes the response through",
+                if name in passthrough:
+                    out.append(
+                        (
+                            "SHAPE",
+                            f"layer.tool-return/{name}",
+                            f"galaxy-mcp returns {{{keys}}}; the agent passes the response through",
+                        )
                     )
-                )
+                elif name in delegated and not covered.get(name) and name not in writes:
+                    # Delegation moved the result out of the agent, so no static read of its
+                    # code can see the shape. Only a field the agent declares gets read back
+                    # off a live result; an undeclared promise is checked by nothing.
+                    out.append(
+                        (
+                            "SHAPE",
+                            f"layer.tool-return/{name}",
+                            f"galaxy-mcp returns {{{keys}}}; the agent delegates this tool and "
+                            f"declares no promised field, so nothing verifies the shape",
+                        )
+                    )
     return out
 
 
