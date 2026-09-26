@@ -117,7 +117,15 @@ async def _run(scenario, model):
     # this from the saved document.
     config["session_id"] = str(uuid.uuid4())
     session = await Session(config).init()
+    try:
+        return await _drive(scenario, session, config)
+    finally:
+        # Outside the browser a session holds a node process for galaxy-ops; a suite is
+        # hundreds of sessions in one interpreter, so each one has to give it back.
+        await session.substrate.close()
 
+
+async def _drive(scenario, session, config):
     staged = None
     if scenario.get("dataset"):
         staged = stage_dataset(config, scenario["dataset"])
