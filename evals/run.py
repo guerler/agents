@@ -86,6 +86,13 @@ def main():
         help="loom's scenario directory, the source of truth for shared scenarios",
     )
     ap.add_argument("--only-local", action="store_true", help="skip the scenarios shared with loom")
+    ap.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="SUBSTRING",
+        help="drop scenarios whose id contains this; repeatable. Excluded ids are named in the header",
+    )
     args = ap.parse_args()
 
     with open(os.path.join(HERE, "models.json")) as f:
@@ -100,6 +107,12 @@ def main():
             for name, why in sorted(loom_scenarios.NOT_PORTABLE.items()):
                 print(f"  skip {name}: {why}")
         scenarios = shared + scenarios
+
+    if args.exclude:
+        kept = [s for s in scenarios if not any(term in s["id"] for term in args.exclude)]
+        for dropped in sorted({s["id"] for s in scenarios} - {s["id"] for s in kept}):
+            print(f"  exclude {dropped}: named on the command line")
+        scenarios = kept
 
     if not os.environ.get("GALAXY_URL", "").strip() or not os.environ.get("GALAXY_API_KEY", "").strip():
         print("  evals need GALAXY_URL and GALAXY_API_KEY: they run against a real Galaxy.")
