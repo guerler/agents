@@ -898,6 +898,7 @@
         "olit": [
           "capability",
           "destructive-declined",
+          "malformed-object-id",
           "max-steps",
           "process-refusal",
           "repeated-failure",
