@@ -1,0 +1,57 @@
+{
+  "name": "visualizations: a genome is the entry the server offered, not an id that looks like one",
+  "description": "IGV declares `genome` three times under one conditional: a data table for a built-in, a remote json list for IGV's own hosted genomes, and a history dataset. Each case draws its options from a different place, so the name alone does not say what a legal value is, and the value for the hosted list is an entry copied whole. An id is the part of that entry a model already knows, so `{\"id\": \"hg19\"}` is the shape invention takes, and viz-igv-second-track accepts it: its settingsContain check reads source.genome.id and a fabricated entry carries exactly that. This grades a key only the resolved entry has. hg19's fastaURL is on the list the plugin names and nowhere in the request, so a config holding it was built from options the server returned, and one holding only an id was not. The user names IGV's hosted list because a person disambiguating between a built-in and a hosted genome would; without that the parameter is declared in more than one case and guessing which is the defect, not the task. Graded on what Galaxy stores: IGV renders an unusable genome and the chat reports success either way.",
+  "tier": 3,
+  "substrate": "live",
+  "dataset": {
+    "file": "tracks.bed",
+    "history": "igv genome $run",
+    "datatype": "bed"
+  },
+  "inputs": [
+    "In my history \"igv genome $run\", open tracks.bed in IGV on the hg19 reference from IGV's own hosted genome list, and save it so I can come back to it."
+  ],
+  "timeoutMs": 300000,
+  "assertions": {
+    "events": {
+      "mustInclude": [
+        "turn_start"
+      ]
+    },
+    "messages": {
+      "repliesInChat": true
+    },
+    "toolCalls": {
+      "mustInclude": [
+        {
+          "name": "save_visualization",
+          "argsContains": {
+            "dataset_id": "$staged:tracks.bed"
+          }
+        }
+      ]
+    },
+    "artifacts": {
+      "mustInclude": [
+        {
+          "kind": "visualization"
+        }
+      ]
+    },
+    "visualization": {
+      "referencesDataset": "$staged:tracks.bed",
+      "type": [
+        "igv"
+      ],
+      "settingsContain": {
+        "source.origin": "igv",
+        "source.genome.id": "hg19",
+        "source.genome.fastaURL": "hg19.fasta"
+      }
+    },
+    "budget": {
+      "maxSteps": 20,
+      "maxRepeatedCall": 3
+    }
+  }
+}
