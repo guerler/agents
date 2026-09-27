@@ -87,6 +87,12 @@ def main():
     )
     ap.add_argument("--only-local", action="store_true", help="skip the scenarios shared with loom")
     ap.add_argument(
+        "--records",
+        default=os.path.join(os.path.dirname(HERE), ".records"),
+        help="where each run's completions are recorded; local disk only, never committed",
+    )
+    ap.add_argument("--no-records", action="store_true", help="run without recording completions")
+    ap.add_argument(
         "--exclude",
         action="append",
         default=[],
@@ -137,6 +143,18 @@ def main():
             print(f"  {problem}")
         return 1
 
+    started = time.strftime("%Y-%m-%dT%H-%M-%S")
+    records = None if args.no_records else os.path.join(args.records, started)
+    if records:
+        os.makedirs(records, exist_ok=True)
+        print(f"  records: {records}")
+
+    def capture(scenario, model, run_index):
+        if not records:
+            return None
+        name = f"{scenario['id']}--{model['id']}--run{run_index + 1}.jsonl.gz"
+        return os.path.join(records, name)
+
     repeat = max(1, args.repeat) if args.repeat else 0
     times = f" x {repeat} run(s)" if repeat > 1 else " x per-scenario runs"
     print(f"\n{len(scenarios)} scenario(s) x {len(models)} model(s){times}\n")
@@ -148,7 +166,7 @@ def main():
                 if args.delay and results:
                     time.sleep(args.delay)
                 scenario = _resolve_run_tokens(scenario)
-                run = run_scenario(scenario, model)
+                run = run_scenario(scenario, model, capture=capture(scenario, model, run_index))
                 if run.error:
                     failures, exercised = [], set()
                     verdict = "quota" if is_quota(run) else "ERROR"

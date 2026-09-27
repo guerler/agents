@@ -20,6 +20,7 @@ from olit.substrate.llm import REGISTRY  # noqa: E402
 
 from . import tooltests  # noqa: E402
 from .plan import parse_latest_plan  # noqa: E402
+from .record import recording  # noqa: E402
 
 # The eval substrate is a real Galaxy, deliberately.
 
@@ -72,13 +73,25 @@ class RunResult:
         return "\n\n".join(parts)
 
 
-def build_config(model, capabilities=None):
-    """Resolve through the brain's provider registry, so evals and the app agree."""
-    # Shared scenarios carry loom's restricted surface; others get the full one.
-    capabilities = capabilities or os.environ.get("OLIT_EVAL_CAPABILITIES", "llm,local,read,write")
+def declared_base(model):
+    """The endpoint a model entry names, with an `${ENV}` reference resolved."""
     base = model.get("baseUrl") or ""
     if base.startswith("${") and base.endswith("}"):
         base = os.environ.get(base[2:-1], "")
+    return base
+
+
+def upstream(model):
+    """Where this model's completions actually go, which is what a recorder stands in for."""
+    provider = REGISTRY.get(model.get("provider"))
+    return declared_base(model) or (provider.base_url if provider else None)
+
+
+def build_config(model, capabilities=None, base_url=None):
+    """Resolve through the brain's provider registry, so evals and the app agree."""
+    # Shared scenarios carry loom's restricted surface; others get the full one.
+    capabilities = capabilities or os.environ.get("OLIT_EVAL_CAPABILITIES", "llm,local,read,write")
+    base = base_url or declared_base(model)
     config = {
         "galaxy_root": "http://stub.invalid/",
         "ai_provider": model.get("provider"),
@@ -111,8 +124,8 @@ def _api_key(model):
     return ""
 
 
-async def _run(scenario, model):
-    config = build_config(model, scenario.get("capabilities"))
+async def _run(scenario, model, base_url=None):
+    config = build_config(model, scenario.get("capabilities"), base_url)
     # A run is a session, and a session owns its record page; the browser shell supplies
     # this from the saved document.
     config["session_id"] = str(uuid.uuid4())
@@ -254,11 +267,9 @@ def _note(event, sink, events=None, refused=None):
         refused.append(event.get("name"))
 
 
-def run_scenario(scenario, model):
-    timeout = (scenario.get("timeoutMs") or 150_000) / 1000
-
+def _guarded(scenario, model, base_url, timeout):
     async def guarded():
-        return await asyncio.wait_for(_run(scenario, model), timeout=timeout)
+        return await asyncio.wait_for(_run(scenario, model, base_url), timeout=timeout)
 
     try:
         return asyncio.run(guarded())
@@ -266,6 +277,16 @@ def run_scenario(scenario, model):
         return RunResult([], [], [], error=f"timed out after {timeout:.0f}s")
     except Exception as e:  # a provider error is a run outcome, not a harness crash
         return RunResult([], [], [], error=f"{type(e).__name__}: {e}", status_code=getattr(e, "status_code", None))
+
+
+def run_scenario(scenario, model, capture=None):
+    """`capture` names a file to record this run's completions into."""
+    timeout = (scenario.get("timeoutMs") or 150_000) / 1000
+    target = upstream(model) if capture else None
+    if not target:
+        return _guarded(scenario, model, None, timeout)
+    with recording(target, capture) as base_url:
+        return _guarded(scenario, model, base_url, timeout)
 
 
 def load_scenarios(root, only=None):
