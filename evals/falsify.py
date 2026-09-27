@@ -251,7 +251,7 @@ BREAKS = [
         "right, the artifact is there -- and the only trace is a row the user never "
         "asked for in their visualization list. Nothing but grading Galaxy for what "
         "should be absent can see it",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/drivers/loop/visualizations.py",
         find="""    query = {"visualization": name, "dataset_id": a["dataset_id"], **_EMBED}""",
         replace="""    await g.post("api/visualizations",  # FALSIFY: showing saves
                  {"type": name, "title": title, "config": _visualization_config(a)})
@@ -265,7 +265,7 @@ BREAKS = [
         "saved config. The agent reports the track added and the pane still renders the "
         "first dataset, so nothing the user or the chat can see distinguishes it from a "
         "visualization that gained a track",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/drivers/loop/visualizations.py",
         find="""    config = _visualization_config(a)""",
         replace="""    config = _visualization_config(a)
     config.pop("tracks", None)  # FALSIFY: tracks dropped on save""",
@@ -278,7 +278,7 @@ BREAKS = [
         "reach the saved config. The tracks still land and the chat still says the view "
         "moved, which is the point: settings are the half of a visualization that leaves "
         "no trace anywhere else",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/drivers/loop/visualizations.py",
         find="""    config = _visualization_config(a)""",
         replace="""    config = _visualization_config(a)
     config.pop("settings", None)  # FALSIFY: settings dropped on save""",
@@ -291,7 +291,7 @@ BREAKS = [
         "stores that without complaint and the visualization saves, renders and looks "
         "right in the list, but galaxy-charts reads the genome from inside the "
         "conditional and finds nothing, so the view never moves",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/drivers/loop/visualizations.py",
         find="""        config["settings"] = a["settings"]""",
         replace="""        config["settings"] = {  # FALSIFY: conditionals flattened
             name: value
