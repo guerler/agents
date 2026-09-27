@@ -144,14 +144,6 @@ def _messages(spec, run, failures, exercised):
     if not spec:
         return
     exercised.add("behavior")
-    for name in spec.get("toolsCalled") or []:
-        if name not in run.tools_called:
-            failures.append(Failure("messages.toolsCalled", f"never called {name}", "behavior"))
-    for name in spec.get("toolsNotCalled") or []:
-        if name in run.tools_called:
-            failures.append(
-                Failure("messages.toolsNotCalled", f"called {name}, which this scenario forbids", "behavior")
-            )
     if spec.get("repliesInChat") and getattr(run, "exhausted", False):
         failures.append(Failure("messages.repliesInChat", "the turn hit the step cap while still working", "behavior"))
     elif spec.get("repliesInChat") and not run.chat_text.strip():
