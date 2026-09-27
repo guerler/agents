@@ -1,5 +1,6 @@
 __pycache__/
 .ruff_cache/
 .DS_Store
-comparison/ops-parity/results/
 .records/
+# left behind by the removed mcp/ops parity runs; local evidence, never committed
+comparison/ops-parity/
