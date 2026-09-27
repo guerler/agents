@@ -712,7 +712,7 @@
         "save_visualization": "ADDED: stores a durable Galaxy visualization the user keeps and can share. Split from show_visualization so that displaying a chart does not add a row to the user's visualization list, and because only a saved config can carry settings and tracks.",
         "get_visualization_details": "ADDED: galaxy-mcp has no visualization surface. Returns one plugin's inputs joined with what galaxy-charts stores for each input type, so settings and tracks are written to a stated shape instead of inferred from parameter names, and a caller can tell a genome input from a track input. The shapes come from galaxy-charts' published contract, vendored under brain/olit/vendor and pinned; Galaxy declares which inputs exist, galaxy-charts owns what they store. Per plugin rather than on the listing: the caller needs exactly one.",
         "get_visualization": "ADDED: galaxy-mcp has no visualization surface. Returns a saved visualization's current settings and tracks so a revision changes them rather than rebuilding them: save_visualization replaces the config wholesale, and reconstructing it blind drops whatever the plugin itself wrote there. Same read-before-write shape as get_page before update_page.",
-        "get_visualization_options": "ADDED: galaxy-mcp has no visualization surface. Resolves a parameter's options from wherever the declaration says they live -- a remote json list, a Galaxy data table, or the declared options -- which is the same lookup galaxy-charts performs to build the input form, using the browser fetch olit already has. Without it the agent invents an option, and where the stored value is an object copied verbatim it cannot invent a usable one. Returns labels to browse and the full value only for a `search`, since these lists are large and only the chosen entry is ever written.",
+        "get_visualization_options": "ADDED: galaxy-mcp has no visualization surface. Resolves a parameter's options from wherever the declaration says they live -- a remote json list, a Galaxy data table, or the declared options -- which is the same lookup galaxy-charts performs to build the input form, using the browser fetch olit already has. Without it the agent invents an option, and where the stored value is an object copied verbatim it cannot invent a usable one. Each option carries the value to store, so matching a label and filling the field is one call; `search` narrows a long list.",
         "get_job_details": "DIVERGES: galaxy-mcp fetches api/jobs/{id}; olit adds full=true so a failed job's stderr is readable, which is what invocation_outcome tells the model to reach for. That flag also carries tool_stdout/tool_stderr/job_stdout/job_stderr/stdout/stderr, hundreds of KB for a chatty tool, so each log field is trimmed to its last 4 KB on a line boundary with a notice naming the full size.",
         "get_histories": "DIVERGES: galaxy-mcp returns every history by default and adds a `pagination` block with `total_items` only when a limit is given, paying for a second unbounded fetch to count. olit always bounds the page at ROW_CAP, asks Galaxy for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope it already uses for list_workflows and get_tool_panel. No `total`: the server was never asked for one.",
         "upload_file_from_url": "DIVERGES: passes `auto_decompress: true` on the fetch element. Galaxy's own uploader defaults it to true (client/src/composables/upload/uploadOptionModel.ts:67); the API defaults to false (lib/galaxy/schema/fetch_data.py:46) and galaxy-mcp passes nothing, so a `.gz` URL declared as its uncompressed type lands as gzip bytes wearing the wrong label. Observed on 4/4 cryptic-exon-q1 runs: the model names the logical format and drops the `.gz`, and every downstream tool then fails."
@@ -908,53 +908,13 @@
       }
     },
     "tool_request": {
-      "get_histories": {
-        "limit": null,
-        "offset": null,
-        "q": "name-contains",
-        "qv": null
-      },
-      "list_history_ids": {
-        "keys": "id,name"
-      },
       "get_history_contents": {
         "deleted": null,
         "limit": null,
         "offset": null,
         "order": null,
+        "v": "dev",
         "visible": null
-      },
-      "search_tools_by_name": {
-        "q": null
-      },
-      "get_tool_details": {
-        "io_details": null
-      },
-      "get_job_details": {
-        "full": true
-      },
-      "search_tools_by_keywords": {
-        "q": null
-      },
-      "get_tool_panel": {
-        "in_panel": "true"
-      },
-      "get_tool_input_template": {
-        "io_details": true
-      },
-      "get_collection_details": {
-        "instance_type": "history"
-      },
-      "list_workflows": {
-        "show_published": null
-      },
-      "get_workflow_details": {
-        "version": null
-      },
-      "get_workflow_input_template": {
-        "history_id": null,
-        "instance": "false",
-        "style": "run"
       },
       "get_invocations": {
         "history_id": null,
@@ -963,36 +923,76 @@
         "view": null,
         "workflow_id": null
       },
-      "list_user_tools": {
-        "active": null
+      "get_job_details": {
+        "full": true
       },
-      "show_visualization": {
-        "dataset_id": null,
-        "visualization": null
+      "list_visualizations": {
+        "dataset_id": null
       },
       "save_visualization": {
         "visualization": null,
         "visualization_id": null
       },
-      "list_visualizations": {
-        "dataset_id": null
-      },
-      "list_pages": {
-        "limit": null,
-        "offset": null,
-        "search": null,
-        "show_published": null,
-        "show_shared": null
+      "show_visualization": {
+        "dataset_id": null,
+        "visualization": null
       }
     },
     "tool_contract": {
-      "get_server_info": {
-        "params": {},
-        "prose": "a8e42e92e0cadff1"
+      "cancel_workflow_invocation": {
+        "params": {
+          "invocation_id": "string!"
+        },
+        "prose": "9eb061fe7167467b"
       },
-      "get_user": {
-        "params": {},
-        "prose": "a9123d74d4391468"
+      "create_history": {
+        "params": {
+          "history_name": "string!"
+        },
+        "prose": "5e20d31de5a00eff"
+      },
+      "create_page": {
+        "params": {
+          "annotation": "string",
+          "content": "string",
+          "history_id": "string",
+          "slug": "string",
+          "title": "string"
+        },
+        "prose": "ec88c917d8f3c361"
+      },
+      "create_user_tool": {
+        "params": {
+          "representation": "object!"
+        },
+        "prose": "fd63d09bb44bcbe5"
+      },
+      "delete_user_tool": {
+        "params": {
+          "uuid": "string!"
+        },
+        "prose": "f2d28564622276bc"
+      },
+      "download_dataset": {
+        "params": {
+          "dataset_id": "string!"
+        },
+        "prose": "4cd5ef39fc894022"
+      },
+      "get_collection_details": {
+        "params": {
+          "collection_id": "string!",
+          "max_elements": "integer"
+        },
+        "prose": "8650da896e8567f2"
+      },
+      "get_dataset_details": {
+        "params": {
+          "dataset_id": "string!",
+          "include_preview": "boolean",
+          "preview_lines": "integer"
+        },
+        "prose": "bf61844ed286530a"
       },
       "get_histories": {
         "params": {
@@ -1001,16 +1001,6 @@
           "offset": "integer"
         },
         "prose": "aad7c210cf841da1"
-      },
-      "list_history_ids": {
-        "params": {},
-        "prose": "c661154113e900ad"
-      },
-      "get_history_details": {
-        "params": {
-          "history_id": "string!"
-        },
-        "prose": "746bc68576d38633"
       },
       "get_history_contents": {
         "params": {
@@ -1023,166 +1013,11 @@
         },
         "prose": "a6574cb21146129d"
       },
-      "create_history": {
+      "get_history_details": {
         "params": {
-          "history_name": "string!"
+          "history_id": "string!"
         },
-        "prose": "5e20d31de5a00eff"
-      },
-      "run_tool": {
-        "params": {
-          "history_id": "string!",
-          "inputs": "object!",
-          "tool_id": "string!"
-        },
-        "prose": "7734a83f62e133e9"
-      },
-      "search_tools_by_name": {
-        "params": {
-          "query": "string!"
-        },
-        "prose": "9b74d022953b88e1"
-      },
-      "get_tool_details": {
-        "params": {
-          "io_details": "boolean",
-          "tool_id": "string!"
-        },
-        "prose": "b537bfcbf13a6e34"
-      },
-      "get_job_details": {
-        "params": {
-          "dataset_id": "string!",
-          "history_id": "string"
-        },
-        "prose": "5e5f1f8da446e83b"
-      },
-      "get_dataset_details": {
-        "params": {
-          "dataset_id": "string!",
-          "include_preview": "boolean",
-          "preview_lines": "integer"
-        },
-        "prose": "bf61844ed286530a"
-      },
-      "update_history": {
-        "params": {
-          "annotation": "string",
-          "deleted": "boolean",
-          "history_id": "string!",
-          "name": "string",
-          "published": "boolean",
-          "tags": "array"
-        },
-        "prose": "60469e0baa2260c4"
-      },
-      "search_tools_by_keywords": {
-        "params": {
-          "keywords": "array!"
-        },
-        "prose": "af5f6cc91448d05a"
-      },
-      "get_tool_panel": {
-        "params": {
-          "limit": "integer",
-          "offset": "integer",
-          "section": "string"
-        },
-        "prose": "9d8420ed9db297f0"
-      },
-      "get_tool_citations": {
-        "params": {
-          "tool_id": "string!"
-        },
-        "prose": "24aa6c36ddb2f967"
-      },
-      "get_tool_input_template": {
-        "params": {
-          "tool_id": "string!"
-        },
-        "prose": "25f5dfd1dbd63385"
-      },
-      "get_tool_run_examples": {
-        "params": {
-          "tool_id": "string!",
-          "tool_version": "string"
-        },
-        "prose": "2a5e4c77e852cf3e"
-      },
-      "get_collection_details": {
-        "params": {
-          "collection_id": "string!",
-          "max_elements": "integer"
-        },
-        "prose": "8650da896e8567f2"
-      },
-      "download_dataset": {
-        "params": {
-          "dataset_id": "string!"
-        },
-        "prose": "4cd5ef39fc894022"
-      },
-      "upload_file_from_url": {
-        "params": {
-          "dbkey": "string",
-          "file_name": "string",
-          "file_type": "string",
-          "history_id": "string",
-          "url": "string!"
-        },
-        "prose": "22de7128882f6be6"
-      },
-      "upload_file": {
-        "params": {
-          "dbkey": "string",
-          "file_name": "string",
-          "file_type": "string",
-          "history_id": "string",
-          "path": "string!"
-        },
-        "prose": "427366d526712b89"
-      },
-      "list_workflows": {
-        "params": {
-          "limit": "integer",
-          "name": "string",
-          "offset": "integer",
-          "published": "boolean",
-          "workflow_id": "string"
-        },
-        "prose": "baf0d5c67f37ad8e"
-      },
-      "get_workflow_details": {
-        "params": {
-          "version": "integer",
-          "workflow_id": "string!"
-        },
-        "prose": "a13258e456a2d31d"
-      },
-      "get_workflow_input_template": {
-        "params": {
-          "history_id": "string",
-          "workflow_id": "string!"
-        },
-        "prose": "642b2d005edaf2ab"
-      },
-      "invoke_workflow": {
-        "params": {
-          "history_id": "string",
-          "history_name": "string",
-          "inputs": "object",
-          "inputs_by": "string",
-          "parameters_normalized": "boolean",
-          "params": "object",
-          "workflow_id": "string!"
-        },
-        "prose": "2b4796a9b07d24d6"
-      },
-      "cancel_workflow_invocation": {
-        "params": {
-          "invocation_id": "string!"
-        },
-        "prose": "9eb061fe7167467b"
+        "prose": "746bc68576d38633"
       },
       "get_invocations": {
         "params": {
@@ -1195,40 +1030,81 @@
         },
         "prose": "91a65fbecbfa3afa"
       },
-      "list_user_tools": {
+      "get_iwc_workflow_details": {
         "params": {
-          "active": "boolean"
+          "trs_id": "string!"
         },
-        "prose": "f57d85d324cf991c"
+        "prose": "9b88d48bb0e4db0b"
       },
-      "create_user_tool": {
+      "get_iwc_workflows": {
         "params": {
-          "representation": "object!"
+          "limit": "integer",
+          "offset": "integer"
         },
-        "prose": "5bf376653538d36c"
+        "prose": "d5fd5470647c8ff5"
       },
-      "delete_user_tool": {
+      "get_job_details": {
         "params": {
-          "uuid": "string!"
+          "dataset_id": "string!",
+          "history_id": "string"
         },
-        "prose": "f2d28564622276bc"
+        "prose": "5e5f1f8da446e83b"
       },
-      "run_user_tool": {
+      "get_page": {
         "params": {
-          "history_id": "string!",
-          "inputs": "object!",
-          "tool_uuid": "string!"
+          "include_rendered": "boolean",
+          "page_id": "string!"
         },
-        "prose": "b8bb547b8020a24b"
+        "prose": "3d1a179c5bea780d"
       },
-      "get_visualization_options": {
+      "get_page_revision": {
         "params": {
-          "parameter": "string!",
-          "search": "string",
-          "visualization": "string!",
-          "when": "string"
+          "page_id": "string!",
+          "revision_id": "string!"
         },
-        "prose": "472cadced816df89"
+        "prose": "214dcd74a01b20c9"
+      },
+      "get_server_info": {
+        "params": {},
+        "prose": "a8e42e92e0cadff1"
+      },
+      "get_tool_citations": {
+        "params": {
+          "tool_id": "string!"
+        },
+        "prose": "24aa6c36ddb2f967"
+      },
+      "get_tool_details": {
+        "params": {
+          "io_details": "boolean",
+          "tool_id": "string!"
+        },
+        "prose": "b537bfcbf13a6e34"
+      },
+      "get_tool_input_template": {
+        "params": {
+          "tool_id": "string!"
+        },
+        "prose": "25f5dfd1dbd63385"
+      },
+      "get_tool_panel": {
+        "params": {
+          "limit": "integer",
+          "offset": "integer",
+          "section_id": "string"
+        },
+        "prose": "1cb9966c58aa6985"
+      },
+      "get_tool_run_examples": {
+        "params": {
+          "tool_id": "string!",
+          "tool_version": "string"
+        },
+        "prose": "2a5e4c77e852cf3e"
+      },
+      "get_user": {
+        "params": {},
+        "prose": "a9123d74d4391468"
       },
       "get_visualization": {
         "params": {
@@ -1242,30 +1118,59 @@
         },
         "prose": "732ddbb5ca2b6f4b"
       },
-      "show_visualization": {
+      "get_visualization_options": {
         "params": {
-          "dataset_id": "string!",
-          "title": "string",
+          "config": "object",
+          "dataset_id": "string",
+          "parameter": "string!",
+          "search": "string",
           "visualization": "string!"
         },
-        "prose": "258784451d3926ba"
+        "prose": "d4ef045c21184be9"
       },
-      "save_visualization": {
+      "get_workflow_details": {
         "params": {
-          "dataset_id": "string!",
-          "settings": "object",
-          "title": "string",
-          "tracks": "array",
-          "visualization": "string!",
-          "visualization_id": "string"
+          "version": "integer",
+          "workflow_id": "string!"
         },
-        "prose": "c1570da1e6e43e36"
+        "prose": "a13258e456a2d31d"
       },
-      "list_visualizations": {
+      "get_workflow_input_template": {
         "params": {
-          "dataset_id": "string!"
+          "history_id": "string",
+          "verbose": "boolean",
+          "workflow_id": "string!"
         },
-        "prose": "3bd887546fea27c2"
+        "prose": "86523bda519fc5c2"
+      },
+      "import_workflow_from_iwc": {
+        "params": {
+          "trs_id": "string!"
+        },
+        "prose": "fdaaa15edf5e0979"
+      },
+      "invoke_workflow": {
+        "params": {
+          "history_id": "string",
+          "history_name": "string",
+          "inputs": "object",
+          "inputs_by": "string",
+          "parameters_normalized": "boolean",
+          "params": "object",
+          "workflow_id": "string!"
+        },
+        "prose": "2b4796a9b07d24d6"
+      },
+      "list_history_ids": {
+        "params": {},
+        "prose": "c661154113e900ad"
+      },
+      "list_page_revisions": {
+        "params": {
+          "page_id": "string!",
+          "sort_desc": "boolean"
+        },
+        "prose": "821a28de27b5f4c7"
       },
       "list_pages": {
         "params": {
@@ -1278,22 +1183,111 @@
         },
         "prose": "0aebc4cebe061430"
       },
-      "get_page": {
+      "list_user_tools": {
         "params": {
-          "include_rendered": "boolean",
-          "page_id": "string!"
+          "active": "boolean"
         },
-        "prose": "3d1a179c5bea780d"
+        "prose": "f57d85d324cf991c"
       },
-      "create_page": {
+      "list_visualizations": {
+        "params": {
+          "dataset_id": "string!"
+        },
+        "prose": "3bd887546fea27c2"
+      },
+      "list_workflows": {
+        "params": {
+          "limit": "integer",
+          "name": "string",
+          "offset": "integer",
+          "published": "boolean",
+          "workflow_id": "string"
+        },
+        "prose": "baf0d5c67f37ad8e"
+      },
+      "recommend_biocontainer": {
+        "params": {
+          "packages": "array!"
+        },
+        "prose": "3374c9fd857368fd"
+      },
+      "recommend_iwc_workflows": {
+        "params": {
+          "intent": "string!",
+          "limit": "integer"
+        },
+        "prose": "9cd5fb501be76470"
+      },
+      "revert_page_revision": {
+        "params": {
+          "page_id": "string!",
+          "revision_id": "string!"
+        },
+        "prose": "5b69ebcd78e4ff8b"
+      },
+      "run_tool": {
+        "params": {
+          "history_id": "string!",
+          "inputs": "object!",
+          "tool_id": "string!"
+        },
+        "prose": "7734a83f62e133e9"
+      },
+      "run_user_tool": {
+        "params": {
+          "history_id": "string!",
+          "inputs": "object!",
+          "tool_uuid": "string!"
+        },
+        "prose": "b8bb547b8020a24b"
+      },
+      "save_visualization": {
+        "params": {
+          "dataset_id": "string!",
+          "settings": "object",
+          "title": "string",
+          "tracks": "array",
+          "visualization": "string!",
+          "visualization_id": "string"
+        },
+        "prose": "c1570da1e6e43e36"
+      },
+      "search_iwc_workflows": {
+        "params": {
+          "query": "string!"
+        },
+        "prose": "4da63a9464d598b4"
+      },
+      "search_tools_by_keywords": {
+        "params": {
+          "keywords": "array!"
+        },
+        "prose": "af5f6cc91448d05a"
+      },
+      "search_tools_by_name": {
+        "params": {
+          "query": "string!"
+        },
+        "prose": "9b74d022953b88e1"
+      },
+      "show_visualization": {
+        "params": {
+          "dataset_id": "string!",
+          "title": "string",
+          "visualization": "string!"
+        },
+        "prose": "258784451d3926ba"
+      },
+      "update_history": {
         "params": {
           "annotation": "string",
-          "content": "string",
-          "history_id": "string",
-          "slug": "string",
-          "title": "string"
+          "deleted": "boolean",
+          "history_id": "string!",
+          "name": "string",
+          "published": "boolean",
+          "tags": "array"
         },
-        "prose": "ec88c917d8f3c361"
+        "prose": "60469e0baa2260c4"
       },
       "update_page": {
         "params": {
@@ -1306,55 +1300,25 @@
         },
         "prose": "b93061521c3bcf0c"
       },
-      "list_page_revisions": {
+      "upload_file": {
         "params": {
-          "page_id": "string!",
-          "sort_desc": "boolean"
+          "dbkey": "string",
+          "file_name": "string",
+          "file_type": "string",
+          "history_id": "string",
+          "path": "string!"
         },
-        "prose": "821a28de27b5f4c7"
+        "prose": "b4a1d708bfb9ca53"
       },
-      "get_page_revision": {
+      "upload_file_from_url": {
         "params": {
-          "page_id": "string!",
-          "revision_id": "string!"
+          "dbkey": "string",
+          "file_name": "string",
+          "file_type": "string",
+          "history_id": "string",
+          "url": "string!"
         },
-        "prose": "214dcd74a01b20c9"
-      },
-      "revert_page_revision": {
-        "params": {
-          "page_id": "string!",
-          "revision_id": "string!"
-        },
-        "prose": "5b69ebcd78e4ff8b"
-      },
-      "get_iwc_workflows": {
-        "params": {},
-        "prose": "9b07929fc6cc5af9"
-      },
-      "search_iwc_workflows": {
-        "params": {
-          "query": "string!"
-        },
-        "prose": "4da63a9464d598b4"
-      },
-      "recommend_iwc_workflows": {
-        "params": {
-          "intent": "string!",
-          "limit": "integer"
-        },
-        "prose": "9cd5fb501be76470"
-      },
-      "get_iwc_workflow_details": {
-        "params": {
-          "trs_id": "string!"
-        },
-        "prose": "9b88d48bb0e4db0b"
-      },
-      "import_workflow_from_iwc": {
-        "params": {
-          "trs_id": "string!"
-        },
-        "prose": "fdaaa15edf5e0979"
+        "prose": "22de7128882f6be6"
       }
     }
   }
