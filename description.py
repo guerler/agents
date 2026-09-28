@@ -10,8 +10,8 @@ import pathlib
 import subprocess
 import sys
 
-# How an agent is asked to describe itself, by name.
-DESCRIBE = {"olit": ("brain", "olit.describe")}
+# How an agent is asked to describe itself, by name: a script in its checkout.
+DESCRIBE = {"olit": "contract/describe.py"}
 
 
 def load(source=None, agent="olit"):
@@ -22,9 +22,11 @@ def load(source=None, agent="olit"):
     path = pathlib.Path(source).expanduser().resolve()
     if path.is_file():
         return json.loads(path.read_text())
-    package, module = DESCRIBE[agent]
     out = subprocess.run(
-        [sys.executable, "-m", module, "--root", str(path)], cwd=path / package, capture_output=True, text=True
+        [sys.executable, str(path / DESCRIBE[agent]), "--root", str(path)],
+        cwd=path,
+        capture_output=True,
+        text=True,
     )
     if out.returncode:
         raise SystemExit(f"{agent} could not describe itself:\n{out.stderr}")

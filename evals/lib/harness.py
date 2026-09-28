@@ -547,7 +547,7 @@ def _settle_pending(staged, events, timeout=180, interval=10):
 
 
 # The shell script that answers for its own follow-up contract, relative to the checkout.
-SHELL_CONTRACT = "scripts/shell-contract.mjs"
+SHELL_CONTRACT = "contract/shell.mjs"
 
 
 def _shell_contract(runs=None):
