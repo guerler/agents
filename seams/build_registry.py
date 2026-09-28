@@ -195,6 +195,45 @@ EXTRA = [
         "start produces byte-identical system text.",
     ),
     (
+        "prompt.GALAXY_PARTLY_AVAILABLE",
+        "prompt-block",
+        None,
+        ("brain/olit/prompt.py", "GALAXY_PARTLY_AVAILABLE"),
+        "ADDED",
+        "loom has no equivalent because it reaches Galaxy through one channel: MCP is connected or "
+        "it is not, which its NOT CONNECTED block already covers. olit has two -- galaxy-ops for "
+        "most tools and direct REST for the rest -- so ops can fail to load while Galaxy itself "
+        "answers. This block names the tools that still work in that state rather than letting the "
+        "agent discover the boundary one failure at a time. Emitted only when ops are unavailable, "
+        "so a healthy session produces byte-identical system text.",
+    ),
+    (
+        "prompt.galaxyArtifactLinkGuidance",
+        "prompt-block",
+        (
+            "extensions/loom/galaxy-artifact-link-guidance.ts",
+            "GALAXY_ARTIFACT_LINK_GUIDANCE",
+            "unconditional upstream; here only once the Galaxy root is known",
+        ),
+        ("brain/olit/prompt.py", "ARTIFACT_LINKS"),
+        "PORTED",
+        "Two deviations. loom names the connected server in its own connection block and warns "
+        "against using it for an artifact recorded elsewhere; olit is served by the one Galaxy it "
+        "talks to, so the root is named here and that warning is inapplicable. And loom's "
+        "machine-readable ids sit in loom-galaxy-page/loom-invocation/loom-job YAML fences, where "
+        "olit's sit in ```galaxy directives. The routes are Galaxy's own, checked against "
+        "client/src/entry/analysis/router.js.",
+    ),
+    (
+        "prompt.buildChatFormattingBlock.assembled",
+        "prompt-block",
+        ("extensions/loom/context.ts", "buildChatFormattingBlock", "unconditional"),
+        ("brain/olit/prompt.py", "chat_formatting_block"),
+        "PORTED",
+        "loom interpolates the artifact-link convention at the tail of this block; the function is "
+        "what does the same here, so the constant beside it stays the block's own text.",
+    ),
+    (
         "tool.ena_runs",
         "tool",
         None,
@@ -243,7 +282,9 @@ def _extra_rows():
         anchor = None
         if loom:
             file, symbol, condition = loom
-            src = extract.ts_symbol((LOOM / file).read_text(), symbol)
+            text = (LOOM / file).read_text()
+            # A block can be a function or an exported const, as check.py also allows.
+            src = extract.ts_symbol(text, symbol) or extract.ts_const(text, symbol)
             if src is None:
                 raise SystemExit(f"loom symbol not found: {symbol}")
             anchor = {"file": file, "symbol": symbol, "condition": condition, "fingerprint": extract.fingerprint(src)}
