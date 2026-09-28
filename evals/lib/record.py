@@ -44,6 +44,10 @@ class _Recorder(ThreadingHTTPServer):
         self.upstream = upstream.rstrip("/")
         self.sink = sink
         self.exchanges = 0
+        # Handlers are daemon threads, so `server_close()` does not wait for one still
+        # forwarding. Closing guards the sink against a reply that lands after it is gone.
+        self.closed = False
+        self.lock = threading.Lock()
 
     def forward(self, path, body, headers):
         request = urllib.request.Request(
@@ -67,21 +71,31 @@ class _Recorder(ThreadingHTTPServer):
             return 502, json.dumps({"error": f"recorder could not reach {self.upstream}: {err}"}).encode()
 
     def write(self, path, body, status, reply):
-        self.exchanges += 1
-        self.sink.write(
-            json.dumps(
-                {
-                    "exchange": self.exchanges,
-                    "path": path,
-                    "status": status,
-                    "request": _decode(body),
-                    "response": _decode(reply),
-                },
-                default=str,
+        with self.lock:
+            if self.closed:
+                # The scenario it belonged to is over -- it timed out, or the run moved on --
+                # and there is nothing left to record it in.
+                return
+            self.exchanges += 1
+            self.sink.write(
+                json.dumps(
+                    {
+                        "exchange": self.exchanges,
+                        "path": path,
+                        "status": status,
+                        "request": _decode(body),
+                        "response": _decode(reply),
+                    },
+                    default=str,
+                )
+                + "\n"
             )
-            + "\n"
-        )
-        self.sink.flush()
+            self.sink.flush()
+
+    def close(self):
+        """Refuse further writes, so the sink can be closed with handlers still in flight."""
+        with self.lock:
+            self.closed = True
 
 
 def _decode(raw):
@@ -107,3 +121,6 @@ def recording(upstream, path):
             server.shutdown()
             server.server_close()
             thread.join(timeout=5)
+            # Before the sink goes out of scope: a handler may still be waiting on the
+            # provider, and its reply has nowhere to go.
+            server.close()
