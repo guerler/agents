@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import runpy
+import subprocess
 import sys
 import time
 import uuid
@@ -196,7 +197,7 @@ async def _drive(scenario, session, config):
                 if not landed:
                     break
                 events.append("auto_follow_up")
-                text = resume_prompt() + "\n" + json.dumps(landed, indent=2)
+                text = resume_prompt(landed)
                 messages = [*messages, {"role": "user", "content": text}]
                 graded.append({"role": "user", "content": text})
                 events.append("turn_start")
@@ -454,10 +455,9 @@ RUNNING_STATES = ("new", "queued", "running", "paused", "upload", "setting_metad
 ADVANCING_STATES = ("new", "queued", "running", "upload", "setting_metadata")
 
 
-# How many turns the shell will continue by itself once work lands.
 def max_auto_follow_ups():
     """How many turns the shell will continue by itself once work lands."""
-    return (subject.describe().get("shell") or {}).get("max_auto_follow_ups") or 3
+    return _shell_contract()["max_auto_follow_ups"]
 
 
 # Galaxy 26 moves a settled invocation from `scheduled` to `completed`, so pinning either
@@ -546,9 +546,26 @@ def _settle_pending(staged, events, timeout=180, interval=10):
     ]
 
 
-def resume_prompt():
-    """The shell's own follow-up text, taken from what the agent publishes."""
-    text = (subject.describe().get("shell") or {}).get("resume_prompt")
-    if not text:
-        raise RuntimeError("the agent publishes no resume prompt; the harness cannot stand in for it")
-    return text
+# The shell script that answers for its own follow-up contract, relative to the checkout.
+SHELL_CONTRACT = "scripts/shell-contract.mjs"
+
+
+def _shell_contract(runs=None):
+    """Ask the shell what it would do, rather than reconstruct it here."""
+    script = subject.root() / SHELL_CONTRACT
+    if not script.is_file():
+        raise RuntimeError(f"the agent has no {SHELL_CONTRACT}; the harness cannot stand in for it")
+    stated = subprocess.run(
+        ["node", "--experimental-strip-types", str(script)],
+        input=json.dumps(runs) if runs else "",
+        capture_output=True,
+        text=True,
+    )
+    if stated.returncode:
+        raise RuntimeError(f"the shell could not state its contract:\n{stated.stderr}")
+    return json.loads(stated.stdout)
+
+
+def resume_prompt(runs):
+    """The message the shell would deliver for these runs, built by the shell itself."""
+    return _shell_contract(runs)["resume_prompt"]
