@@ -953,12 +953,12 @@
     },
     "tool_request": {
       "get_history_contents": {
-        "deleted": null,
         "limit": null,
         "offset": null,
         "order": null,
-        "v": "dev",
-        "visible": null
+        "q": null,
+        "qv": null,
+        "v": "dev"
       },
       "get_invocations": {
         "history_id": null,
