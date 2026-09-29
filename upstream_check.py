@@ -150,9 +150,14 @@ def pi():
         return f"pi         pinned at {version}; npm could not be asked"
     if latest == version:
         return f"pi         up to date at {version} ({package})"
+    if pinned.get("reviewed") == latest:
+        return (
+            f"pi         loom installs {version}; npm has {latest}, already read and nothing ported\n"
+            f"           the layer's note says what was read; re-read it when loom bumps pi"
+        )
     return (
-        f"pi         BEHIND: the loop was audited against {version}, npm has {latest}\n"
-        f"           read pi-loop-audit.md, then re-record the pi layer"
+        f"pi         NEWER upstream: the loop runs against {version}, npm has {latest}\n"
+        f"           read the loop surfaces, then record the review on the pi layer"
     )
 
 

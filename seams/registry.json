@@ -739,7 +739,9 @@
         "dist/agent-loop.js": "5077a2e5b845cc55",
         "dist/agent.js": "8baf1f05f827fd1b",
         "dist/harness/agent-harness.js": "cd3ad83815819c7e"
-      }
+      },
+      "note": "Running and audited against 0.85.1, the version loom installs. 0.87.1 read on 2026-09-29 and nothing ported: agent-harness.js is unchanged, while agent-loop.js and agent.js gained tool-loadout declarations in system messages, a finishTurn decision replacing shouldStopAfterTurn, and a prepareRequest hook. olit's tool loadout is fixed for the session, so there is no delta to declare and system messages stay out of the stored transcript; continuation is the shell's bounded follow-up, not a host turn hook. Re-read this note when loom bumps pi rather than re-auditing from scratch.",
+      "reviewed": "0.87.1"
     },
     "tool_surface": {
       "source": "tmp",
