@@ -163,6 +163,7 @@ async def _drive(scenario, session, config):
     logs = []
     events = []
     refused = []
+    # Graded at the end, and handed back to each turn so a page can place an earlier chart.
     artifacts = []
     exhausted = False
     # The most any single turn needed, which is what the cap actually constrains.
@@ -180,7 +181,7 @@ async def _drive(scenario, session, config):
         messages = [*messages, {"role": "user", "content": turn}]
         graded.append({"role": "user", "content": turn})
         events.append("turn_start")
-        result = await session.turn(messages, lambda ev: _note(ev, tools_called, events, refused))
+        result = await session.turn(messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts)
         messages = result.get("messages") or messages
         graded.extend(result.get("new_messages") or [])
         logs.extend(result.get("logs") or [])
@@ -201,7 +202,9 @@ async def _drive(scenario, session, config):
                 messages = [*messages, {"role": "user", "content": text}]
                 graded.append({"role": "user", "content": text})
                 events.append("turn_start")
-                result = await session.turn(messages, lambda ev: _note(ev, tools_called, events, refused))
+                result = await session.turn(
+                    messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts
+                )
                 messages = result.get("messages") or messages
                 graded.extend(result.get("new_messages") or [])
                 logs.extend(result.get("logs") or [])
@@ -218,7 +221,9 @@ async def _drive(scenario, session, config):
             graded.append({"role": "user", "content": text})
             events.append("approval_sent")
             events.append("turn_start")
-            result = await session.turn(messages, lambda ev: _note(ev, tools_called, events, refused))
+            result = await session.turn(
+                messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts
+            )
             messages = result.get("messages") or messages
             graded.extend(result.get("new_messages") or [])
             logs.extend(result.get("logs") or [])

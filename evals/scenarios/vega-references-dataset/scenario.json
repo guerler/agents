@@ -1,0 +1,20 @@
+{
+  "name": "vega: the simplest chart references the dataset",
+  "description": "The tool's floor. One scatter, no derived data, so the only correct outcome is a spec pointing at /api/datasets/<id>/display with no rows in it. Asserts the reference rather than the tool, so a Galaxy plugin answering instead would also have to reference.",
+  "tier": 2,
+  "dataset": { "file": "health.csv", "history": "vega session" },
+  "inputs": [
+    "Plot Glucose against BMI from the dataset in this history as a scatter plot. Put the chart in the record page."
+  ],
+  "timeoutMs": 300000,
+  "assertions": {
+    "events": { "mustInclude": ["turn_start"] },
+    "messages": { "repliesInChat": true },
+    "toolCalls": { "mustInclude": [{ "name": "vega_dataset" }] },
+    "artifacts": {
+      "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true, "datasetId": "$staged:health.csv" }]
+    },
+    "record": { "notEmpty": true, "mustMention": ["```vega"], "mustNotMention": ["{{artifact}}"] },
+    "budget": { "maxSteps": 20, "maxRepeatedCall": 3 }
+  }
+}
