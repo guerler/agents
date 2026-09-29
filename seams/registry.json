@@ -161,14 +161,14 @@
         "file": "extensions/loom/context.ts",
         "symbol": "buildGalaxyContextBlock",
         "condition": "suppressed in local mode; otherwise emits a CONNECTED or a NOT CONNECTED variant",
-        "fingerprint": "d205b990e0543e07"
+        "fingerprint": "a4638b6dc4a7646d"
       },
       "olit": {
         "file": "brain/olit/prompt.py",
         "symbol": "GALAXY_TERMINOLOGY"
       },
       "label": "PORTED",
-      "note": "Condition not yet ported: olit has no NOT-CONNECTED variant. See catalog gap."
+      "note": "Condition not yet ported: olit has no NOT-CONNECTED variant. See catalog gap. loom v0.8.0 added the IWC section and rewrote the routing-tag list; both are ported. The new hybrid/local bullets are not: this build has no local execution."
     },
     {
       "id": "prompt.buildSkillsContext",
@@ -314,14 +314,14 @@
         "symbol": "buildGalaxyContextBlock",
         "section": "Drafting a new plan",
         "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
-        "fingerprint": "b1bf9fe62b11658f"
+        "fingerprint": "300a0a18c1129362"
       },
       "olit": {
         "file": "brain/olit/prompt.py",
         "symbol": "DRAFTING_A_PLAN"
       },
       "label": "PORTED",
-      "note": "Own block since 2026-08-20, gated on the tool catalog exactly as loom gates it on a live connection. Previously DIVERGED: carried inside PLAN_CONVENTION and ungated, which fired it in contexts loom never does. The local-routing branch stays dropped."
+      "note": "Own block since 2026-08-20, gated on the tool catalog exactly as loom gates it on a live connection. Previously DIVERGED: carried inside PLAN_CONVENTION and ungated, which fired it in contexts loom never does. The local-routing branch stays dropped. Step 1 now points at the IWC section rather than naming a search tool; ported with it."
     },
     {
       "id": "prompt.galaxy-context.resuming",
@@ -373,14 +373,14 @@
         "symbol": "buildGalaxyContextBlock",
         "branch": "NOT CONNECTED (shell-disabled branch)",
         "condition": "emitted instead of the Galaxy guidance when credentials are absent",
-        "fingerprint": "d205b990e0543e07"
+        "fingerprint": "a4638b6dc4a7646d"
       },
       "olit": {
         "file": "brain/olit/prompt.py",
         "symbol": "GALAXY_UNAVAILABLE"
       },
       "label": "PORTED",
-      "note": "loom keys on missing GALAXY_URL/GALAXY_API_KEY; olit is served by Galaxy, so the equivalent condition is the OpenAPI tool catalog failing to load."
+      "note": "loom keys on missing GALAXY_URL/GALAXY_API_KEY; olit is served by Galaxy, so the equivalent condition is the OpenAPI tool catalog failing to load. The NOT CONNECTED branch itself is untouched in v0.8.0; the fingerprint moves because it covers the whole symbol."
     },
     {
       "id": "prompt.GALAXY_PAGE_MARKDOWN_GUIDANCE",
