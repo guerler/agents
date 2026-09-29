@@ -1,0 +1,651 @@
+{
+ "date": "2026-09-27",
+ "model": "js2-gpt-oss-120b",
+ "commit": "11669b8c",
+ "note": "Post-hardening measured baseline. Olit 11669b8c on ops-v0.1.1-fork.5 (sha256 a10a3643213202a822a1d86ce1a02162655c81a2c1d01033ac25c3db158caed9), agents 0d790b8, loom c216e8f, Galaxy 26.2.dev0, js2-gpt-oss-120b. Scenario membership identical to run-2026-09-26, so the tiers are comparable; every scenario was still compared individually. Interpretation as measured: (1) no behavioural regression attributable to the architecture hardening (F1-F5) or to fork.5; (2) the six viz/chart scenarios that flipped to pass are known single-run variance -- the 2026-09-26 note records this family as unstable with its own repeat measurements -- and are NOT claimed as improvements; (3) approval-leads-to-execution and session-resumed-after-close are environment/provider failures, the Jetstream2 400 'Unknown role: final'; (4) udt-authoring-container, udt-authoring-select-params and plan-consults-iwc are non-unanimous across their runs and remain model variability in the skills router, not verdicts; (5) refuses-to-analyse-failed-data is a known model-level substitution of a healthy dataset for a failed derived one -- measured 8 runs across both arms, 0/4 baseline vs 2/4 here, which does not attribute a regression -- and the deterministic failed-dataset download guard is working, no dataset in error state ever reached run_python; (6) analysis-cat-two-datasets moved environment->fail because it ran for the first time: the agent used toolshed tp_cat while the oracle compares cat_wrapper_out1.bed from built-in cat1, two installed tools sharing the display name 'Concatenate datasets' -- an eval-oracle ambiguity, not an Olit defect. Neither Olit nor any scenario was tuned to these results. Two earlier attempts the same day were discarded and are not snapshots: Session(dict) raised after F3 tightened the config contract, and a second run was lost when the Galaxy server stopped mid-suite.",
+ "runs": 88,
+ "tiers": {
+  "parity": {
+   "scenarios": 14,
+   "clean": 11,
+   "failing": 3,
+   "environment": 0
+  },
+  "grounded": {
+   "scenarios": 44,
+   "clean": 39,
+   "failing": 3,
+   "environment": 2
+  }
+ },
+ "scenarios": [
+  {
+   "scenario": "analysis-cat-two-datasets",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "failures": [
+    "toolOutput.matchesToolTest: no output matched cat_wrapper_out1.bed: 133 differing line(s), 0 allowed"
+   ],
+   "verdict": "fail",
+   "max_steps": 8
+  },
+  {
+   "scenario": "analysis-column-statistics",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "analysis-csv-columns",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "approval-leads-to-execution",
+   "tier": "grounded",
+   "runs": [
+    "error"
+   ],
+   "failures": [
+    "error: HttpError: HTTP 400: {\"detail\":\"500: litellm.InternalServerError: InternalServerError: Hosted_vllmException - {\\\"error\\\":{\\\"message\\\":\\\"Unknown role: final\\\",\\\""
+   ],
+   "verdict": "environment",
+   "max_steps": null
+  },
+  {
+   "scenario": "async-work-suspends-and-resumes",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "basics-history-contents",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-instance-orientation",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-workflow-inventory",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "chart-bar-groups-by-category",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "chart-histogram-embeds-bins",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "chart-regression-follows-scatter",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "chart-scatter-references-dataset",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "chart-treemap-embeds-layout",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 9
+  },
+  {
+   "scenario": "chart-unnamed-reaches-the-user",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "collection-from-paired-fasta",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "collection-from-paired-reads",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 10
+  },
+  {
+   "scenario": "collection-from-single-fasta",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "gate-holds-before-approval",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "gate-refuses-destructive",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "gtn-tutorial-completed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 28
+  },
+  {
+   "scenario": "gtn-tutorial-data-fetched",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 44
+  },
+  {
+   "scenario": "instance-tool-count",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "notices-an-empty-result",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "picks-something-and-runs-it",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "failures": [
+    "behavior.galaxyDidWork: answered with vintent_dataset while Galaxy produced nothing",
+    "history.producedDatasets: 0 successful dataset(s) beyond the staged input, wanted 1; the work did not happen on Galaxy",
+    "anyOf: no acceptable outcome: never called invoke_workflow | never called run_tool"
+   ],
+   "verdict": "fail",
+   "max_steps": 26
+  },
+  {
+   "scenario": "plan-collections-tags-datatype",
+   "tier": "grounded",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "record-page-holds-content",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "refuses-to-analyse-failed-data",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /(?i)\\b(fail(ed|ure|s)?|error(ed|s)?|could ?n[o']t|cannot|can'?t|unable|no (valid )?data)\\b/"
+   ],
+   "verdict": "fail",
+   "max_steps": 7
+  },
+  {
+   "scenario": "report-page-holds-content",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "reports-a-failed-invocation",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "reports-a-failed-job",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "research-glucose-bmi",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 19
+  },
+  {
+   "scenario": "session-resumed-after-close",
+   "tier": "grounded",
+   "runs": [
+    "error"
+   ],
+   "failures": [
+    "error: HttpError: HTTP 400: {\"detail\":\"500: litellm.InternalServerError: InternalServerError: Hosted_vllmException - {\\\"error\\\":{\\\"message\\\":\\\"Unknown role: final\\\",\\\""
+   ],
+   "verdict": "environment",
+   "max_steps": null
+  },
+  {
+   "scenario": "smoke-answers",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "udt-container-tag-resolves",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "upload-failure-is-noticed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "upload-lands-a-usable-datatype",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "viz-igv-second-track",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 14
+  },
+  {
+   "scenario": "viz-plotly-binds-columns",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 17
+  },
+  {
+   "scenario": "viz-plotly-tracks-index-columns",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 12
+  },
+  {
+   "scenario": "viz-plugins-listed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "viz-structure-saved",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "viz-structure-shown",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "workflow-runs-end-to-end",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 15
+  },
+  {
+   "scenario": "workflow-select-uses-a-legal-value",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 14
+  },
+  {
+   "scenario": "behavior-underspecified-ask",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "execution-after-approval",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 9
+  },
+  {
+   "scenario": "plan-consults-iwc",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "fail",
+    "fail"
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called search_iwc_workflows"
+   ],
+   "verdict": "fail",
+   "max_steps": 9
+  },
+  {
+   "scenario": "plan-creation-metagenomics",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "plan-creation-pharmacogenomics",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "plan-creation-rnaseq",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "plan-creation-scrna-celltypes",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "plan-creation-somatic-variants",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "routing-clear-galaxy",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "routing-clear-local",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "smoke-echo",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "udt-authoring-container",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "fail",
+    "pass"
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /container:\\s*[\"']?(?:docker://)?(?:quay\\.io/biocontainers/|depot\\.galaxyproject\\.org/singularity/)/"
+   ],
+   "verdict": "fail",
+   "max_steps": 3
+  },
+  {
+   "scenario": "udt-authoring-select-params",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "fail",
+    "pass"
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called skills_fetch with {'path': 'udt-authoring'}"
+   ],
+   "verdict": "fail",
+   "max_steps": 3
+  },
+  {
+   "scenario": "udt-authoring-threads",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  }
+ ]
+}

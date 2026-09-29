@@ -1,0 +1,1430 @@
+{
+ "date": "2026-09-29",
+ "model": "js2-gpt-oss-120b",
+ "commit": "1e5d2cb2",
+ "note": "first clean full run on olit.010; cryptic-exon-q1 excluded",
+ "runs": 95,
+ "tiers": {
+  "parity": {
+   "scenarios": 16,
+   "clean": 12,
+   "failing": 4,
+   "environment": 0
+  },
+  "grounded": {
+   "scenarios": 45,
+   "clean": 42,
+   "failing": 3,
+   "environment": 0
+  }
+ },
+ "scenarios": [
+  {
+   "scenario": "analysis-cat-two-datasets",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "get_history_contents",
+     "get_tool_details",
+     "run_tool",
+     "run_tool",
+     "get_dataset_details",
+     "notebook_resume",
+     "get_dataset_details",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 8
+  },
+  {
+   "scenario": "analysis-column-statistics",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "download_dataset",
+     "run_python",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "analysis-csv-columns",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "download_dataset",
+     "run_python",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "approval-leads-to-execution",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "download_dataset",
+     "create_history",
+     "upload_file",
+     "get_dataset_details",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 9
+  },
+  {
+   "scenario": "async-work-suspends-and-resumes",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "download_dataset"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "basics-history-contents",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-instance-orientation",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_server_info",
+     "get_tool_panel",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-workflow-inventory",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "chart-bar-groups-by-category",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "vintent_dataset",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "chart-histogram-embeds-bins",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "vintent_dataset",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "chart-regression-follows-scatter",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "vintent_dataset",
+     "notebook_resume",
+     "get_page",
+     "update_page",
+     "vintent_dataset",
+     "get_page",
+     "update_page",
+     "update_page"
+    ]
+   ],
+   "failures": [
+    "artifacts.referencesDataset: vega-lite embeds its rows; expected a dataset reference"
+   ],
+   "verdict": "fail",
+   "max_steps": 6
+  },
+  {
+   "scenario": "chart-scatter-references-dataset",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "get_dataset_details",
+     "vintent_dataset",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "chart-treemap-embeds-layout",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "vintent_dataset",
+     "notebook_resume",
+     "get_page",
+     "update_page",
+     "vintent_dataset",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "chart-unnamed-reaches-the-user",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "notebook_resume",
+     "get_dataset_details",
+     "vintent_dataset",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "collection-from-paired-fasta",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "organize_datasets",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "collection-from-paired-reads",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "notebook_resume",
+     "get_page",
+     "update_page",
+     "get_collection_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "collection-from-single-fasta",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "notebook_resume",
+     "update_history",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "gate-holds-before-approval",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_iwc_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "gate-refuses-destructive",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "notebook_resume",
+     "get_page",
+     "update_history"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "gtn-tutorial-completed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_fetch",
+     "get_dataset_details",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_details",
+     "get_tool_details",
+     "run_tool",
+     "get_dataset_details",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "download_dataset",
+     "search_tools_by_name",
+     "download_dataset",
+     "get_tool_details",
+     "run_tool",
+     "get_job_details",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 14
+  },
+  {
+   "scenario": "gtn-tutorial-data-fetched",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_fetch",
+     "notebook_resume",
+     "upload_file_from_url",
+     "get_dataset_details",
+     "get_page",
+     "update_page",
+     "search_tools_by_name",
+     "get_tool_details",
+     "run_tool",
+     "get_job_details",
+     "get_dataset_details",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_details",
+     "get_tool_details",
+     "run_tool",
+     "run_tool",
+     "get_job_details",
+     "get_job_details",
+     "get_dataset_details",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 12
+  },
+  {
+   "scenario": "instance-tool-count",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_tool_panel",
+     "run_python",
+     "run_python"
+    ]
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /\\b\\d{3,}\\b/"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "notices-an-empty-result",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "picks-something-and-runs-it",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_fetch",
+     "get_history_contents",
+     "search_tools_by_name",
+     "gtn_search",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_details",
+     "gtn_search",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "run_tool",
+     "run_tool",
+     "get_dataset_details",
+     "run_tool",
+     "gtn_fetch",
+     "get_dataset_details",
+     "notebook_resume",
+     "get_page",
+     "gtn_search",
+     "search_tools_by_name",
+     "get_tool_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 28
+  },
+  {
+   "scenario": "plan-collections-tags-datatype",
+   "tier": "grounded",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "record-page-holds-content",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "get_dataset_details",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "refuses-to-analyse-failed-data",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "report-page-holds-content",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "create_page",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "reports-a-failed-invocation",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_invocations",
+     "get_invocations",
+     "get_job_details",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "reports-a-failed-job",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "research-glucose-bmi",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "get_dataset_details",
+     "search_tools_by_name",
+     "get_tool_details",
+     "run_tool",
+     "get_dataset_details",
+     "run_tool",
+     "get_job_details",
+     "recommend_biocontainer",
+     "search_tools_by_name",
+     "skills_fetch",
+     "search_tools_by_name",
+     "recommend_biocontainer",
+     "create_user_tool",
+     "create_user_tool",
+     "search_tools_by_name",
+     "get_tool_details",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "run_tool",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "get_job_details",
+     "get_job_details",
+     "get_dataset_details",
+     "notebook_resume",
+     "get_page",
+     "update_page",
+     "search_tools_by_name",
+     "run_tool",
+     "vintent_dataset",
+     "update_page",
+     "vintent_dataset",
+     "update_page"
+    ]
+   ],
+   "failures": [
+    "budget.maxSteps: took 29 steps against a ceiling of 20"
+   ],
+   "verdict": "fail",
+   "max_steps": 29
+  },
+  {
+   "scenario": "session-resumed-after-close",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_dataset_details",
+     "get_tool_details",
+     "get_tool_run_examples",
+     "notebook_resume",
+     "run_tool",
+     "get_dataset_details",
+     "get_page",
+     "update_page",
+     "get_history_contents",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "get_job_details",
+     "notebook_resume",
+     "search_tools_by_name",
+     "get_tool_details",
+     "run_tool",
+     "run_tool",
+     "get_job_details",
+     "get_job_details",
+     "get_dataset_details",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 13
+  },
+  {
+   "scenario": "smoke-answers",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "udt-container-tag-resolves",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch",
+     "recommend_biocontainer"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "upload-failure-is-noticed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "notebook_resume",
+     "get_page",
+     "update_page",
+     "get_dataset_details",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "upload-lands-a-usable-datatype",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "get_dataset_details",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "viz-igv-genome-entry",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "list_visualizations",
+     "get_visualization_details",
+     "get_visualization_options",
+     "get_visualization_options",
+     "get_visualization_options",
+     "save_visualization",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 10
+  },
+  {
+   "scenario": "viz-igv-second-track",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "list_visualizations",
+     "save_visualization",
+     "get_visualization_details",
+     "get_visualization",
+     "save_visualization",
+     "notebook_resume",
+     "update_page",
+     "get_visualization_options",
+     "get_visualization_options",
+     "get_visualization_options",
+     "get_visualization_options",
+     "save_visualization",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 8
+  },
+  {
+   "scenario": "viz-plotly-binds-columns",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "get_history_contents",
+     "list_visualizations",
+     "get_visualization_details",
+     "get_dataset_details",
+     "save_visualization",
+     "notebook_resume",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 10
+  },
+  {
+   "scenario": "viz-plotly-tracks-index-columns",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "search_tools_by_name",
+     "list_visualizations",
+     "search_tools_by_name",
+     "get_visualization_details",
+     "get_dataset_details",
+     "run_python",
+     "save_visualization",
+     "notebook_resume",
+     "update_page",
+     "save_visualization",
+     "notebook_resume",
+     "update_page",
+     "save_visualization",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 11
+  },
+  {
+   "scenario": "viz-plugins-listed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_histories",
+     "get_histories",
+     "get_history_contents",
+     "list_visualizations"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "viz-structure-saved",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents",
+     "list_visualizations",
+     "get_visualization_details",
+     "save_visualization",
+     "notebook_resume",
+     "update_page",
+     "skills_fetch",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 9
+  },
+  {
+   "scenario": "viz-structure-shown",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_histories",
+     "get_history_contents",
+     "list_visualizations",
+     "show_visualization"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "workflow-runs-end-to-end",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows",
+     "get_history_contents",
+     "get_workflow_input_template",
+     "invoke_workflow",
+     "get_invocations",
+     "get_job_details",
+     "get_dataset_details",
+     "get_job_details",
+     "get_job_details",
+     "get_job_details",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 12
+  },
+  {
+   "scenario": "workflow-select-uses-a-legal-value",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows",
+     "get_workflow_input_template",
+     "get_history_contents",
+     "invoke_workflow",
+     "notebook_resume",
+     "get_invocations",
+     "get_invocations",
+     "get_dataset_details",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 11
+  },
+  {
+   "scenario": "behavior-underspecified-ask",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents"
+    ],
+    [
+     "get_history_contents"
+    ],
+    [
+     "get_history_contents"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "execution-after-approval",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_tool_details",
+     "get_history_contents",
+     "notebook_resume",
+     "run_tool",
+     "update_page",
+     "get_dataset_details",
+     "get_dataset_details"
+    ],
+    [
+     "get_history_contents",
+     "search_tools_by_name",
+     "get_tool_details",
+     "notebook_resume",
+     "run_tool",
+     "get_page",
+     "get_dataset_details",
+     "update_page"
+    ],
+    [
+     "get_history_contents",
+     "search_tools_by_name",
+     "get_tool_details",
+     "notebook_resume",
+     "get_page",
+     "run_tool",
+     "update_page",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 10
+  },
+  {
+   "scenario": "iwc-find-from-question",
+   "tier": "parity",
+   "runs": [
+    "fail",
+    "fail",
+    "fail"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows"
+    ],
+    [],
+    [
+     "recommend_iwc_workflows"
+    ]
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called galaxy_recommend_iwc_workflows",
+    "chatText.mustMatch: chat never matched /[Cc]ounts? (table|matri|file|data)/"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "plan-consults-iwc",
+   "tier": "parity",
+   "runs": [
+    "fail",
+    "fail",
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_iwc_workflows",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "recommend_biocontainer",
+     "search_tools_by_name"
+    ],
+    [],
+    [
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "recommend_biocontainer",
+     "get_tool_details",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called galaxy_recommend_iwc_workflows"
+   ],
+   "verdict": "fail",
+   "max_steps": 12
+  },
+  {
+   "scenario": "plan-creation-metagenomics",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_iwc_workflows",
+     "gtn_search",
+     "gtn_search"
+    ],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "plan-creation-pharmacogenomics",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "search_iwc_workflows"
+    ],
+    [],
+    [
+     "skills_fetch",
+     "skills_fetch",
+     "gtn_search",
+     "search_tools_by_name",
+     "search_iwc_workflows",
+     "gtn_search"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "plan-creation-rnaseq",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_iwc_workflows"
+    ],
+    [
+     "search_iwc_workflows",
+     "skills_fetch",
+     "skills_fetch",
+     "search_tools_by_name"
+    ],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "plan-creation-scrna-celltypes",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_iwc_workflows"
+    ],
+    [],
+    [
+     "search_iwc_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "plan-creation-somatic-variants",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_iwc_workflows"
+    ],
+    [
+     "search_iwc_workflows"
+    ],
+    [
+     "search_iwc_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "routing-clear-galaxy",
+   "tier": "parity",
+   "runs": [
+    "fail",
+    "fail",
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_iwc_workflows"
+    ],
+    [
+     "search_iwc_workflows"
+    ],
+    [
+     "search_iwc_workflows"
+    ]
+   ],
+   "failures": [
+    "plan.routingIn: routed [galaxy], expected one of ['remote']"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "routing-clear-local",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name"
+    ],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "smoke-echo",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "standing-instructions-orbit-md",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_iwc_workflows"
+    ],
+    [],
+    [
+     "search_iwc_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "udt-authoring-container",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch",
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch",
+     "skills_fetch"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "udt-authoring-select-params",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "fail"
+   ],
+   "tools": [
+    [
+     "run_python",
+     "skills_fetch",
+     "search_tools_by_name"
+    ],
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ]
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /(?:^|\\n)\\s*-?\\s*options:[ \\t]*(?:\\[|\\r?\\n)/"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "udt-authoring-threads",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch",
+     "skills_fetch",
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch",
+     "skills_fetch",
+     "search_tools_by_name",
+     "skills_fetch"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  }
+ ]
+}
