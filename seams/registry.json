@@ -84,14 +84,14 @@
         "file": "extensions/loom/context.ts",
         "symbol": "buildPlanConventionBlock",
         "condition": "unconditional; `omitAnchors` varies by model family",
-        "fingerprint": "d28bb2dbbda78f97"
+        "fingerprint": "7cd8e64165fb6a42"
       },
       "olit": {
         "file": "brain/olit/prompt.py",
         "symbol": "PLAN_CONVENTION"
       },
       "label": "PORTED",
-      "note": "olit emits no anchors at all, so it matches the omit path."
+      "note": "olit emits no anchors at all, so it matches the omit path. Re-read 2026-09-29 for loom v0.8.0's retirement of the `[galaxy]` routing tag; olit now tags `[remote]` and still teaches one tag, since this build has no local execution."
     },
     {
       "id": "prompt.buildParameterReviewBlock",
@@ -203,14 +203,14 @@
         "file": "extensions/loom/context.ts",
         "symbol": "buildNoLocalShellBlock",
         "condition": "emitted only when the local shell is disabled",
-        "fingerprint": "b3406c5947bfa7f0"
+        "fingerprint": "83b926a66b3823f7"
       },
       "olit": {
         "file": "brain/olit/prompt.py",
         "symbol": "NO_LOCAL_SHELL"
       },
       "label": "PORTED",
-      "note": "Condition is permanently true in olit; block is unconditional here."
+      "note": "Condition is permanently true in olit; block is unconditional here. Re-read 2026-09-29 for loom v0.8.0's retirement of the `[galaxy]` routing tag; olit now tags `[remote]` and still teaches one tag, since this build has no local execution."
     },
     {
       "id": "prompt.buildTeamDispatchContext",
