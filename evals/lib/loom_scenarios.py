@@ -19,6 +19,11 @@ NOT_PORTABLE = {
         "of which olit has; the contradiction itself is covered by record-jobs, which marks "
         "a step `- [!]` when the watcher sees its job fail"
     ),
+    "iwc-find-from-question": (
+        "asserts a skill.hint activity event for loom's iwc-candidates trigger; olit has no "
+        "activity log, so what this uniquely measures is an artifact it does not produce. The "
+        "tool call it also asserts is covered by plan-consults-iwc"
+    ),
 }
 
 # loom grades against a stub, so a scenario may name data nothing creates. On a live Galaxy
