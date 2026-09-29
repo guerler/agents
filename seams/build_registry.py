@@ -79,7 +79,7 @@ BLOCKS = [
         "emitted when at least one skill is configured",
         None,
         "PORTED",
-        "olit's skills router is assembled in registry/skills.py, not prompt.py.",
+        "olit's skills router is assembled in skills/__init__.py, not prompt.py.",
     ),
     ("buildLocalEnvContext", "emitted only when a local shell exists", None, "NA", "No local shell."),
     (
@@ -237,7 +237,7 @@ EXTRA = [
         "tool.ena_runs",
         "tool",
         None,
-        ("brain/olit/drivers/loop/ena.py", "ENA_RUNS"),
+        ("brain/olit/loop/ena.py", "ENA_RUNS"),
         "ADDED",
         "loom has no equivalent because Orbit reaches ENA through a general shell. ENA's FASTQ "
         "paths are not derivable from an accession -- the shard directory is its first six "
@@ -250,7 +250,7 @@ EXTRA = [
         "hint.fetch-failure",
         "tool-result-hint",
         None,
-        ("brain/olit/drivers/loop/fetch_failure_hint.py", "ARCHIVE_HINT"),
+        ("brain/olit/loop/fetch_failure_hint.py", "ARCHIVE_HINT"),
         "ADDED",
         "loom has no equivalent: its only tool-result hint covers failed workflow invocations, "
         "a different trigger that stays unported. The shape is borrowed from it -- append the "
@@ -263,7 +263,7 @@ EXTRA = [
         "tool.get_invocations.outcome",
         "tool-result-projection",
         ("extensions/loom/tools.ts", "checkInvocations", "a poll of an in-flight invocation recorded in the notebook"),
-        ("brain/olit/drivers/loop/invocation_outcome.py", "settle"),
+        ("brain/olit/loop/invocation_outcome.py", "settle"),
         "PORTED",
         "loom's transition rules, applied to what the agent reads instead of to a notebook "
         "block: FAILED_JOB_STATES, and the two questions of whether Galaxy has stopped "

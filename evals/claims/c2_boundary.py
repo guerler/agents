@@ -16,7 +16,7 @@ sys.path.insert(0, EV)
 
 from lib.assertions import _lineage_intact
 from lib.tooltests import Galaxy
-from olit.drivers.loop.galaxy_tools import _run_tool
+from olit.loop.galaxy_tools import _run_tool
 
 G = Galaxy(os.environ["GALAXY_URL"], os.environ["GALAXY_API_KEY"])
 TAG = os.environ.get("TAG", str(int(time.time()))[-6:])

@@ -41,7 +41,7 @@ POLICY_UPSTREAM = {
         "built without tools cannot show that field.",
     },
     "loop": {
-        "source": "brain/olit/drivers/loop/agent.py, brain/olit/compaction.py, brain/olit/drivers/loop/paging.py",
+        "source": "brain/olit/loop/agent.py, brain/olit/compaction.py, brain/olit/loop/paging.py",
         "upstream": {
             "keep_recent_tokens": 20000,
             "max_steps": None,
@@ -77,7 +77,7 @@ POLICY_UPSTREAM = {
         },
     },
     "guards": {
-        "source": "brain/olit/drivers/loop/tools.py, brain/olit/drivers/loop/agent.py",
+        "source": "brain/olit/loop/tools.py, brain/olit/loop/agent.py",
         "label": "ADDED",
         "note": "Olit's own refusals. pi has none of them. Each names itself in the run's `guards` list so "
         "an eval can tell a trajectory a guard shaped from one the model chose.",
@@ -142,9 +142,9 @@ ALLOWED_TOOL_DIVERGENCE = {
 MODULE_CLASSIFICATION = {
     "context": "PORTED: the system prompt, tracked block by block in `seams`",
     "galaxy-page-markdown-guidance": "PORTED: tracked in `seams`",
-    "sra-import-gate": "PORTED: brain/olit/drivers/loop/sra_import_gate.py",
-    "confusables": "PORTED: brain/olit/drivers/loop/confusables.py",
-    "secret-redaction": "PORTED: brain/olit/drivers/loop/secret_redaction.py",
+    "sra-import-gate": "PORTED: brain/olit/loop/sra_import_gate.py",
+    "confusables": "PORTED: brain/olit/loop/confusables.py",
+    "secret-redaction": "PORTED: brain/olit/loop/secret_redaction.py",
     "skills-discovery": "PORTED: the skills registry",
     "skills": "PORTED: the skills registry",
     "vendor-skills": "PORTED: skills are vendored at build time",
@@ -160,7 +160,7 @@ MODULE_CLASSIFICATION = {
     "galaxy-artifact-link-guidance": "PORTED: prompt.ARTIFACT_LINKS, at the tail of the chat "
     "formatting block as upstream interpolates it. Rooted at the session's own Galaxy rather than "
     "naming a server, and loom's YAML fences become olit's ```galaxy directives.",
-    "galaxy-poll-guard": "PORTED: brain/olit/drivers/loop/galaxy_poll_guard.py, with the guidance "
+    "galaxy-poll-guard": "PORTED: brain/olit/loop/galaxy_poll_guard.py, with the guidance "
     "in EXECUTING_A_STEP. loom holds the repeated read for two minutes; a browser turn that sleeps "
     "shows the user nothing, so the repeat is answered from what is known instead. The shell "
     "watcher stays the only judge of what is unfinished.",

@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.join(EV, "..", "brain"))
 sys.path.insert(0, EV)
 
 from lib.tooltests import Galaxy
-from olit.drivers.loop.tools import ToolSurface
-from olit.registry import ProcessRegistry
+from olit.loop.tools import ToolSurface
+from olit.processes import ProcessRegistry
 from olit.substrate import Substrate
 
 G = Galaxy(os.environ["GALAXY_URL"], os.environ["GALAXY_API_KEY"])

@@ -13,7 +13,7 @@ import subject  # noqa: E402
 
 subject.importable()
 
-from olit.drivers.loop import galaxy_tools, notebook  # noqa: E402
+from olit.loop import galaxy_tools, notebook  # noqa: E402
 
 from .plan import count_plans, parse_latest_plan, step_has_description  # noqa: E402
 

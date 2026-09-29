@@ -68,7 +68,7 @@ BREAKS = [
     Break(
         family="artifacts",
         why="a produced chart is never handed to the shell, so nothing renders for the user",
-        path="brain/olit/drivers/loop/tools.py",
+        path="brain/olit/loop/tools.py",
         find="            self.artifacts.append(art)",
         replace="            pass  # FALSIFY: artifact dropped",
         scenarios=[
@@ -82,7 +82,7 @@ BREAKS = [
     Break(
         family="record.write",
         why="the page write is dropped, so the agent reports saving and nothing lands",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find="    return await g.put(f\"api/pages/{a['page_id']}\", payload)",
         replace='    return {"id": a["page_id"], "ok": True}  # FALSIFY: write dropped',
         scenarios=["record-page-holds-content", "research-glucose-bmi"],
@@ -91,7 +91,7 @@ BREAKS = [
     Break(
         family="record.format",
         why="a page created without a content format is stored as html and opens empty",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find='    payload["content_format"] = "markdown"',
         replace="    pass  # FALSIFY: format omitted",
         scenarios=["report-page-holds-content"],
@@ -100,7 +100,7 @@ BREAKS = [
     Break(
         family="chatText",
         why="only the preview is downloaded, so a sum over it is quietly wrong",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find="MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024",
         replace="MAX_DOWNLOAD_BYTES = 512  # FALSIFY: truncated download",
         scenarios=["dataset-analysis-sum"],
@@ -109,7 +109,7 @@ BREAKS = [
     Break(
         family="toolCount",
         why="the panel is returned raw, so the model counts sections instead of tools",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find='    return {"tool_count": tools, "section_count": sections, "panel": panel}',
         replace="    return panel  # FALSIFY: no count",
         scenarios=["instance-tool-count"],
@@ -129,7 +129,7 @@ BREAKS = [
         family="toolInputs",
         why="run_tool submits no inputs, so the job produces something that is not the "
         "answer while the agent reports success",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find='        {"history_id": a["history_id"], "tool_id": a["tool_id"], "inputs": a.get("inputs") or {}},',
         replace='        {"history_id": a["history_id"], "tool_id": a["tool_id"], "inputs": {}},  # FALSIFY',
         scenarios=["analysis-cat-two-datasets"],
@@ -139,7 +139,7 @@ BREAKS = [
         family="chatReply",
         why="the assistant's words never reach the transcript, so the user is answered "
         "with silence. Sinks every scenario, so it is only pointed at the canary",
-        path="brain/olit/drivers/loop/agent.py",
+        path="brain/olit/loop/agent.py",
         find='                "content": reply.content,',
         replace='                "content": "",  # FALSIFY: reply dropped',
         scenarios=["smoke-answers"],
@@ -148,7 +148,7 @@ BREAKS = [
     Break(
         family="destructiveGate",
         why="nothing is classified as destructive, so a purge request runs unchallenged " "and the user's data is gone",
-        path="brain/olit/drivers/loop/galaxy_destructive.py",
+        path="brain/olit/loop/galaxy_destructive.py",
         find='DESTRUCTIVE_OPS = {"update_history": _update_history}',
         replace="DESTRUCTIVE_OPS = {}  # FALSIFY: gate disarmed",
         scenarios=["gate-refuses-destructive"],
@@ -159,7 +159,7 @@ BREAKS = [
         why="a history listing hides datasets in an error state, the 'clean view' bug: the "
         "failed job is not merely unexplained, it is absent, so the agent reports a "
         "tidy history that is not the one the researcher has",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find="""    return await g.get(f"api/histories/{a['history_id']}/contents{_q(params)}")""",
         replace="""    items = await g.get(f"api/histories/{a['history_id']}/contents{_q(params)}")  # FALSIFY
     return ([i for i in items if (i or {}).get("state") != "error"]
@@ -176,17 +176,17 @@ BREAKS = [
         "place agrees, and agrees wrongly",
         edits=[
             (
-                "brain/olit/drivers/loop/galaxy_tools.py",
+                "brain/olit/loop/galaxy_tools.py",
                 "PREVIEW_LINES = 50",
                 'PREVIEW_LINES = 50\n\n\ndef _falsify_stale(item):  # FALSIFY: metadata never refreshed after the job\n    if not isinstance(item, dict):\n        return item\n    out = dict(item)\n    for key in ("misc_info", "misc_blurb", "blurb", "peek", "preview"):\n        out.pop(key, None)\n    if "metadata_data_lines" in out:\n        out["metadata_data_lines"] = 768\n    if "file_size" in out:\n        out["file_size"] = 33000\n    return out',
             ),
             (
-                "brain/olit/drivers/loop/galaxy_tools.py",
+                "brain/olit/loop/galaxy_tools.py",
                 '    return dataset\n\n\n_STR = {"type": "string"}',
                 '    return _falsify_stale(dataset)\n\n\n_STR = {"type": "string"}',
             ),
             (
-                "brain/olit/drivers/loop/galaxy_tools.py",
+                "brain/olit/loop/galaxy_tools.py",
                 "    return await g.get(f\"api/histories/{a['history_id']}/contents{_q(params)}\")",
                 "    _items = await g.get(f\"api/histories/{a['history_id']}/contents{_q(params)}\")\n    return ([_falsify_stale(i) for i in _items] if isinstance(_items, list) else _items)",
             ),
@@ -200,7 +200,7 @@ BREAKS = [
         "dataset appears. The agent can still reach the right number in the browser "
         "scratchpad, which is the substitution this scenario exists to catch: an answer "
         "that is correct and unreproducible",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find='async def _run_tool(g, a):\n    return await g.post(\n        "api/tools",\n        {"history_id": a["history_id"], "tool_id": a["tool_id"], "inputs": a.get("inputs") or {}},\n    )',
         replace='async def _run_tool(g, a):\n    return {"outputs": [], "jobs": [{"state": "ok"}]}  # FALSIFY: nothing submitted',
         scenarios=["gtn-tutorial-completed"],
@@ -212,7 +212,7 @@ BREAKS = [
         "invocation never schedules. The agent still sees a 2xx and reports success, "
         "which is exactly why this is graded against the invocation record rather than "
         "against the chat",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find='    body = {"inputs": a.get("inputs") or {}, "inputs_by": a.get("inputs_by", "step_index")}',
         replace='    body = {"inputs": {}, "inputs_by": "step_index"}  # FALSIFY: inputs dropped',
         scenarios=["workflow-runs-end-to-end"],
@@ -225,7 +225,7 @@ BREAKS = [
         "Galaxy holds no such object. The artifact assertion still passes, which is "
         "the point: a pane is not a saved visualization, and only grading against "
         "Galaxy separates the two",
-        path="brain/olit/drivers/loop/galaxy_tools.py",
+        path="brain/olit/loop/galaxy_tools.py",
         find="""    created = await g.post("api/visualizations",
                            {"type": name, "title": title, "config": _visualization_config(a)})""",
         replace='    created = {"id": "0" * 16}  # FALSIFY: nothing saved',
@@ -238,7 +238,7 @@ BREAKS = [
         "it never reaches the shell and the user sees no viewer. The saved Galaxy "
         "object is untouched and the chat still describes it, so only the artifact "
         "assertion moves: the mirror of visualizationSaved",
-        path="brain/olit/drivers/loop/tools.py",
+        path="brain/olit/loop/tools.py",
         find="            result = self._claim_artifact(await handler(self.substrate.galaxy, args))\n            return json.dumps(result, default=str)",
         replace="            return json.dumps(await handler(self.substrate.galaxy, args), default=str)  # FALSIFY",
         scenarios=["viz-structure-shown", "viz-structure-saved"],
@@ -251,7 +251,7 @@ BREAKS = [
         "right, the artifact is there -- and the only trace is a row the user never "
         "asked for in their visualization list. Nothing but grading Galaxy for what "
         "should be absent can see it",
-        path="brain/olit/drivers/loop/visualizations.py",
+        path="brain/olit/loop/visualizations.py",
         find="""    query = {"visualization": name, "dataset_id": a["dataset_id"], **_EMBED}""",
         replace="""    await g.post("api/visualizations",  # FALSIFY: showing saves
                  {"type": name, "title": title, "config": _visualization_config(a)})
@@ -265,7 +265,7 @@ BREAKS = [
         "saved config. The agent reports the track added and the pane still renders the "
         "first dataset, so nothing the user or the chat can see distinguishes it from a "
         "visualization that gained a track",
-        path="brain/olit/drivers/loop/visualizations.py",
+        path="brain/olit/loop/visualizations.py",
         find="""    config = _visualization_config(a)""",
         replace="""    config = _visualization_config(a)
     config.pop("tracks", None)  # FALSIFY: tracks dropped on save""",
@@ -278,7 +278,7 @@ BREAKS = [
         "reach the saved config. The tracks still land and the chat still says the view "
         "moved, which is the point: settings are the half of a visualization that leaves "
         "no trace anywhere else",
-        path="brain/olit/drivers/loop/visualizations.py",
+        path="brain/olit/loop/visualizations.py",
         find="""    config = _visualization_config(a)""",
         replace="""    config = _visualization_config(a)
     config.pop("settings", None)  # FALSIFY: settings dropped on save""",
@@ -291,7 +291,7 @@ BREAKS = [
         "stores that without complaint and the visualization saves, renders and looks "
         "right in the list, but galaxy-charts reads the genome from inside the "
         "conditional and finds nothing, so the view never moves",
-        path="brain/olit/drivers/loop/visualizations.py",
+        path="brain/olit/loop/visualizations.py",
         find="""        config["settings"] = a["settings"]""",
         replace="""        config["settings"] = {  # FALSIFY: conditionals flattened
             name: value

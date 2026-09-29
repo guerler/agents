@@ -55,7 +55,7 @@ anyone noticing.** That has already happened once here, to the prompt-block audi
 
 ### The skills corpus is a build artifact
 
-`brain/olit/registry/skills/galaxy-skills/` is fetched by `npm run build:skills` and is
+`brain/olit/skills/galaxy-skills/` is fetched by `npm run build:skills` and is
 gitignored; only `skills.lock.json` is committed. So the two halves of that layer are checked
 independently:
 

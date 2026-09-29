@@ -181,7 +181,7 @@
       },
       "olit": null,
       "label": "PORTED",
-      "note": "olit's skills router is assembled in registry/skills.py, not prompt.py."
+      "note": "olit's skills router is assembled in skills/__init__.py, not prompt.py."
     },
     {
       "id": "prompt.buildLocalEnvContext",
@@ -489,7 +489,7 @@
       "kind": "tool",
       "loom": null,
       "olit": {
-        "file": "brain/olit/drivers/loop/ena.py",
+        "file": "brain/olit/loop/ena.py",
         "symbol": "ENA_RUNS"
       },
       "label": "ADDED",
@@ -500,7 +500,7 @@
       "kind": "tool-result-hint",
       "loom": null,
       "olit": {
-        "file": "brain/olit/drivers/loop/fetch_failure_hint.py",
+        "file": "brain/olit/loop/fetch_failure_hint.py",
         "symbol": "ARCHIVE_HINT"
       },
       "label": "ADDED",
@@ -516,7 +516,7 @@
         "fingerprint": "1dff1ee76de5e5be"
       },
       "olit": {
-        "file": "brain/olit/drivers/loop/invocation_outcome.py",
+        "file": "brain/olit/loop/invocation_outcome.py",
         "symbol": "settle"
       },
       "label": "PORTED",
@@ -568,9 +568,9 @@
       "classified": {
         "context": "PORTED: the system prompt, tracked block by block by the prompt seams above.",
         "galaxy-page-markdown-guidance": "PORTED: tracked in `seams`",
-        "sra-import-gate": "PORTED: brain/olit/drivers/loop/sra_import_gate.py",
-        "confusables": "PORTED: brain/olit/drivers/loop/confusables.py",
-        "secret-redaction": "PORTED: brain/olit/drivers/loop/secret_redaction.py",
+        "sra-import-gate": "PORTED: brain/olit/loop/sra_import_gate.py",
+        "confusables": "PORTED: brain/olit/loop/confusables.py",
+        "secret-redaction": "PORTED: brain/olit/loop/secret_redaction.py",
         "skills-discovery": "PORTED: the skills registry",
         "skills": "PORTED: the skills registry",
         "vendor-skills": "PORTED: skills are vendored at build time",
@@ -584,7 +584,7 @@
         "galaxy-api": "PORTED: the scoped catalog",
         "galaxy-poller": "PORTED: the job watcher",
         "galaxy-artifact-link-guidance": "PORTED: prompt.ARTIFACT_LINKS, at the tail of the chat formatting block as upstream interpolates it. Rooted at the session's own Galaxy rather than naming a server, and loom's YAML fences become olit's ```galaxy directives.",
-        "galaxy-poll-guard": "PORTED: brain/olit/drivers/loop/galaxy_poll_guard.py, with the guidance in EXECUTING_A_STEP. loom holds the repeated read for two minutes; a browser turn that sleeps shows the user nothing, so the repeat is answered from what is known instead. The shell watcher stays the only judge of what is unfinished.",
+        "galaxy-poll-guard": "PORTED: brain/olit/loop/galaxy_poll_guard.py, with the guidance in EXECUTING_A_STEP. loom holds the repeated read for two minutes; a browser turn that sleeps shows the user nothing, so the repeat is answered from what is known instead. The shell watcher stays the only judge of what is unfinished.",
         "skill-triggers": "PORTED: the same two hints, as confusables.py and invocation_outcome.py. Upstream consolidated them into one table; olit reaches them through its own dispatcher. v0.8.0 added iwc-candidates, whose guidance olit carries in the ported FINDING_A_WORKFLOW prompt block instead of as a per-result hint.",
         "dashboard-tools": "NA: no panel surface to arrange. Decided rather than deferred -- the layout is a file beside notebook.md in an analysis directory, and olit has neither. Its one pane is the artifact pane, which the shell owns.",
         "dashboard-store": "NA: the transport is a write to .loom-dashboard.json on disk.",
@@ -922,7 +922,7 @@
         }
       },
       "loop": {
-        "source": "brain/olit/drivers/loop/agent.py, brain/olit/compaction.py, brain/olit/drivers/loop/paging.py",
+        "source": "brain/olit/loop/agent.py, brain/olit/compaction.py, brain/olit/loop/paging.py",
         "upstream": {
           "keep_recent_tokens": 20000,
           "max_steps": null,
@@ -962,7 +962,7 @@
         }
       },
       "guards": {
-        "source": "brain/olit/drivers/loop/tools.py, brain/olit/drivers/loop/agent.py",
+        "source": "brain/olit/loop/tools.py, brain/olit/loop/agent.py",
         "label": "ADDED",
         "note": "Olit's own refusals. pi has none of them. Each names itself in the run's `guards` list so an eval can tell a trajectory a guard shaped from one the model chose.",
         "olit": [

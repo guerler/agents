@@ -46,7 +46,7 @@ def test_not_empty_fails_a_page_that_is_actually_empty():
         _record({"notEmpty": True}, Run(content), failures, set())
         return [f.assertion for f in failures]
 
-    from olit.drivers.loop.notebook import STARTER
+    from olit.loop.notebook import STARTER
 
     assert grade("") == ["record.notEmpty"]
     assert grade("   \n ") == ["record.notEmpty"]
@@ -58,7 +58,7 @@ def test_not_empty_fails_a_page_that_is_actually_empty():
 def test_not_empty_accepts_content_appended_below_the_starter():
     """The agent had written; it just left the placeholder above its entry."""
     from lib.assertions import _record
-    from olit.drivers.loop.notebook import STARTER
+    from olit.loop.notebook import STARTER
 
     class FakeGalaxy:
         def __init__(self, content):
