@@ -290,6 +290,23 @@
       "note": ""
     },
     {
+      "id": "prompt.galaxy-context.finding-a-workflow",
+      "kind": "prompt-section",
+      "loom": {
+        "file": "extensions/loom/context.ts",
+        "symbol": "buildGalaxyContextBlock",
+        "section": "Finding a community workflow (IWC)",
+        "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
+        "fingerprint": "72e65b4f0d1ca93a"
+      },
+      "olit": {
+        "file": "brain/olit/prompt.py",
+        "symbol": "FINDING_A_WORKFLOW"
+      },
+      "label": "PORTED",
+      "note": "Ported 2026-09-29, tool names as olit registers them. It fires on a described analysis rather than only on a plan request, and states that search_iwc_workflows is keyword search while recommend ranks an intent -- the distinction a run consulted the registry through and got nothing."
+    },
+    {
       "id": "prompt.galaxy-context.drafting",
       "kind": "prompt-section",
       "loom": {
