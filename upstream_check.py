@@ -41,6 +41,14 @@ def npm_latest(package):
         return None
 
 
+def installed_pi():
+    """The pi version sitting in loom's node_modules, which is what the pi layer fingerprints."""
+    manifest = LOOM / "node_modules" / "@earendil-works" / "pi-ai" / "package.json"
+    if not manifest.is_file():
+        return None
+    return json.loads(manifest.read_text()).get("version")
+
+
 def loom_seams():
     """The seam report against the fetched branch, and the files behind whatever drifted."""
     if not (LOOM / ".git").exists():
@@ -62,6 +70,11 @@ def loom_seams():
     modules = LOOM / "node_modules"
     if modules.is_dir():
         (tree / "node_modules").symlink_to(modules)
+        out.append(
+            f"           loom source read at {there}; pi read from the installed node_modules"
+            + (f" ({installed_pi()})" if installed_pi() else "")
+            + ", not a fresh install"
+        )
     try:
         report = subprocess.run(
             [sys.executable, "seams/check.py"],
