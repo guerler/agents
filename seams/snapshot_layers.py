@@ -28,11 +28,17 @@ POLICY_UPSTREAM = {
     "llm_request": {
         "source": "brain/olit/substrate/llm/api/openai_completions.py",
         "label": "PORTED",
-        "upstream": {"sampling": {"max_tokens": None, "temperature": None, "tool_choice": None, "top_p": None}},
+        "upstream": {
+            "sampling": {"max_tokens": None, "temperature": None, "tool_choice": None, "top_p": None},
+            "with_tools": {"tool_choice": None},
+        },
         "note": "pi-ai emits temperature and max_tokens only when set (api/openai-completions.js:589,595) "
         "and reaches top_p only through the samplingParams bag; loom sets none of them, so an "
         "Orbit request runs at the provider's own defaults. Olit must not impose its own or a "
-        "benchmark measures the defaults rather than the runtime.",
+        "benchmark measures the defaults rather than the runtime. pi reaches tool_choice only when "
+        "a caller passes one (api/openai-completions.js:626) and loom never does, so a request "
+        "carrying tools states no choice either; the with_tools slice exists because a request "
+        "built without tools cannot show that field.",
     },
     "loop": {
         "source": "brain/olit/drivers/loop/agent.py, brain/olit/compaction.py, brain/olit/drivers/loop/paging.py",
