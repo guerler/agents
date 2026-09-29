@@ -2,7 +2,7 @@
 OLIT_ROOT ?= $(HOME)/galaxy-visualizations/packages/olit
 export OLIT_ROOT
 
-.PHONY: format lint test check
+.PHONY: format lint test check upstream
 
 format:
 	python3 -m black .
@@ -16,3 +16,7 @@ test:
 	python3 -m pytest tests -q
 
 check: lint test
+
+# Read-only: fetches refs, reports drift, adopts nothing.
+upstream:
+	python3 upstream_check.py
