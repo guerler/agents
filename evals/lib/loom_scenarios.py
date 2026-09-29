@@ -50,6 +50,7 @@ TOOL_NAMES = {
     "galaxy_delete_user_tool": "delete_user_tool",
     "galaxy_list_user_tools": "list_user_tools",
     "galaxy_search_iwc": "search_iwc_workflows",
+    "galaxy_recommend_iwc_workflows": "recommend_iwc_workflows",
     "galaxy_search_tools_by_name": "search_tools_by_name",
     "galaxy_get_workflow_input_template": "get_workflow_input_template",
     "galaxy_invoke_workflow": "invoke_workflow",
