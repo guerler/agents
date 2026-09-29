@@ -164,6 +164,12 @@ MODULE_CLASSIFICATION = {
     "in EXECUTING_A_STEP. loom holds the repeated read for two minutes; a browser turn that sleeps "
     "shows the user nothing, so the repeat is answered from what is known instead. The shell "
     "watcher stays the only judge of what is unfinished.",
+    "iwc-plan-check": "MISSING by decision: loom sends one follow-up when a turn drafts a plan "
+    "without having consulted IWC, to compensate for a weaker model drafting from memory. Olit "
+    "keeps prompting out of the role of an enforceable invariant, and 2026-09-29 evidence for the "
+    "behaviour it prevents is not yet separated from a tool-choice fault: plan-consults-iwc run 1 "
+    "did consult the registry, through the substring search rather than the ranked recommend, and "
+    "got nothing. Revisit when olit's own evals show a plan drafted past an applicable workflow.",
     "skill-triggers": "PORTED: the same two hints, as confusables.py and invocation_outcome.py. "
     "Upstream consolidated them into one table; olit reaches them through its own dispatcher.",
     "dashboard-tools": "NA: no panel surface to arrange. Decided rather than deferred -- the "

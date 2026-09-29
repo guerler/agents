@@ -609,7 +609,8 @@
         "galaxy-transport-error": "NA: transport is the browser's fetch",
         "galaxy-upload-tus": "NA: tus resumable upload is a desktop concern",
         "index": "NA: extension entry point",
-        "types": "NA: type declarations"
+        "types": "NA: type declarations",
+        "iwc-plan-check": "MISSING by decision: loom sends one follow-up when a turn drafts a plan without having consulted IWC, to compensate for a weaker model drafting from memory. Olit keeps prompting out of the role of an enforceable invariant, and 2026-09-29 evidence for the behaviour it prevents is not yet separated from a tool-choice fault: plan-consults-iwc run 1 did consult the registry, through the substring search rather than the ranked recommend, and got nothing. Revisit when olit's own evals show a plan drafted past an applicable workflow."
       },
       "fingerprints": {
         "activity-hooks": "49e2e292be3b6a2f",
@@ -672,7 +673,8 @@
         "ui-bridge": "32d67384f9618020",
         "user-instructions": "5de835fc7675402a",
         "vendor-skills": "6b62996e0c98894c",
-        "workspace-state-dir": "4d877608b3ac8161"
+        "workspace-state-dir": "4d877608b3ac8161",
+        "iwc-plan-check": "61c2d37b4294c037"
       }
     },
     "identity_prompt": {
