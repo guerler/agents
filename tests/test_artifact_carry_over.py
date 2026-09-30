@@ -31,7 +31,7 @@ def drive(monkeypatch, inputs):
     monkeypatch.setattr(harness, "_empty_history", lambda config, scenario: "history1")
     session = Session()
     scenario = {"id": "carry-over", "inputs": inputs}
-    run = asyncio.run(harness._drive(scenario, session, {}))
+    run = asyncio.run(harness._drive(scenario, session, {}, None))
     return session, run
 
 

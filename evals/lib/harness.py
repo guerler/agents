@@ -43,6 +43,8 @@ class RunResult:
         max_steps=0,
         refused=None,
         config=None,
+        stalled=False,
+        waited=0.0,
     ):
         self.messages = messages
         # What the session ran under, so a caller can find the page it opened.
@@ -61,6 +63,10 @@ class RunResult:
         # Every event the brain emitted, plus turn boundaries synthesised by the harness.
         self.events = events or []
         self.error = error
+        # The run never reached the agent: Galaxy did not finish the work it was waiting on.
+        self.stalled = stalled
+        # Seconds spent waiting on Galaxy: staging plus settles. Recorded, never graded.
+        self.waited = waited
         # The provider's HTTP status, preserved so grading never sniffs the message.
         self.status_code = status_code
 
@@ -209,29 +215,44 @@ async def _run(scenario, model, base_url=None):
     # A run is a session, and a session owns its record page; the browser shell supplies
     # this from the saved document.
     config["session_id"] = str(uuid.uuid4())
-    session = await Session(config).init()
+    # Staging is the environment's work, so it is timed by the environment's clock and sits
+    # outside the budget that measures the agent.
+    waited = [0.0]
     try:
-        return await _drive(scenario, session, config)
+        staged = await _timed(waited, _stage, scenario, config)
+    except Exception as e:
+        return RunResult([], [], [], error=f"{type(e).__name__}: {e}", stalled=True, waited=waited[0])
+    session = await Session(config).init()
+    budget = scenario_timeout(scenario)
+    try:
+        return await asyncio.wait_for(_drive(scenario, session, config, staged, waited), timeout=budget)
+    except asyncio.TimeoutError:
+        return RunResult([], [], [], error=f"the agent ran past its {budget:.0f}s budget", waited=waited[0])
     finally:
         # Outside the browser a session holds a node process for galaxy-ops; a suite is
         # hundreds of sessions in one interpreter, so each one has to give it back.
         await session.substrate.close()
 
 
-async def _drive(scenario, session, config):
-    budget = scenario_timeout(scenario)
-    staged = None
+def _stage(scenario, config):
+    """The fixtures a scenario starts from, on the environment's clock."""
+    wait = galaxy_wait_timeout()
     if scenario.get("dataset"):
-        staged = await asyncio.to_thread(stage_dataset, config, scenario["dataset"], budget)
+        staged = stage_dataset(config, scenario["dataset"], wait)
         if scenario.get("workflows"):
-            staged["workflow_ids"] = await asyncio.to_thread(import_workflows, staged["galaxy"], scenario["workflows"])
-    elif scenario.get("workflows"):
-        staged = await asyncio.to_thread(stage_workflows, config, scenario["workflows"], budget)
-    elif scenario.get("emptyHistory"):
-        staged = await asyncio.to_thread(stage_empty, config, scenario["emptyHistory"])
-    elif scenario.get("toolTest"):
-        staged = await asyncio.to_thread(stage_tool_test, config, scenario["toolTest"], budget)
+            staged["workflow_ids"] = import_workflows(staged["galaxy"], scenario["workflows"])
+        return staged
+    if scenario.get("workflows"):
+        return stage_workflows(config, scenario["workflows"], wait)
+    if scenario.get("emptyHistory"):
+        return stage_empty(config, scenario["emptyHistory"])
+    if scenario.get("toolTest"):
+        return stage_tool_test(config, scenario["toolTest"], wait)
+    return None
 
+
+async def _drive(scenario, session, config, staged, waited=None):
+    waited = waited if waited is not None else [0.0]
     bound_history = staged["history_id"] if staged else _empty_history(config, scenario)
     # No record page is staged: the session makes its own, as it does in the browser.
     transcripts = await session.prepare(
@@ -272,8 +293,8 @@ async def _drive(scenario, session, config):
         # Only after run() returns: a turn that dies mid-flight must not look complete.
         events.append("turn_end")
         if staged:
-            wait = scenario.get("settleTimeoutMs", 180_000) / 1000
-            landed = await asyncio.to_thread(_settle_pending, staged, events, wait)
+            wait = galaxy_wait_timeout()
+            landed = await _timed(waited, _settle_pending, staged, events, wait)
             for _ in range(max_auto_follow_ups()):
                 if not landed:
                     break
@@ -293,7 +314,7 @@ async def _drive(scenario, session, config):
                 steps = max(steps, int(result.get("steps") or 0))
                 cap = int(result.get("max_steps") or 0) or cap
                 events.append("turn_end")
-                landed = await asyncio.to_thread(_settle_pending, staged, events, wait)
+                landed = await _timed(waited, _settle_pending, staged, events, wait)
         # One approval, only for a run that stopped at the gate; the gate itself is untouched.
         if approval and _awaiting_approval(result.get("new_messages")):
             approval, text = None, scenario["approveWhenPlanned"]
@@ -313,9 +334,7 @@ async def _drive(scenario, session, config):
             cap = int(result.get("max_steps") or 0) or cap
             events.append("turn_end")
             if staged:
-                await asyncio.to_thread(
-                    _settle_pending, staged, events, scenario.get("settleTimeoutMs", 180_000) / 1000
-                )
+                await _timed(waited, _settle_pending, staged, events, galaxy_wait_timeout())
     return RunResult(
         graded if restart_after else messages,
         logs,
@@ -328,6 +347,7 @@ async def _drive(scenario, session, config):
         max_steps=cap,
         config=config,
         refused=refused,
+        waited=waited[0],
     )
 
 
@@ -357,6 +377,22 @@ def _note(event, sink, events=None, refused=None):
 
 
 DEFAULT_TIMEOUT_MS = 150_000
+DEFAULT_GALAXY_WAIT_SECONDS = 600
+
+
+def galaxy_wait_timeout():
+    """How long a Galaxy wait may take. The environment's clock, set per run, never per scenario."""
+    stated = os.environ.get("OLIT_EVAL_GALAXY_WAIT", "").strip()
+    return float(stated) if stated else DEFAULT_GALAXY_WAIT_SECONDS
+
+
+async def _timed(waited, func, *args):
+    """Run a Galaxy wait off the event loop, adding its wall clock to `waited`."""
+    started = time.monotonic()
+    try:
+        return await asyncio.to_thread(func, *args)
+    finally:
+        waited[0] += time.monotonic() - started
 
 
 def scenario_timeout(scenario):
@@ -364,26 +400,20 @@ def scenario_timeout(scenario):
     return (scenario.get("timeoutMs") or DEFAULT_TIMEOUT_MS) / 1000
 
 
-def _guarded(scenario, model, base_url, timeout):
-    async def guarded():
-        return await asyncio.wait_for(_run(scenario, model, base_url), timeout=timeout)
-
+def _guarded(scenario, model, base_url):
     try:
-        return asyncio.run(guarded())
-    except asyncio.TimeoutError:
-        return RunResult([], [], [], error=f"timed out after {timeout:.0f}s")
+        return asyncio.run(_run(scenario, model, base_url))
     except Exception as e:  # a provider error is a run outcome, not a harness crash
         return RunResult([], [], [], error=f"{type(e).__name__}: {e}", status_code=getattr(e, "status_code", None))
 
 
 def run_scenario(scenario, model, capture=None):
     """`capture` names a file to record this run's completions into."""
-    timeout = scenario_timeout(scenario)
     target = upstream(model) if capture else None
     if not target:
-        return _guarded(scenario, model, None, timeout)
+        return _guarded(scenario, model, None)
     with recording(target, capture) as base_url:
-        return _guarded(scenario, model, base_url, timeout)
+        return _guarded(scenario, model, base_url)
 
 
 def load_scenarios(root, only=None):

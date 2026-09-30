@@ -179,7 +179,7 @@ def main():
                 run = run_scenario(scenario, model, capture=capture(scenario, model, run_index))
                 if run.error:
                     failures, exercised = [], set()
-                    verdict = "quota" if is_quota(run) else "ERROR"
+                    verdict = "quota" if is_quota(run) else ("STALL" if run.stalled else "ERROR")
                     note = run.error.replace("\n", " ")
                 else:
                     try:
@@ -194,6 +194,8 @@ def main():
                 # Flushed per result: a full matrix runs for many minutes, and Python
                 tag = f" #{run_index + 1}" if runs > 1 else ""
                 budget = f" {run.steps}/{run.max_steps} steps" if run.max_steps else ""
+                if run.waited >= 1:
+                    budget += f" waited {run.waited:.0f}s"
                 print(f"  [{verdict:5s}] {model['id']:24s} {scenario['id']:34s}{tag}{budget} {note[:52]}", flush=True)
                 for f in failures[1:]:
                     print(f"          {f}")
@@ -211,6 +213,10 @@ def main():
                         "scenario": scenario["id"],
                         "run": run_index + 1,
                         "error": run.error,
+                        # Galaxy never finished the work; nothing about the agent was measured.
+                        "stalled": run.stalled,
+                        # Wall clock spent waiting on Galaxy. Information, not a verdict.
+                        "waitedSeconds": round(run.waited, 1),
                         "statusCode": run.status_code,
                         "dimensions": sorted(exercised),
                         "failures": [
@@ -238,15 +244,17 @@ def main():
         with open(args.json_out, "w") as f:
             json.dump(results, f, indent=2)
         print(f"\nraw results -> {args.json_out}")
-    # A quota-limited run is not a failure of the agent, so it must not fail the suite.
-    graded = [r for r in results if not is_quota(r)]
+    # Neither a quota limit nor a Galaxy stall is a failure of the agent, so neither fails the suite.
+    graded = [r for r in results if not is_quota(r) and not r.get("stalled")]
     return 0 if all(not r["failures"] and not r["error"] for r in graded) else 1
 
 
 def outcome(row):
     """One word per run, so repeated runs can be compared."""
     if row["error"]:
-        return "quota" if is_quota(row) else "ERROR"
+        if is_quota(row):
+            return "quota"
+        return "STALL" if row.get("stalled") else "ERROR"
     return "pass" if not row["failures"] else "FAIL"
 
 

@@ -78,3 +78,54 @@ def test_no_wait_carries_a_cap_of_its_own():
     for func in (harness._await_invocation, harness._settle_pending, tooltests.Galaxy.await_dataset):
         timeout = inspect.signature(func).parameters["timeout"]
         assert timeout.default is inspect.Parameter.empty, f"{func.__name__} still defaults its own cap"
+
+
+def test_the_environment_clock_is_set_per_run_not_per_scenario():
+    import os
+
+    from lib.harness import DEFAULT_GALAXY_WAIT_SECONDS, galaxy_wait_timeout
+
+    assert galaxy_wait_timeout() == DEFAULT_GALAXY_WAIT_SECONDS
+    os.environ["OLIT_EVAL_GALAXY_WAIT"] = "14400"
+    try:
+        assert galaxy_wait_timeout() == 14400.0
+    finally:
+        del os.environ["OLIT_EVAL_GALAXY_WAIT"]
+
+
+def test_staging_waits_on_the_environment_clock_not_the_scenario_budget(monkeypatch):
+    """A queued upload must not spend the budget that exists to catch a stalled agent."""
+    from lib import harness
+
+    seen = {}
+    monkeypatch.setenv("OLIT_EVAL_GALAXY_WAIT", "3600")
+    monkeypatch.setattr(harness, "stage_dataset", lambda config, spec, timeout: seen.setdefault("timeout", timeout))
+    harness._stage({"dataset": {"file": "x.tabular"}, "timeoutMs": 1_000}, {})
+    assert seen["timeout"] == 3600.0, "staging read the scenario budget instead of the environment clock"
+
+
+def test_a_staging_failure_is_a_stall_and_not_a_behavioural_verdict(monkeypatch):
+    from lib import harness
+
+    def explode(scenario, config):
+        raise harness.tooltests.ToolTestError("x.tabular landed in state running")
+
+    monkeypatch.setattr(harness, "_stage", explode)
+    monkeypatch.setattr(harness, "build_config", lambda *a, **k: {})
+    run = harness._guarded({"id": "s", "inputs": ["hi"]}, {"id": "m"}, None)
+    assert run.stalled is True
+    assert "landed in state running" in run.error
+    assert run.steps == 0
+
+
+def test_the_wait_is_recorded_even_when_staging_stalls(monkeypatch):
+    from lib import harness
+
+    def slow_then_fail(scenario, config):
+        time.sleep(0.05)
+        raise harness.tooltests.ToolTestError("stalled")
+
+    monkeypatch.setattr(harness, "_stage", slow_then_fail)
+    monkeypatch.setattr(harness, "build_config", lambda *a, **k: {})
+    run = harness._guarded({"id": "s", "inputs": ["hi"]}, {"id": "m"}, None)
+    assert run.waited >= 0.05
