@@ -15,6 +15,7 @@ subject.importable()
 
 from olit.loop import galaxy_tools, notebook  # noqa: E402
 
+from .harness import ADVANCING_STATES  # noqa: E402
 from .plan import count_plans, parse_latest_plan, step_has_description  # noqa: E402
 
 # What the gate protects: compute spent or data mutated before approval.
@@ -543,7 +544,7 @@ def _history(spec, run, failures, exercised):
                     "behavior",
                 )
             )
-        pending = [c.get("name") for c in produced if c.get("state") in ("new", "queued", "running", "paused")]
+        pending = [c.get("name") for c in produced if c.get("state") in ADVANCING_STATES]
         if pending:
             failures.append(
                 Failure("history.producedDatasets", f"answered while output was still {pending}", "behavior")
@@ -1359,7 +1360,7 @@ def _invocation(spec, run, failures, exercised):
             failures.append(
                 Failure("invocation.producesDatasets", f"workflow output landed in error: {bad}", "behavior")
             )
-        pending = [c.get("name") for c in produced if c.get("state") in ("new", "queued", "running", "paused")]
+        pending = [c.get("name") for c in produced if c.get("state") in ADVANCING_STATES]
         if pending:
             failures.append(
                 Failure(

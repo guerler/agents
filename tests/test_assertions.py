@@ -115,3 +115,36 @@ def test_chat_text_ignores_other_tool_results():
         [],
     )
     assert run.chat_text == "Here is the answer."
+
+
+def test_a_paused_dataset_is_not_work_the_agent_should_have_waited_for():
+    """Galaxy pauses a dependent job when its input fails, and that state never advances."""
+    from lib.assertions import _history
+
+    class FakeGalaxy:
+        def __init__(self, states):
+            self._states = states
+
+        def call(self, path):
+            return [
+                {
+                    "history_content_type": "dataset",
+                    "id": f"d{i}",
+                    "name": f"out {i}",
+                    "state": state,
+                    "deleted": False,
+                }
+                for i, state in enumerate(self._states)
+            ]
+
+    class Run:
+        def __init__(self, states):
+            self.staged = {"galaxy": FakeGalaxy(states), "history_id": "h1", "dataset_ids": {}}
+
+    paused = []
+    _history({"producedDatasets": 1}, Run(["ok", "paused"]), paused, set())
+    assert paused == [], paused
+
+    queued = []
+    _history({"producedDatasets": 1}, Run(["ok", "queued"]), queued, set())
+    assert [f.detail for f in queued] == ["answered while output was still ['out 1']"]
