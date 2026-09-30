@@ -24,7 +24,7 @@ subject.importable()
 
 from lib import loom_scenarios  # noqa: E402
 from lib.assertions import DIMENSIONS, evaluate, validate_patterns  # noqa: E402
-from lib.harness import load_scenarios, run_scenario  # noqa: E402
+from lib.harness import label_record_page, load_scenarios, run_scenario, save_session  # noqa: E402
 
 # HTTP 429 means out of budget, not a behavioural failure; graded separately.
 QUOTA_STATUS = 429
@@ -92,6 +92,16 @@ def main():
         help="where each run's completions are recorded; local disk only, never committed",
     )
     ap.add_argument("--no-records", action="store_true", help="run without recording completions")
+    ap.add_argument(
+        "--no-pages",
+        action="store_true",
+        help="skip titling each run's record page after its scenario and printing where to read it",
+    )
+    ap.add_argument(
+        "--no-sessions",
+        action="store_true",
+        help="skip saving each run as an Olit visualization, which is how a run reopens in the UI",
+    )
     ap.add_argument(
         "--exclude",
         action="append",
@@ -187,6 +197,14 @@ def main():
                 print(f"  [{verdict:5s}] {model['id']:24s} {scenario['id']:34s}{tag}{budget} {note[:52]}", flush=True)
                 for f in failures[1:]:
                     print(f"          {f}")
+                if not args.no_pages and run.config:
+                    page = label_record_page(run.config, scenario["id"], model["id"])
+                    if page:
+                        print(f"          notebook: {page}", flush=True)
+                if not args.no_sessions and run.config and run.messages:
+                    session = save_session(run.config, scenario["id"], model["id"], run)
+                    if session:
+                        print(f"          session:  {session}", flush=True)
                 results.append(
                     {
                         "model": model["id"],

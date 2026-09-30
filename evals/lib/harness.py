@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 import uuid
+from datetime import datetime, timezone
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
@@ -41,8 +42,11 @@ class RunResult:
         steps=0,
         max_steps=0,
         refused=None,
+        config=None,
     ):
         self.messages = messages
+        # What the session ran under, so a caller can find the page it opened.
+        self.config = config
         # Charts and diagrams routed to the shell, never into the model's context.
         self.artifacts = artifacts or []
         # The turn hit MAX_STEPS. The shell says so; grading must not read it as silence.
@@ -123,6 +127,81 @@ def _api_key(model):
         if name.endswith("_KEY"):
             return os.environ.get(name, "")
     return ""
+
+
+def label_record_page(config, scenario_id, model_id):
+    """Title the session's record page after the scenario, and say where to read it.
+
+    The agent already saved it: `notebook_resume` creates a Galaxy page under a slug derived
+    from the session id. Untitled that way it is a uuid among hundreds, so this names it.
+    """
+    slug = f"olit-{config.get('session_id')}"
+    galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
+    try:
+        pages = galaxy.call(f"api/pages?search=slug:{slug}") or []
+        page = next((p for p in pages if p.get("slug") == slug and not p.get("deleted")), None)
+        if not page:
+            return None
+        title = f"eval: {scenario_id} [{model_id}]"
+        galaxy.call(f"api/pages/{page['id']}", method="PUT", body={"title": title})
+        return f"{config['galaxy_root']}u/{page.get('username')}/p/{slug}"
+    except Exception:
+        # Reporting must never decide a run; the page is saved either way.
+        return None
+
+
+# The shell's session document, whose shape `src/session-document.ts` owns.
+SESSION_SCHEMA = 1
+# The block the brain refreshes each turn, stale the moment it is stored.
+RECORD_MARKER = "<!-- olit:record -->"
+
+
+def storable_messages(messages):
+    """`storableMessages`: the seed and the refreshed record block are regenerated on open."""
+    return [
+        m
+        for i, m in enumerate(messages or [])
+        if not (i == 0 and m.get("role") == "system")
+        and not (m.get("role") == "system" and RECORD_MARKER in (m.get("content") or ""))
+    ]
+
+
+def save_session(config, scenario_id, model_id, run):
+    """Save the run as an Olit visualization, so it reopens in the UI as a session.
+
+    The agent saves its record page itself; the session document is the shell's job, and an
+    eval has no shell. Without this a run is reviewable only as JSONL.
+    """
+    root = config["galaxy_root"]
+    galaxy = tooltests.Galaxy(root, config.get("galaxy_key", ""))
+    now = datetime.now(timezone.utc).isoformat()
+    title = f"eval: {scenario_id} [{model_id}]"
+    document = {
+        "olit_session": SESSION_SCHEMA,
+        "session": {
+            "id": config["session_id"],
+            "title": title,
+            "createdAt": now,
+            "updatedAt": now,
+            "turn": len(storable_messages(run.messages)),
+            "models": [{"provider": model_id, "firstTurn": 1, "lastTurn": 1}],
+            "usage": {"input": 0, "output": 0, "cost": None},
+        },
+        "messages": storable_messages(run.messages),
+        "artifacts": run.artifacts or [],
+        "toolErrors": list(run.refused or []),
+    }
+    staged = getattr(run, "staged", None) or {}
+    if staged.get("history_id"):
+        document["history_id"] = staged["history_id"]
+    try:
+        created = galaxy.call(
+            "api/visualizations", method="POST", body={"title": title, "config": document, "type": "olit"}
+        )
+        return f"{root}visualizations/display?visualization=olit&visualization_id={created['id']}"
+    except Exception:
+        # Reporting must never decide a run.
+        return None
 
 
 async def _run(scenario, model, base_url=None):
@@ -244,6 +323,7 @@ async def _drive(scenario, session, config):
         staged=staged,
         steps=steps,
         max_steps=cap,
+        config=config,
         refused=refused,
     )
 
