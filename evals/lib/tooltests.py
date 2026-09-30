@@ -94,8 +94,8 @@ class Galaxy:
         )
         return got["outputs"][0]["id"]
 
-    def await_dataset(self, dataset_id, timeout=600):
-        for _ in range(max(1, timeout // POLL_SECONDS)):
+    def await_dataset(self, dataset_id, timeout):
+        for _ in range(max(1, int(timeout // POLL_SECONDS))):
             d = self.call(f"api/datasets/{dataset_id}")
             if d.get("state") in ("ok", "error", "paused", "deleted"):
                 return d
@@ -132,7 +132,7 @@ def expected_bytes(name, extra_dirs=()):
     )
 
 
-def stage(galaxy, tool_id, test_index=0, history_name=None):
+def stage(galaxy, tool_id, timeout, test_index=0, history_name=None):
     """A history holding the test's input files. Returns (history_id, {filename: dataset_id})."""
     test = galaxy.tests(tool_id)[test_index]
     history_id = galaxy.new_history(history_name or f"eval {tool_id} #{test_index}")
@@ -140,7 +140,7 @@ def stage(galaxy, tool_id, test_index=0, history_name=None):
     for name, _ in test.get("required_files") or []:
         ids[name] = galaxy.upload(history_id, name, galaxy.test_file(tool_id, name))
     for name, dataset_id in ids.items():
-        state = galaxy.await_dataset(dataset_id).get("state")
+        state = galaxy.await_dataset(dataset_id, timeout).get("state")
         if state != "ok":
             raise ToolTestError(f"input {name} landed in state {state}")
     return history_id, ids, test

@@ -219,17 +219,18 @@ async def _run(scenario, model, base_url=None):
 
 
 async def _drive(scenario, session, config):
+    budget = scenario_timeout(scenario)
     staged = None
     if scenario.get("dataset"):
-        staged = stage_dataset(config, scenario["dataset"])
+        staged = await asyncio.to_thread(stage_dataset, config, scenario["dataset"], budget)
         if scenario.get("workflows"):
-            staged["workflow_ids"] = import_workflows(staged["galaxy"], scenario["workflows"])
+            staged["workflow_ids"] = await asyncio.to_thread(import_workflows, staged["galaxy"], scenario["workflows"])
     elif scenario.get("workflows"):
-        staged = stage_workflows(config, scenario["workflows"])
+        staged = await asyncio.to_thread(stage_workflows, config, scenario["workflows"], budget)
     elif scenario.get("emptyHistory"):
-        staged = stage_empty(config, scenario["emptyHistory"])
+        staged = await asyncio.to_thread(stage_empty, config, scenario["emptyHistory"])
     elif scenario.get("toolTest"):
-        staged = stage_tool_test(config, scenario["toolTest"])
+        staged = await asyncio.to_thread(stage_tool_test, config, scenario["toolTest"], budget)
 
     bound_history = staged["history_id"] if staged else _empty_history(config, scenario)
     # No record page is staged: the session makes its own, as it does in the browser.
@@ -272,7 +273,7 @@ async def _drive(scenario, session, config):
         events.append("turn_end")
         if staged:
             wait = scenario.get("settleTimeoutMs", 180_000) / 1000
-            landed = _settle_pending(staged, events, timeout=wait)
+            landed = await asyncio.to_thread(_settle_pending, staged, events, wait)
             for _ in range(max_auto_follow_ups()):
                 if not landed:
                     break
@@ -292,7 +293,7 @@ async def _drive(scenario, session, config):
                 steps = max(steps, int(result.get("steps") or 0))
                 cap = int(result.get("max_steps") or 0) or cap
                 events.append("turn_end")
-                landed = _settle_pending(staged, events, timeout=wait)
+                landed = await asyncio.to_thread(_settle_pending, staged, events, wait)
         # One approval, only for a run that stopped at the gate; the gate itself is untouched.
         if approval and _awaiting_approval(result.get("new_messages")):
             approval, text = None, scenario["approveWhenPlanned"]
@@ -312,7 +313,9 @@ async def _drive(scenario, session, config):
             cap = int(result.get("max_steps") or 0) or cap
             events.append("turn_end")
             if staged:
-                _settle_pending(staged, events, timeout=scenario.get("settleTimeoutMs", 180_000) / 1000)
+                await asyncio.to_thread(
+                    _settle_pending, staged, events, scenario.get("settleTimeoutMs", 180_000) / 1000
+                )
     return RunResult(
         graded if restart_after else messages,
         logs,
@@ -353,6 +356,14 @@ def _note(event, sink, events=None, refused=None):
         refused.append(event.get("name"))
 
 
+DEFAULT_TIMEOUT_MS = 150_000
+
+
+def scenario_timeout(scenario):
+    """The wall clock one run gets; every wait inside the run is bounded by this same number."""
+    return (scenario.get("timeoutMs") or DEFAULT_TIMEOUT_MS) / 1000
+
+
 def _guarded(scenario, model, base_url, timeout):
     async def guarded():
         return await asyncio.wait_for(_run(scenario, model, base_url), timeout=timeout)
@@ -367,7 +378,7 @@ def _guarded(scenario, model, base_url, timeout):
 
 def run_scenario(scenario, model, capture=None):
     """`capture` names a file to record this run's completions into."""
-    timeout = (scenario.get("timeoutMs") or 150_000) / 1000
+    timeout = scenario_timeout(scenario)
     target = upstream(model) if capture else None
     if not target:
         return _guarded(scenario, model, None, timeout)
@@ -390,12 +401,12 @@ def load_scenarios(root, only=None):
     return out
 
 
-def stage_tool_test(config, spec):
+def stage_tool_test(config, spec, timeout):
     """A history holding a tool test's inputs, plus the expectation used to grade it."""
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     tool_id = spec["tool"]
     index = spec.get("testIndex", 0)
-    history_id, ids, test = tooltests.stage(galaxy, tool_id, index)
+    history_id, ids, test = tooltests.stage(galaxy, tool_id, timeout, index)
     return {
         "galaxy": galaxy,
         "history_id": history_id,
@@ -437,7 +448,7 @@ def import_workflows(galaxy, spec):
     return {name: galaxy.call("api/workflows", "POST", {"workflow": d})["id"] for name, d in definitions.items()}
 
 
-def stage_workflows(config, spec):
+def stage_workflows(config, spec, timeout):
     """Import fixture workflows, so questions about the instance have a countable answer."""
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     ids = import_workflows(galaxy, spec)
@@ -463,7 +474,7 @@ def _fixture_path(name):
     return path
 
 
-def _stage_file(galaxy, history_id, spec):
+def _stage_file(galaxy, history_id, spec, timeout):
     """A fixture from disk, or a pinned URL Galaxy fetches itself."""
     name = spec.get("name") or spec["file"]
     datatype = spec.get("datatype")
@@ -471,7 +482,7 @@ def _stage_file(galaxy, history_id, spec):
         dataset_id = galaxy.fetch_url(history_id, spec["url"], name, datatype)
     else:
         dataset_id = galaxy.upload(history_id, name, _fixture_path(name).read_bytes(), datatype)
-    landed = galaxy.await_dataset(dataset_id)
+    landed = galaxy.await_dataset(dataset_id, timeout)
     if landed.get("state") != "ok":
         raise tooltests.ToolTestError(f"{name} landed in state {landed.get('state')}")
     if datatype and landed.get("extension") != datatype:
@@ -479,7 +490,7 @@ def _stage_file(galaxy, history_id, spec):
     return dataset_id
 
 
-def stage_dataset(config, spec):
+def stage_dataset(config, spec, timeout):
     """A history holding the scenario's fixtures, as a researcher's would when they sit down.
 
     `file` stages one from `fixtures/`, `url` has Galaxy fetch one, and `files` stages
@@ -488,7 +499,7 @@ def stage_dataset(config, spec):
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     wanted = spec.get("files") or [spec]
     history_id = galaxy.new_history(spec.get("history") or "olit eval")
-    dataset_ids = {(f.get("name") or f["file"]): _stage_file(galaxy, history_id, f) for f in wanted}
+    dataset_ids = {(f.get("name") or f["file"]): _stage_file(galaxy, history_id, f, timeout) for f in wanted}
     dataset_id = dataset_ids[wanted[0].get("name") or wanted[0]["file"]]
     staged = {
         "galaxy": galaxy,
@@ -499,13 +510,13 @@ def stage_dataset(config, spec):
         "session_id": config["session_id"],
     }
     if spec.get("thenRuns"):
-        staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id, spec["thenRuns"])
+        staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id, spec["thenRuns"], timeout)
     if spec.get("thenInvokes"):
-        staged["invocation_id"] = _stage_invocation(galaxy, history_id, dataset_id, spec["thenInvokes"])
+        staged["invocation_id"] = _stage_invocation(galaxy, history_id, dataset_id, spec["thenInvokes"], timeout)
     return staged
 
 
-def _stage_run(galaxy, history_id, dataset_id, spec):
+def _stage_run(galaxy, history_id, dataset_id, spec, timeout):
     """Leave a prior job in the history, as a researcher would find after a session.
 
     Staged rather than requested: asked to do something visibly impossible the agent
@@ -525,7 +536,7 @@ def _stage_run(galaxy, history_id, dataset_id, spec):
         raise tooltests.ToolTestError(f"{spec['tool_id']} produced no output to fail")
     produced_id = outputs[0]["id"]
     wanted = spec.get("expectState", "error")
-    state = galaxy.await_dataset(produced_id).get("state")
+    state = galaxy.await_dataset(produced_id, timeout).get("state")
     if state != wanted:
         raise tooltests.ToolTestError(
             f"{spec['tool_id']} was expected to land in state {wanted!r} but landed in "
@@ -550,7 +561,7 @@ def max_auto_follow_ups():
 INVOCATION_TERMINAL = ("scheduled", "completed", "cancelled", "failed")
 
 
-def _await_invocation(galaxy, invocation_id, timeout=600):
+def _await_invocation(galaxy, invocation_id, timeout):
     """The invocation once Galaxy stops driving it, and the states of its jobs."""
     for _ in range(max(1, timeout // 2)):
         invocation = galaxy.call(f"api/invocations/{invocation_id}")
@@ -565,7 +576,7 @@ def _await_invocation(galaxy, invocation_id, timeout=600):
     return galaxy.call(f"api/invocations/{invocation_id}"), {}
 
 
-def _stage_invocation(galaxy, history_id, dataset_id, spec):
+def _stage_invocation(galaxy, history_id, dataset_id, spec, timeout):
     """Leave a finished workflow run in the history, as a researcher would find it.
 
     `expectJobState` is asserted, so a scenario cannot silently test a run that failed
@@ -582,7 +593,7 @@ def _stage_invocation(galaxy, history_id, dataset_id, spec):
             "inputs_by": "step_index",
         },
     )
-    settled, states = _await_invocation(galaxy, invocation["id"])
+    settled, states = _await_invocation(galaxy, invocation["id"], timeout)
     wanted_job = spec.get("expectJobState", "error")
     if settled.get("state") not in INVOCATION_TERMINAL or not states.get(wanted_job):
         raise tooltests.ToolTestError(
@@ -593,7 +604,7 @@ def _stage_invocation(galaxy, history_id, dataset_id, spec):
     return invocation["id"]
 
 
-def _settle_pending(staged, events, timeout=180, interval=10):
+def _settle_pending(staged, events, timeout, interval=10):
     """Wait for work Galaxy is advancing, as the shell's watcher does."""
     galaxy, history_id = staged["galaxy"], staged["history_id"]
     deadline = time.time() + timeout
