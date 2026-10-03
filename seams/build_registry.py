@@ -43,7 +43,18 @@ BLOCKS = [
         "PORTED",
         "Secrets section adapted: olit needs no credentials.",
     ),
-    ("buildVerificationDisciplineBlock", "unconditional", "VERIFICATION", "PORTED", ""),
+    (
+        "buildVerificationDisciplineBlock",
+        "unconditional",
+        "VERIFICATION",
+        "PORTED",
+        "2026-10-03: carries one rule loom states in buildResumePrompt instead -- re-running "
+        "failed elements does not repair the collection they came from. olit's resume message "
+        "says only what the standing prompt cannot, since the prompt is re-injected every turn, "
+        "so a verification rule lives here. loom's other two additions were already covered: "
+        "empty output despite success by the per-format checks, every element by the element "
+        "count and failed-or-hidden rule.",
+    ),
     (
         "buildPlanConventionBlock",
         "unconditional; `omitAnchors` varies by model family",
