@@ -22,7 +22,8 @@ NOT_PORTABLE = {
     "iwc-find-from-question": (
         "asserts a skill.hint activity event for loom's iwc-candidates trigger; olit has no "
         "activity log, so what this uniquely measures is an artifact it does not produce. The "
-        "tool call it also asserts is covered by plan-consults-iwc"
+        "rest of it is olit's own iwc-question-finds-a-workflow: plan-consults-iwc does not "
+        "cover it, because asking for a plan is the gating this behaviour denies"
     ),
 }
 
