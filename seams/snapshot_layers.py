@@ -189,13 +189,13 @@ MODULE_CLASSIFICATION = {
     "skills-discovery": "PORTED: the skills registry",
     "skills": "PORTED: the skills registry",
     "vendor-skills": "PORTED: skills are vendored at build time",
-    "notebook-writer": "PORTED: the record",
+    "notebook-writer": "PORTED: the record. v0.8.0's delta is entirely `loom-invocation` fence mechanics -- parse, render, locate, upsert, harness fields carried across a rewrite -- and olit has no counterpart: the Page is the record and carries no machine-parsed blocks. Its fence-safety concern, appending outside an unclosed fence, lands on olit at the artifact substitution guard (`_inside_fence`) and on Galaxy's own section semantics.",
     "notebook-anchors": "PORTED: record anchors",
     "galaxy-page-binding": "PORTED: one record per history",
     "galaxy-page-sync": "PORTED: record writes",
     "galaxy-pages-api": "PORTED: the page tools",
     "galaxy-pages-sync": "PORTED: record writes",
-    "galaxy-markdown-adapter": "PORTED: artifact markdown",
+    "galaxy-markdown-adapter": "PORTED: artifact markdown. v0.8.0 extends the base64 link-reference carrier from `loom-invocation` to job and session fences, and olit has no dual-store sync to smuggle fences through. It also emits visible `invocation_outputs` and `job_parameters` directives, written by loom's harness and never by its model, whose page guidance names the same five directives olit names. olit is not behind on the model-facing surface.",
     "galaxy-api": "PORTED: the scoped catalog",
     "galaxy-poller": "PORTED: the job watcher",
     "galaxy-artifact-link-guidance": "PORTED: prompt.ARTIFACT_LINKS, at the tail of the chat "
@@ -226,9 +226,9 @@ MODULE_CLASSIFICATION = {
     "mcp-output": "NA: reads an MCP adapter's spill files off disk.",
     "mcp-recovery": "NA: no MCP surface; olit dispatches Galaxy tools by name.",
     "workspace-state-dir": "NA: a per-analysis state directory on disk.",
-    "galaxy-job-block": "PORTED: job state in the record",
+    "galaxy-job-block": "PORTED: job state in the record. v0.8.0's delta is `loom-job` fence mechanics, the twin of notebook-writer's. Its two transferable concerns are answered in olit's idiom: replacing a range preceded by an unclosed fence, and a lost update, are Galaxy's own section semantics plus `expect_hash` on update_page.",
     "galaxy-upload": "PORTED: upload_file",
-    "tools": "PORTED: the tool surface",
+    "tools": "PORTED: the tool surface. v0.8.0 changed only galaxy_invocation_record and galaxy_job_record: annotate an existing block rather than overwrite it, refuse an empty label the block parser would choke on, refuse to clobber an unreadable block. No tool was added or removed, so olit's surface is missing nothing from this sync, and the read-before-write concern is already get_page before update_page.",
     "tools-sync": "PORTED: the tool surface is built at load",
     "evidence-gate": "NA: loom's model owns the checkbox and its poller owns a separate "
     "status block, so the two can contradict. olit's watcher writes the "
@@ -237,7 +237,14 @@ MODULE_CLASSIFICATION = {
     "the model.",
     "auto-resume": "PORTED: bounded automatic Galaxy follow-up in src/auto-resume.ts. Was labelled NA on the reasoning that olit starts no turn, which described the gap rather than a constraint: the browser does not prevent it, and the watcher and submit lifecycle were already there. onSettled used to tell the user to ask; loom's own prompt forbids asking them to ask."
     "posts a message and edits the record; it starts no turn, so there is no "
-    "automatic continuation to bound.",
+    "automatic continuation to bound. "
+    "2026-10-03: v0.8.0 splits in two. The delivery-receipt half (FOLLOW_UP_ACK_MS, "
+    "userMessageRecorded, isIdle) answers pi swallowing a refused sendUserMessage; olit "
+    "sends into its own in-process runner and has no such channel. The other half was a "
+    "real gap, now fixed: a Stop or the turn cap discarded the held batch while the watcher "
+    "had already dropped those ids, so the results were lost outright. Its verification "
+    "additions went into VERIFICATION rather than the resume message, per olit's "
+    "single-source rule.",
     "invocation-failure-hint": "PARTIAL: the imperative rides the result as `outcome_note` (see the tool.get_invocations.outcome seam); the pointer to loom's two vendored failure references is not ported, because they live in its foundry bundle rather than in the shared galaxy-skills repo",
     "galaxy-cred-drift": "NA: the browser session is the credential; nothing to reconnect",
     "user-instructions": "NA: no project directory in a browser, so no LOOM.md channel",
