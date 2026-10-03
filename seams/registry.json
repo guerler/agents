@@ -161,14 +161,14 @@
         "file": "extensions/loom/context.ts",
         "symbol": "buildGalaxyContextBlock",
         "condition": "suppressed in local mode; otherwise emits a CONNECTED or a NOT CONNECTED variant",
-        "fingerprint": "a4638b6dc4a7646d"
+        "fingerprint": "93cca7c23db94506"
       },
       "olit": {
         "file": "brain/olit/prompt.py",
         "symbol": "GALAXY_TERMINOLOGY"
       },
       "label": "PORTED",
-      "note": "Condition not yet ported: olit has no NOT-CONNECTED variant. See catalog gap. loom v0.8.0 added the IWC section and rewrote the routing-tag list; both are ported. The new hybrid/local bullets are not: this build has no local execution."
+      "note": "Condition not yet ported: olit has no NOT-CONNECTED variant. See catalog gap. loom v0.8.0 added the IWC section and rewrote the routing-tag list; both are ported. The new hybrid/local bullets are not: this build has no local execution. 2026-10-03: the plan-lifecycle pre-draft order and the retirement of `[galaxy]` for `[remote]` are ported. The clause tying the routing tag to what IWC and availability return is omitted, because every olit plan is `[remote]` and the tag turns on nothing."
     },
     {
       "id": "prompt.buildSkillsContext",
@@ -273,24 +273,7 @@
       "note": ""
     },
     {
-      "id": "prompt.galaxy-context.executing",
-      "kind": "prompt-section",
-      "loom": {
-        "file": "extensions/loom/context.ts",
-        "symbol": "buildGalaxyContextBlock",
-        "section": "Executing a Galaxy step",
-        "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
-        "fingerprint": "061bd0efab046abe"
-      },
-      "olit": {
-        "file": "brain/olit/prompt.py",
-        "symbol": "EXECUTING_A_STEP"
-      },
-      "label": "PORTED",
-      "note": ""
-    },
-    {
-      "id": "prompt.galaxy-context.finding-a-workflow",
+      "id": "prompt.galaxy-context.finding",
       "kind": "prompt-section",
       "loom": {
         "file": "extensions/loom/context.ts",
@@ -305,6 +288,23 @@
       },
       "label": "PORTED",
       "note": "Ported 2026-09-29, tool names as olit registers them. It fires on a described analysis rather than only on a plan request, and states that search_iwc_workflows is keyword search while recommend ranks an intent -- the distinction a run consulted the registry through and got nothing."
+    },
+    {
+      "id": "prompt.galaxy-context.executing",
+      "kind": "prompt-section",
+      "loom": {
+        "file": "extensions/loom/context.ts",
+        "symbol": "buildGalaxyContextBlock",
+        "section": "Executing a Galaxy step",
+        "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
+        "fingerprint": "27e4954fc10ac3aa"
+      },
+      "olit": {
+        "file": "brain/olit/prompt.py",
+        "symbol": "EXECUTING_A_STEP"
+      },
+      "label": "PORTED",
+      "note": "2026-10-03: v0.8.0 rewrote the run-binding paragraph around galaxy_job_record and galaxy_invocation_record. olit has neither tool. Its watcher ingests ids out of the submission result (src/main.ts), so a run is watched before the next turn exactly as loom's poller is, but the record is a Galaxy Page the model writes rather than a block the harness writes. EXECUTING_A_STEP already carries the portable half: told when a run finishes or fails, and note it against the step it belongs to."
     },
     {
       "id": "prompt.galaxy-context.drafting",
@@ -373,7 +373,7 @@
         "symbol": "buildGalaxyContextBlock",
         "branch": "NOT CONNECTED (shell-disabled branch)",
         "condition": "emitted instead of the Galaxy guidance when credentials are absent",
-        "fingerprint": "a4638b6dc4a7646d"
+        "fingerprint": "93cca7c23db94506"
       },
       "olit": {
         "file": "brain/olit/prompt.py",
@@ -405,14 +405,14 @@
         "file": "extensions/loom/sra-import-gate.ts",
         "symbol": "SRA_IMPORT_GUIDANCE",
         "condition": "unconditional when Galaxy is reachable",
-        "fingerprint": "7b54fc3c992287f6"
+        "fingerprint": "233d2c82223b592a"
       },
       "olit": {
         "file": "brain/olit/prompt.py",
         "symbol": "IMPORTING_SRA"
       },
       "label": "PORTED",
-      "note": "loom also enforces this with a tool-call gate that groups sibling SRA submissions; olit carries the guidance only."
+      "note": "loom also enforces this with a tool-call gate that groups sibling SRA submissions; olit carries the guidance only. 2026-10-03: v0.8.0 replaced 'Record the returned job and collection IDs' with a galaxy_job_record binding, unportable for the same reason as galaxy-context.executing. olit keeps its own sentence and EXECUTING_A_STEP carries the equivalent."
     },
     {
       "id": "context.project-data-placement",

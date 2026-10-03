@@ -49,7 +49,9 @@ BLOCKS = [
         "unconditional; `omitAnchors` varies by model family",
         "PLAN_CONVENTION",
         "PORTED",
-        "olit emits no anchors at all, so it matches the omit path.",
+        "olit emits no anchors at all, so it matches the omit path."
+        " Re-read 2026-09-29 for loom v0.8.0's retirement of the `[galaxy]` routing tag; olit now "
+        "tags `[remote]` and still teaches one tag, since this build has no local execution.",
     ),
     ("buildParameterReviewBlock", "unconditional", "PARAMETER_REVIEW", "PORTED", ""),
     ("buildChatFormattingBlock", "unconditional", "CHAT_FORMATTING", "PORTED", ""),
@@ -72,7 +74,12 @@ BLOCKS = [
         "suppressed in local mode; otherwise emits a CONNECTED or a NOT CONNECTED variant",
         "GALAXY_TERMINOLOGY",
         "PORTED",
-        "Condition not yet ported: olit has no NOT-CONNECTED variant. See catalog gap.",
+        "Condition not yet ported: olit has no NOT-CONNECTED variant. See catalog gap. "
+        "loom v0.8.0 added the IWC section and rewrote the routing-tag list; both are ported. "
+        "The new hybrid/local bullets are not: this build has no local execution. "
+        "2026-10-03: the plan-lifecycle pre-draft order and the retirement of `[galaxy]` for "
+        "`[remote]` are ported. The clause tying the routing tag to what IWC and availability "
+        "return is omitted, because every olit plan is `[remote]` and the tag turns on nothing.",
     ),
     (
         "buildSkillsContext",
@@ -87,7 +94,9 @@ BLOCKS = [
         "emitted only when the local shell is disabled",
         "NO_LOCAL_SHELL",
         "PORTED",
-        "Condition is permanently true in olit; block is unconditional here.",
+        "Condition is permanently true in olit; block is unconditional here."
+        " Re-read 2026-09-29 for loom v0.8.0's retirement of the `[galaxy]` routing tag; olit now "
+        "tags `[remote]` and still teaches one tag, since this build has no local execution.",
     ),
     ("buildTeamDispatchContext", "emitted when team dispatch is enabled", None, "NA", "No team dispatch."),
     (
@@ -109,14 +118,34 @@ SECTIONS = [
         "Local upload replaced by URL fetch; olit cannot reach the user's disk.",
     ),
     ("Invoking a Galaxy workflow", "INVOKING_WORKFLOW", "PORTED", ""),
-    ("Executing a Galaxy step", "EXECUTING_A_STEP", "PORTED", ""),
+    (
+        "Finding a community workflow (IWC)",
+        "FINDING_A_WORKFLOW",
+        "PORTED",
+        "Ported 2026-09-29, tool names as olit registers them. It fires on a described analysis "
+        "rather than only on a plan request, and states that search_iwc_workflows is keyword "
+        "search while recommend ranks an intent -- the distinction a run consulted the registry "
+        "through and got nothing.",
+    ),
+    (
+        "Executing a Galaxy step",
+        "EXECUTING_A_STEP",
+        "PORTED",
+        "2026-10-03: v0.8.0 rewrote the run-binding paragraph around galaxy_job_record and "
+        "galaxy_invocation_record. olit has neither tool. Its watcher ingests ids out of the "
+        "submission result (src/main.ts), so a run is watched before the next turn exactly as "
+        "loom's poller is, but the record is a Galaxy Page the model writes rather than a block "
+        "the harness writes. EXECUTING_A_STEP already carries the portable half: told when a run "
+        "finishes or fails, and note it against the step it belongs to.",
+    ),
     (
         "Drafting a new plan",
         "DRAFTING_A_PLAN",
         "PORTED",
         "Own block since 2026-08-20, gated on the tool catalog exactly as loom gates it on a "
         "live connection. Previously DIVERGED: carried inside PLAN_CONVENTION and ungated, "
-        "which fired it in contexts loom never does. The local-routing branch stays dropped.",
+        "which fired it in contexts loom never does. The local-routing branch stays dropped. "
+        "Step 1 now points at the IWC section rather than naming a search tool; ported with it.",
     ),
     (
         "Resuming existing Galaxy work",
@@ -143,7 +172,9 @@ BRANCHES = [
         "GALAXY_UNAVAILABLE",
         "PORTED",
         "loom keys on missing GALAXY_URL/GALAXY_API_KEY; olit is served by Galaxy, so the "
-        "equivalent condition is the OpenAPI tool catalog failing to load.",
+        "equivalent condition is the OpenAPI tool catalog failing to load. "
+        "The NOT CONNECTED branch itself is untouched in v0.8.0; the fingerprint moves because "
+        "it covers the whole symbol.",
     ),
 ]
 
@@ -163,7 +194,10 @@ CONSTS = [
         "IMPORTING_SRA",
         "PORTED",
         "loom also enforces this with a tool-call gate that groups sibling SRA submissions; "
-        "olit carries the guidance only.",
+        "olit carries the guidance only. "
+        "2026-10-03: v0.8.0 replaced 'Record the returned job and collection IDs' with a "
+        "galaxy_job_record binding, unportable for the same reason as galaxy-context.executing. "
+        "olit keeps its own sentence and EXECUTING_A_STEP carries the equivalent.",
     ),
 ]
 
