@@ -165,6 +165,22 @@ ALLOWED_TOOL_DIVERGENCE = {
 # means a capability olit could hold and has not yet judged. An unlisted module fails the
 # check, which is the point: an addition upstream must be classified before it is ignored.
 MODULE_CLASSIFICATION = {
+    # v0.8.0's submission-capture cluster. loom's harness writes a notebook block the moment a
+    # submission answers; olit's record is a Galaxy Page the model writes (audit row 6), so only
+    # the id-reading half has a counterpart.
+    "galaxy-submission": "PORTED: reading Galaxy ids out of a submission result, as "
+    "extractWatched in src/invocations.ts. Auditing it against loom's SUBMISSION_TOOLS found "
+    "run_user_tool unwatched: a UDT job was submitted and never followed, while the prompt "
+    "promised the model it would be told when a run finished.",
+    "galaxy-submission-capture": "NA: auto-writes `loom-job`/`loom-invocation` notebook blocks so "
+    "the poller has something to read. olit keeps no second store -- the Page is the record and "
+    "the model writes it -- and its watcher holds the submitted ids in memory instead, so there "
+    "is nothing to register.",
+    "harness-block-fields": "NA: the harness-owned fields of those notebook blocks.",
+    "galaxy-udt-block": "NA: `loom-udt` notebook blocks pointing at a tool definition.",
+    "ulid": "NA: mints attempt ids for those notebook blocks.",
+    "submission-replay": "NA: replays captured submission blocks in loom's Tier-1 evals. Without "
+    "capture there is nothing recorded to replay; olit's evals drive a real Galaxy.",
     "context": "PORTED: the system prompt, tracked block by block in `seams`",
     "galaxy-page-markdown-guidance": "PORTED: tracked in `seams`",
     "sra-import-gate": "PORTED: brain/olit/loop/sra_import_gate.py",
