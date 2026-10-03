@@ -16,6 +16,9 @@ Three failures, each meaning something different:
 - **DRIFT** — loom's text changed since we recorded it. Re-read it, decide whether olit
   should follow, then `python3 seams/build_registry.py` to re-record. This is what makes
   pulling a newer Orbit produce a change list instead of a memory exercise.
+  Labels and notes live in that script's tables, never in `registry.json`: a note written
+  into the output is invisible to the generator and the next run would overwrite it, so
+  regeneration refuses when it would drop a seam or shorten a note (`--prune` to override).
 - **MISSING** — the registry names a symbol that no longer exists on one side.
 - **ORPHAN** — olit defines prompt text that no seam accounts for. Either name its loom
   anchor or label it `ADDED`. This exists because text invented during a port is invisible
@@ -42,16 +45,24 @@ drift: loom's **eval scenarios**, the Galaxy **tool surface** (vs `galaxy-mcp`),
 **policy** layer, the vendored **skills corpus**, and **pi** — the agent loop olit's driver is a port of (`@earendil-works/pi-agent-core`, reached through loom's `node_modules`). Their certified upstream state lives in `registry.json` under
 `layers`, so `check.py` runs offline and in CI.
 
-Re-certifying is deliberate, never automatic:
+Re-certifying is deliberate, never automatic, and **per layer**: name the layers you read.
 
 ```bash
-python3 seams/snapshot_layers.py --mcp <path>/galaxy_mcp/server.py
+python3 seams/snapshot_layers.py --only tool_surface,tool_contract --mcp <path>/galaxy_mcp/server.py
+python3 seams/snapshot_layers.py --all          # every layer, deliberately
 ```
 
-Run that only after actually reading what changed upstream and deciding olit is correct
+Unnamed layers keep their last certification, so reviewing one layer cannot mark another as
+reviewed. Without `--only` or `--all` it refuses and lists the layer names: **green means
+someone read that layer, not that a snapshot ran.**
+
+Run it only after actually reading what changed upstream and deciding olit is correct
 against it. Until it is run, the checker holds the project to the last certification — which
 is the point: **an audit conclusion that is not a check that runs will go stale without
 anyone noticing.** That has already happened once here, to the prompt-block audit.
+
+`tool_surface` records the galaxy-mcp `version` it was certified against, because a
+certification with no provenance passed for weeks while nine tool descriptions were stale.
 
 ### The skills corpus is a build artifact
 
