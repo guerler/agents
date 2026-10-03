@@ -51,6 +51,17 @@ def loom_eval_lib(loom_root):
     return out
 
 
+def mcp_version(server_py):
+    """galaxy-mcp's declared version, so a certification records which one it was made against."""
+    for parent in pathlib.Path(server_py).resolve().parents:
+        pyproject = parent / "pyproject.toml"
+        if pyproject.is_file():
+            for line in pyproject.read_text().splitlines():
+                if line.startswith("version"):
+                    return line.split("=", 1)[1].strip().strip("\"'")
+    return ""
+
+
 def mcp_tool_table(server_py):
     """name -> fingerprint of (description, parameter names) for each @mcp.tool."""
     tree = ast.parse(pathlib.Path(server_py).read_text())

@@ -310,6 +310,26 @@ EXTRA = [
 ]
 
 
+def _refuse_to_lose(previous, rows):
+    """Stop a regeneration that would drop a seam or shorten a note.
+
+    The tables in this file are the source; `registry.json` is the output. Reasoning
+    written straight into the output is invisible here and would be overwritten, which
+    is how one seam and three notes were lost before this check existed.
+    """
+    was = {row["id"]: row for row in previous}
+    now = {row["id"]: row for row in rows}
+    losses = [f"dropped seam: {i}" for i in sorted(set(was) - set(now))]
+    losses += [f"shortened note: {i}" for i in sorted(now) if i in was and len(now[i]["note"]) < len(was[i]["note"])]
+    if losses and "--prune" not in sys.argv:
+        raise SystemExit(
+            "\n".join(
+                ["regeneration would discard recorded reasoning:", *(f"  {line}" for line in losses)]
+                + ["Add it to the tables in this file, or pass --prune if the loss is intended."]
+            )
+        )
+
+
 def _extra_rows():
     rows = []
     for row_id, kind, loom, olit, label, note in EXTRA:
@@ -432,6 +452,7 @@ def main():
 
     out = REGISTRY
     registry = json.loads(out.read_text()) if out.exists() else {}
+    _refuse_to_lose(registry.get("seams") or [], rows)
     registry["seams"] = rows
     out.write_text(json.dumps(registry, indent=2) + "\n")
     print(f"wrote {len(rows)} rows -> {out}")

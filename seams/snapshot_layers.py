@@ -3,7 +3,11 @@
 Running this is the deliberate act of saying "I have looked at what changed upstream and
 the agent is correct against it". `check.py` then holds us to that until it is run again.
 
-  python3 seams/snapshot_layers.py [--mcp path/to/galaxy_mcp/server.py]
+Certification is per layer and never implicit: name the layers you reviewed, so a layer
+nobody looked at keeps failing `check.py` instead of going green on a snapshot.
+
+  python3 seams/snapshot_layers.py --only tool_surface,tool_contract --mcp path/to/galaxy_mcp/server.py
+  python3 seams/snapshot_layers.py --all
 """
 
 import json
@@ -19,6 +23,21 @@ import description  # noqa: E402
 
 REGISTRY = pathlib.Path(__file__).resolve().parent / "registry.json"
 LOOM = os.environ.get("LOOM_ROOT", str(pathlib.Path.home() / "loom"))
+
+# Certifiable layers. A layer is only ever rewritten when it is named, so a green check
+# means someone read that layer's upstream changes, not that a snapshot ran.
+LAYERS = (
+    "eval_scenarios",
+    "eval_lib",
+    "loom_modules",
+    "identity_prompt",
+    "skills",
+    "pi",
+    "tool_surface",
+    "policy",
+    "tool_request",
+    "tool_contract",
+)
 
 # Differences that are forced by the browser architecture, not drift. Each must stay
 # justified in orbit-faithfulness.md §2h; anything outside this set is a finding.
@@ -227,60 +246,82 @@ MODULE_CLASSIFICATION = {
 }
 
 
-def main():
-    mcp_path = None
-    if "--mcp" in sys.argv:
-        mcp_path = sys.argv[sys.argv.index("--mcp") + 1]
+def _builders(agent, existing, mcp_path):
+    """One callable per layer, so a layer nobody reviewed is never recomputed."""
 
-    agent = description.load()
-    registry = json.loads(REGISTRY.read_text())
-    existing = registry.get("layers") or {}
+    def tool_surface():
+        if not mcp_path:
+            raise SystemExit("tool_surface needs --mcp path/to/galaxy_mcp/server.py")
+        return {
+            "source": pathlib.Path(mcp_path).parts[-2],
+            "version": layers.mcp_version(mcp_path),
+            "allowed_divergence": ALLOWED_TOOL_DIVERGENCE,
+            "upstream": layers.mcp_tool_table(mcp_path),
+            # What upstream builds, so a passthrough with matching text is still caught.
+            "shaped_returns": layers.mcp_shaped_returns(mcp_path),
+        }
 
-    layer_data = {
-        "eval_scenarios": {
+    return {
+        "eval_scenarios": lambda: {
             "source": "loom evals/scenarios",
             "fingerprints": layers.loom_scenarios(LOOM),
         },
-        "eval_lib": {
+        "eval_lib": lambda: {
             "source": "loom evals/lib",
-            "note": "grading and normalization; a change here is eval parity even when it "
-            "does not move a recorded run",
+            "note": "grading and normalization; a change here is eval parity even when it does not move a recorded run",
             "fingerprints": layers.loom_eval_lib(LOOM),
         },
-        "loom_modules": {
+        "loom_modules": lambda: {
             "source": "loom extensions/loom",
             "note": "inventory, not a parity list: an added or changed module must be "
             "classified as relevant, NA, or needing investigation",
             "classified": MODULE_CLASSIFICATION,
             "fingerprints": layers.loom_modules(LOOM),
         },
-        "identity_prompt": agent.get("identity_prompt") or (existing.get("identity_prompt") or {}),
-        "skills": agent["skills"],
-        "pi": layers.pi_manifest(LOOM) or (existing.get("pi") or {}),
-        "tool_surface": existing.get("tool_surface") or {},
+        "identity_prompt": lambda: agent.get("identity_prompt") or (existing.get("identity_prompt") or {}),
+        "skills": lambda: agent["skills"],
+        "pi": lambda: layers.pi_manifest(LOOM) or (existing.get("pi") or {}),
+        "tool_surface": tool_surface,
+        "policy": lambda: {n: {**d, "olit": description.policy(agent, n)} for n, d in POLICY_UPSTREAM.items()},
+        "tool_request": lambda: description.tool_requests(agent),
+        "tool_contract": lambda: description.tool_contracts(agent),
     }
-    if mcp_path:
-        layer_data["tool_surface"] = {
-            "source": pathlib.Path(mcp_path).parts[-2],
-            "allowed_divergence": ALLOWED_TOOL_DIVERGENCE,
-            "upstream": layers.mcp_tool_table(mcp_path),
-            # What upstream builds, so a passthrough with matching text is still caught.
-            "shaped_returns": layers.mcp_shaped_returns(mcp_path),
-        }
-    policy = {}
-    for name, declared in POLICY_UPSTREAM.items():
-        policy[name] = {**declared, "olit": description.policy(agent, name)}
-    layer_data["policy"] = policy
-    layer_data["tool_request"] = description.tool_requests(agent)
-    layer_data["tool_contract"] = description.tool_contracts(agent)
+
+
+def main():
+    argv = sys.argv[1:]
+    mcp_path = argv[argv.index("--mcp") + 1] if "--mcp" in argv else None
+    if "--only" in argv:
+        selected = {name.strip() for name in argv[argv.index("--only") + 1].split(",") if name.strip()}
+        unknown = sorted(selected - set(LAYERS))
+        if unknown:
+            raise SystemExit(f"unknown layer: {', '.join(unknown)}\nlayers: {', '.join(LAYERS)}")
+    elif "--all" in argv:
+        selected = set(LAYERS)
+    else:
+        raise SystemExit(
+            "certification says a layer was reviewed, so name the ones you reviewed:\n"
+            f"  --only <layer>[,<layer>]   or   --all\nlayers: {', '.join(LAYERS)}"
+        )
+
+    agent = description.load()
+    registry = json.loads(REGISTRY.read_text())
+    existing = registry.get("layers") or {}
+    builders = _builders(agent, existing, mcp_path)
+
+    layer_data = {}
+    for name in LAYERS:
+        if name in selected:
+            layer_data[name] = builders[name]()
+        elif name in existing:
+            layer_data[name] = existing[name]
     registry["layers"] = layer_data
     REGISTRY.write_text(json.dumps(registry, indent=2) + "\n")
-    n = layer_data["tool_surface"].get("upstream") or {}
-    print(
-        f"certified: {len(layer_data['eval_scenarios']['fingerprints'])} loom scenarios, "
-        f"{len(layer_data['skills']['files'])} skill files, {len(n)} upstream tools, "
-        f"pi {(layer_data.get('pi') or {}).get('version', '?')}"
-    )
+
+    print(f"certified: {', '.join(sorted(selected))}")
+    carried = [name for name in LAYERS if name not in selected and name in existing]
+    if carried:
+        print(f"left as previously certified: {', '.join(carried)}")
 
 
 if __name__ == "__main__":

@@ -744,7 +744,8 @@
       "reviewed": "0.87.1"
     },
     "tool_surface": {
-      "source": "tmp",
+      "source": "galaxy_mcp",
+      "version": "1.11.0.dev0",
       "allowed_divergence": {
         "connect": "no connection step: olit is served by Galaxy",
         "download_dataset": "no local filesystem; returns content instead",
@@ -785,24 +786,24 @@
         "get_tool_run_examples": "2ae02c9ab2c78b0d",
         "get_tool_input_template": "2443c45b5eff3b79",
         "get_tool_citations": "4a5c3d08e33b8a02",
-        "run_tool": "0d8ee8d02d5d1411",
+        "run_tool": "394e5223c2422ce8",
         "get_tool_panel": "7288092e005a1a53",
         "create_history": "67e33303d7485cd2",
         "update_history": "ad7d520ddb1c4777",
         "search_tools_by_keywords": "e9fd1f85f243f120",
         "get_server_info": "6329317aa4fbb00c",
         "get_user": "6996f3e5f40d611a",
-        "get_histories": "627fdfbb146b75f2",
+        "get_histories": "83cbccdf408a472a",
         "list_history_ids": "88ad52890f4200e5",
-        "get_history_details": "5b80d90be39a738d",
-        "get_history_contents": "31582c0e7aeb4f00",
-        "get_job_details": "8aac681c76b9b6fb",
-        "get_dataset_details": "be0edddc46a05c57",
+        "get_history_details": "1e0e223ac411cc55",
+        "get_history_contents": "ed5f0f3866481b60",
+        "get_job_details": "bac1708059e31200",
+        "get_dataset_details": "cdc7a24c57f17e44",
         "get_collection_details": "e92c9556ff548fd1",
-        "download_dataset": "b046881ab6c281aa",
+        "download_dataset": "3108558eabe2e8ad",
         "upload_file": "f6b4d869df115d8f",
-        "upload_file_from_url": "eaedf7345bac0d21",
-        "get_invocations": "cca65124f242e691",
+        "upload_file_from_url": "e1029599679a6733",
+        "get_invocations": "ad8630882b973184",
         "get_iwc_workflows": "aa45e9c23b187121",
         "search_iwc_workflows": "4f1478479f2219a2",
         "get_iwc_workflow_details": "f3c8d8af0a274569",
@@ -816,11 +817,11 @@
         "create_user_tool": "798af4516fb23066",
         "list_user_tools": "61a548dcf3c0b837",
         "delete_user_tool": "b445d0902812a4de",
-        "run_user_tool": "5db1df49c0209b5a",
+        "run_user_tool": "ee2c3a5c7098f316",
         "list_pages": "2d75ee5b241ebba2",
-        "get_page": "48fffc9db01a327f",
-        "create_page": "30d71d80462d041d",
-        "update_page": "6ef655cd843180e7",
+        "get_page": "a6b118c5bfa9c10b",
+        "create_page": "3b5d201260671e38",
+        "update_page": "cac0fd3f73deca63",
         "list_page_revisions": "903f5fdb2f40b0e4",
         "get_page_revision": "1abbfe999c99a88e",
         "revert_page_revision": "fd5854861cc04e7b"
@@ -1063,7 +1064,7 @@
           "include_preview": "boolean",
           "preview_lines": "integer"
         },
-        "prose": "a5edcb62b0efebd0"
+        "prose": "99604c1555834ffa"
       },
       "get_histories": {
         "params": {
@@ -1071,7 +1072,7 @@
           "name": "string",
           "offset": "integer"
         },
-        "prose": "aad7c210cf841da1"
+        "prose": "0468d624a314cd67"
       },
       "get_history_contents": {
         "params": {
@@ -1082,13 +1083,13 @@
           "order": "string",
           "visible": "boolean"
         },
-        "prose": "a6574cb21146129d"
+        "prose": "c52e394575ebb0d4"
       },
       "get_history_details": {
         "params": {
           "history_id": "string!"
         },
-        "prose": "746bc68576d38633"
+        "prose": "7cf195890924e660"
       },
       "get_invocations": {
         "params": {
@@ -1099,7 +1100,7 @@
           "view": "string",
           "workflow_id": "string"
         },
-        "prose": "d8fbe057430c5427"
+        "prose": "9003d1368e6afbdb"
       },
       "get_iwc_workflow_details": {
         "params": {
@@ -1119,14 +1120,14 @@
           "dataset_id": "string!",
           "history_id": "string"
         },
-        "prose": "5e5f1f8da446e83b"
+        "prose": "6d0d8ddbc6c3ed70"
       },
       "get_page": {
         "params": {
           "include_rendered": "boolean",
           "page_id": "string!"
         },
-        "prose": "3d1a179c5bea780d"
+        "prose": "5d59d05747faebc2"
       },
       "get_page_revision": {
         "params": {
@@ -1369,7 +1370,7 @@
           "section_heading": "string",
           "title": "string"
         },
-        "prose": "b93061521c3bcf0c"
+        "prose": "9573967b3fb91d15"
       },
       "upload_file": {
         "params": {
@@ -1389,7 +1390,15 @@
           "history_id": "string",
           "url": "string!"
         },
-        "prose": "22de7128882f6be6"
+        "prose": "a0cdf5bf0ceea38c"
+      },
+      "vega_dataset": {
+        "params": {
+          "dataset_id": "string!",
+          "spec": "object!",
+          "title": "string"
+        },
+        "prose": "2be75d01e543b66f"
       }
     }
   }
