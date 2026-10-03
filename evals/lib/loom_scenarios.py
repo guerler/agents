@@ -25,6 +25,26 @@ NOT_PORTABLE = {
         "rest of it is olit's own iwc-question-finds-a-workflow: plan-consults-iwc does not "
         "cover it, because asking for a plan is the gating this behaviour denies"
     ),
+    # loom v0.8.0's capture cluster: its harness writes a `loom-job` notebook block the moment a
+    # submission answers, so each of these forbids `turn_start` to prove the agent was never
+    # involved. olit's record is a Galaxy Page the model writes and this harness always emits
+    # `turn_start`, so they measure an artifact olit does not produce, exactly as
+    # init-gate-galaxy-no-connection does. Held out after all five failed structurally in the
+    # 2026-10-04 suite run.
+    **{
+        name: (
+            "asserts no turn starts (events.mustNotInclude agent_start/tool_execution_start/"
+            "turn_start), because loom's harness registers the submission without the agent; "
+            "olit has no capture hook and always emits turn_start"
+        )
+        for name in (
+            "submission-capture-local-upload",
+            "submission-capture-mapped-over-jobs",
+            "submission-capture-refuses-to-guess",
+            "submission-capture-registers-every-tool",
+            "submission-capture-udt-provenance",
+        )
+    },
 }
 
 # loom grades against a stub, so a scenario may name data nothing creates. On a live Galaxy
