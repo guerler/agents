@@ -2,12 +2,10 @@
 
 import asyncio
 import json
-import logging
 import os
 import pathlib
 import re
 import runpy
-import subprocess
 import sys
 import time
 import uuid
@@ -84,10 +82,9 @@ class Session:
                 raise RuntimeError(f"the agent refused {request['op']}: {reply['error']}")
             return reply["result"]
 
-    async def prepare(self, transcripts, record_page_id=None, history_id=None):
-        return await self._request(
-            {"op": "prepare", "transcripts": transcripts, "record_page_id": record_page_id, "history_id": history_id}
-        )
+    async def settle(self):
+        """One pass over the session's unfinished Galaxy work, as the page makes between turns."""
+        return await self._request({"op": "settle"})
 
     async def turn(self, messages, on_event=None, artifacts=None):
         result = await self._request(
@@ -325,6 +322,8 @@ async def _run(scenario, model, base_url=None):
         staged = await _timed(waited, _stage, scenario, config)
     except Exception as e:
         return RunResult([], [], [], error=f"{type(e).__name__}: {e}", stalled=True, waited=waited[0])
+    # The session is bound to its history from the start, as the page binds it from the URL.
+    config["history_id"] = staged["history_id"] if staged else _empty_history(config, scenario)
     session = await Session(config).init()
     budget = scenario_timeout(scenario)
     try:
@@ -354,11 +353,9 @@ def _stage(scenario, config):
 
 async def _drive(scenario, session, config, staged, waited=None):
     waited = waited if waited is not None else [0.0]
-    bound_history = staged["history_id"] if staged else _empty_history(config, scenario)
-    # No record page is staged: the session makes its own, as it does in the browser.
-    transcripts = await session.prepare(
-        [{"role": "system", "content": scenario.get("systemPrompt", "You are olit.")}], None, bound_history
-    )
+    # No record page is staged: the session makes its own, as it does in the browser, and each
+    # turn prepares its context itself.
+    transcripts = [{"role": "system", "content": scenario.get("systemPrompt", "You are olit.")}]
 
     tools_called = []
     messages = transcripts
@@ -399,12 +396,11 @@ async def _drive(scenario, session, config, staged, waited=None):
         events.append("turn_end")
         if staged:
             wait = galaxy_wait_timeout()
-            landed = await _timed(waited, _settle_pending, staged, events, wait)
-            for _ in range(max_auto_follow_ups()):
-                if not landed:
+            text, limit = await _settle(session, events, wait, waited)
+            for _ in range(limit):
+                if not text:
                     break
                 events.append("auto_follow_up")
-                text = resume_prompt(landed)
                 messages = [*messages, {"role": "user", "content": text}]
                 graded.append({"role": "user", "content": text})
                 events.append("turn_start")
@@ -420,7 +416,7 @@ async def _drive(scenario, session, config, staged, waited=None):
                 steps = max(steps, int(result.get("steps") or 0))
                 cap = int(result.get("max_steps") or 0) or cap
                 events.append("turn_end")
-                landed = await _timed(waited, _settle_pending, staged, events, wait)
+                text, limit = await _settle(session, events, wait, waited)
         # One approval, only for a run that stopped at the gate; the gate itself is untouched.
         if approval and _awaiting_approval(result.get("new_transcript")):
             approval, text = None, scenario["approveWhenPlanned"]
@@ -441,7 +437,7 @@ async def _drive(scenario, session, config, staged, waited=None):
             cap = int(result.get("max_steps") or 0) or cap
             events.append("turn_end")
             if staged:
-                await _timed(waited, _settle_pending, staged, events, galaxy_wait_timeout())
+                await _settle(session, events, galaxy_wait_timeout(), waited)
     return RunResult(
         graded if restart_after else transcript,
         logs,
@@ -683,15 +679,10 @@ def _stage_run(galaxy, history_id, dataset_id, spec, timeout):
     return produced_id
 
 
-# Job states Galaxy will not leave, matching src/invocations.ts.
+# Job states Galaxy will not leave, matching src/agent/watch.ts.
 RUNNING_STATES = ("new", "queued", "running", "paused", "upload", "setting_metadata")
 # What Galaxy advances on its own; `paused` waits on a failed input or on the user.
 ADVANCING_STATES = ("new", "queued", "running", "upload", "setting_metadata")
-
-
-def max_auto_follow_ups():
-    """How many turns the shell will continue by itself once work lands."""
-    return _shell_contract()["max_auto_follow_ups"]
 
 
 # Galaxy 26 moves a settled invocation from `scheduled` to `completed`, so pinning either
@@ -742,64 +733,25 @@ def _stage_invocation(galaxy, history_id, dataset_id, spec, timeout):
     return invocation["id"]
 
 
-def _settle_pending(staged, events, timeout, interval=10):
-    """Wait for work Galaxy is advancing, as the shell's watcher does."""
-    galaxy, history_id = staged["galaxy"], staged["history_id"]
-    deadline = time.time() + timeout
-    watched = {}
-    while time.time() < deadline:
-        try:
-            contents = galaxy.call(f"api/histories/{history_id}/contents") or []
-        except Exception as exc:
-            # A dropped read must not end a long run.
-            logging.getLogger(__name__).info("settle poll failed, retrying: %s", exc)
-            time.sleep(interval)
-            continue
-        live = [c for c in contents if isinstance(c, dict) and not c.get("deleted")]
-        for c in live:
-            if c.get("state") in ADVANCING_STATES:
-                watched[c.get("id")] = c
-        if not any(c.get("state") in ADVANCING_STATES for c in live):
-            break
-        time.sleep(interval)
-    if not watched:
-        return []
-    events.append("work_settled")
-    landed = {
-        c.get("id"): c for c in (galaxy.call(f"api/histories/{history_id}/contents") or []) if isinstance(c, dict)
-    }
-    return [
-        {
-            "kind": "job",
-            "id": str(i),
-            "label": str(landed.get(i, {}).get("name") or i),
-            "outcome": "failed" if landed.get(i, {}).get("state") == "error" else "completed",
-        }
-        for i in watched
-        if landed.get(i, {}).get("state") in ("ok", "error")
-    ]
+async def _settle(session, events, timeout, waited, interval=10):
+    """Wait for the work the session submitted, through the same settle step the page polls.
 
-
-# The shell script that answers for its own follow-up contract, relative to the checkout.
-SHELL_CONTRACT = "contract/shell.mjs"
-
-
-def _shell_contract(runs=None):
-    """Ask the shell what it would do, rather than reconstruct it here."""
-    script = subject.root() / SHELL_CONTRACT
-    if not script.is_file():
-        raise RuntimeError(f"the agent has no {SHELL_CONTRACT}; the harness cannot stand in for it")
-    stated = subprocess.run(
-        ["node", "--experimental-strip-types", str(script)],
-        input=json.dumps(runs) if runs else "",
-        capture_output=True,
-        text=True,
-    )
-    if stated.returncode:
-        raise RuntimeError(f"the shell could not state its contract:\n{stated.stderr}")
-    return json.loads(stated.stdout)
-
-
-def resume_prompt(runs):
-    """The message the shell would deliver for these runs, built by the shell itself."""
-    return _shell_contract(runs)["resume_prompt"]
+    Returns the follow-up the page would deliver, held batches joined into one turn as the page
+    joins them, and how many automatic turns it allows. Galaxy's clock, not the agent's.
+    """
+    started = time.monotonic()
+    prompts, limit = [], 0
+    try:
+        while True:
+            result = await session.settle()
+            limit = result.get("max_auto_follow_ups") or limit
+            if result.get("settled"):
+                events.append("work_settled")
+            if result.get("follow_up"):
+                prompts.append(result["follow_up"])
+            if not result.get("pending") or time.monotonic() - started >= timeout:
+                break
+            await asyncio.sleep(interval)
+    finally:
+        waited[0] += time.monotonic() - started
+    return "\n\n".join(prompts), limit

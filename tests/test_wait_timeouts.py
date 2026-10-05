@@ -75,7 +75,7 @@ def test_no_wait_carries_a_cap_of_its_own():
 
     from lib import harness, tooltests
 
-    for func in (harness._await_invocation, harness._settle_pending, tooltests.Galaxy.await_dataset):
+    for func in (harness._await_invocation, harness._settle, tooltests.Galaxy.await_dataset):
         timeout = inspect.signature(func).parameters["timeout"]
         assert timeout.default is inspect.Parameter.empty, f"{func.__name__} still defaults its own cap"
 
