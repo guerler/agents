@@ -29,7 +29,6 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import subject  # noqa: E402
 
 ROOT = subject.root()
-BRAIN = pathlib.Path(subject.importable())
 HERE = pathlib.Path(__file__).resolve().parent
 
 
@@ -58,10 +57,17 @@ class Break:
                     "the break is stale and would patch the wrong thing"
                 )
             target.write_text(source.replace(find, replace))
+        build()
 
     def restore(self):
         for target in self._paths():
             subprocess.run(["git", "checkout", "--", str(target)], cwd=ROOT, check=True)
+        build()
+
+
+def build():
+    """The session a run drives is built from source, so an edit counts only once rebuilt."""
+    subprocess.run(subject.BUILD["olit"], shell=True, cwd=ROOT, check=True, capture_output=True)
 
 
 BREAKS = [

@@ -6,7 +6,8 @@ says so when someone runs the suite against a model and a Galaxy. Seventeen of n
 decayed before this test existed and the suite could not run at all, which meant no scenario had a
 current proof that it can fail. Anchors are checked here instead, where a rename shows immediately.
 
-The thirteen anchors below are the decay found on 2026-09-28. Re-anchoring one is not a text edit:
+The thirteen anchors below are the decay found on 2026-09-28; the eight after them went when the
+brain moved to TypeScript on 2026-10-05, and every break still names a Python path. Re-anchoring one is not a text edit:
 the break has to inject a defect that still sinks the scenarios it names, and only a real run
 proves it does. Each is expected to fail until then, strictly, so a fixed anchor fails here and
 the entry gets deleted.
@@ -35,6 +36,16 @@ DECAYED = {
     "workflowInvoke:galaxy_tools:12.0",
     "visualizationSaved:galaxy_tools:13.0",
     "visualizationArtifact:tools:14.0",
+    # The rest were current until the Python brain was removed on 2026-10-05. Each needs the
+    # same defect injected into src/agent/ and a run showing it still sinks its scenarios.
+    "chatText:galaxy_tools:3.0",
+    "planGate:prompt:5.0",
+    "destructiveGate:galaxy_destructive:8.0",
+    "emptyResult:galaxy_tools:10.0",
+    "visualizationSpared:visualizations:15.0",
+    "visualizationTracks:visualizations:16.0",
+    "visualizationSettings:visualizations:17.0",
+    "visualizationShape:visualizations:18.0",
 }
 
 
