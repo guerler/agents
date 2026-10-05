@@ -10,13 +10,11 @@ import sys
 import time
 
 EV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(EV, "..", "brain"))
 sys.path.insert(0, EV)
+sys.path.insert(0, os.path.dirname(EV))
 
+from lib.harness import Session
 from lib.tooltests import Galaxy
-from olit.loop.tools import ToolSurface
-from olit.processes import ProcessRegistry
-from olit.substrate import Substrate
 
 G = Galaxy(os.environ["GALAXY_URL"], os.environ["GALAXY_API_KEY"])
 TAG = os.environ.get("TAG", str(int(time.time()))[-6:])
@@ -36,18 +34,13 @@ history = G.new_history(f"c4 errors {TAG}")
 ds = G.upload(history, "rows.tabular", b"a\t3\nb\t1\nc\t2\n")
 wait(history, 1)
 
-surface = ToolSurface(
-    Substrate(
-        {
-            "galaxy_root": os.environ["GALAXY_URL"].rstrip("/") + "/",
-            "galaxy_key": os.environ["GALAXY_API_KEY"],
-            "capabilities": ["llm", "local", "read", "write"],
-        }
-    ),
-    processes=ProcessRegistry().load_packaged(),
-)
+SESSION = {
+    "galaxy_root": os.environ["GALAXY_URL"].rstrip("/") + "/",
+    "galaxy_key": os.environ["GALAXY_API_KEY"],
+    "ai_provider": "galaxy",
+    "capabilities": ["llm", "local", "read", "write"],
+}
 
-# --- 1. a rejected parameter comes back with the shape the tool wants ------------
 bad = {
     "history_id": history,
     "tool_id": "sort1",
@@ -59,34 +52,43 @@ bad = {
         "0|other_column": "1",
     },
 }
-out = asyncio.run(surface.dispatch("run_tool", bad))
-helped = "Fill this template" in out.content and "column_set_0|other_column" in out.content
-print("1. parameter rejection carries the template:", "YES" if helped else f"NO -> {out.content[:220]}")
-
-# --- 2. the same hopeless call is cut off rather than retried forever ------------
-refusals, attempts = 0, 6
-for _ in range(attempts):
-    o = asyncio.run(surface.dispatch("run_tool", bad))
-    if getattr(o, "refused", False):
-        refusals += 1
-print(f"2. identical failing call refused {refusals} of {attempts} follow-up attempts:", "YES" if refusals else "NO")
-
-# --- 3. an Olit process addressed as a Galaxy tool is named ---------------------
-names = surface.processes.names() or []
-if names:
-    o = asyncio.run(surface.dispatch("run_tool", {"history_id": history, "tool_id": names[0], "inputs": {}}))
-    ok = "is an Olit tool" in o.content
-    print(f"3. misrouted '{names[0]}' is identified:", "YES" if ok else f"NO -> {o.content[:160]}")
-else:
-    print("3. misrouted process: no processes registered, skipped")
-
-# --- control: a valid call still goes through ------------------------------------
 good = {
     "history_id": history,
     "tool_id": "sort1",
     "inputs": {"input": {"src": "hda", "id": ds}, "column": "2", "style": "num", "order": "DESC"},
 }
-o = asyncio.run(surface.dispatch("run_tool", good))
-print("4. control, a valid call is not blocked:", "YES" if not o.is_error else f"NO -> {o.content[:160]}")
 
+
+async def main():
+    session = await Session(SESSION).init()
+    try:
+        # --- 1. a rejected parameter comes back with the shape the tool wants --------
+        out = await session.call("run_tool", bad)
+        helped = "Fill this template" in out["content"] and "column_set_0|other_column" in out["content"]
+        print("1. parameter rejection carries the template:", "YES" if helped else f"NO -> {out['content'][:220]}")
+
+        # --- 2. the same hopeless call is cut off rather than retried forever --------
+        refusals, attempts = 0, 6
+        for _ in range(attempts):
+            o = await session.call("run_tool", bad)
+            if o.get("guard") == "repeated-failure":
+                refusals += 1
+        print(
+            f"2. identical failing call refused {refusals} of {attempts} follow-up attempts:",
+            "YES" if refusals else "NO",
+        )
+
+        # --- 3. an Olit process addressed as a Galaxy tool is named -----------------
+        o = await session.call("run_tool", {"history_id": history, "tool_id": "lineage_report", "inputs": {}})
+        ok = "is an Olit tool" in o["content"]
+        print("3. misrouted 'lineage_report' is identified:", "YES" if ok else f"NO -> {o['content'][:160]}")
+
+        # --- control: a valid call still goes through --------------------------------
+        o = await session.call("run_tool", good)
+        print("4. control, a valid call is not blocked:", "YES" if not o["is_error"] else f"NO -> {o['content'][:160]}")
+    finally:
+        await session.close()
+
+
+asyncio.run(main())
 G.call(f"api/histories/{history}", "DELETE")

@@ -10,26 +10,16 @@ import os
 import sys
 import time
 
-EV = os.path.expanduser("~/galaxy-visualizations/packages/olit/evals")
-sys.path.insert(0, os.path.join(EV, "..", "brain"))
+EV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, EV)
+sys.path.insert(0, os.path.dirname(EV))
 
 from lib.assertions import _lineage_intact
+from lib.harness import Session
 from lib.tooltests import Galaxy
-from olit.loop.galaxy_tools import _run_tool
 
 G = Galaxy(os.environ["GALAXY_URL"], os.environ["GALAXY_API_KEY"])
 TAG = os.environ.get("TAG", str(int(time.time()))[-6:])
-
-
-class AsyncG:
-    """Olit's client shape over the eval transport."""
-
-    async def get(self, path, **k):
-        return G.call(path)
-
-    async def post(self, path, body):
-        return G.call(path, "POST", body)
 
 
 class Run:
@@ -60,18 +50,31 @@ print(f"foreign {foreign} foreign {foreign_ds}\n")
 
 staged = {"galaxy": G, "history_id": target, "dataset_ids": {"local.tabular": local_ds}}
 
-# --- observation 1: the product guard, with the real _run_tool -------------------
-out = asyncio.run(
-    _run_tool(
-        AsyncG(),
+
+# --- observation 1: the product guard, through the agent's own run_tool --------------
+async def submit_foreign():
+    session = await Session(
         {
-            "history_id": target,
-            "tool_id": "addValue",
-            "inputs": {"input": {"src": "hda", "id": foreign_ds}, "exp": "7"},
-        },
-    )
-)
-guard_refused = out.get("submitted") is False
+            "galaxy_root": os.environ["GALAXY_URL"].rstrip("/") + "/",
+            "galaxy_key": os.environ["GALAXY_API_KEY"],
+            "ai_provider": "galaxy",
+        }
+    ).init()
+    try:
+        return await session.call(
+            "run_tool",
+            {
+                "history_id": target,
+                "tool_id": "addValue",
+                "inputs": {"input": {"src": "hda", "id": foreign_ds}, "exp": "7"},
+            },
+        )
+    finally:
+        await session.close()
+
+
+out = asyncio.run(submit_foreign())
+guard_refused = out["is_error"] and "do not identify a dataset in history" in out["content"]
 print("1. product guard:", "REFUSED" if guard_refused else f"SUBMITTED -> {json.dumps(out)[:200]}")
 
 # --- control: the assertion must stay silent on a legitimate job ------------------

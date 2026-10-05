@@ -8,9 +8,9 @@ import os
 import sys
 import time
 
-EV = os.path.expanduser("~/galaxy-visualizations/packages/olit/evals")
-sys.path.insert(0, os.path.join(EV, "..", "brain"))
+EV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, EV)
+sys.path.insert(0, os.path.dirname(EV))
 
 from lib.assertions import _galaxy_did_work
 from lib.tooltests import Galaxy

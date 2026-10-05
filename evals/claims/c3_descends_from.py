@@ -8,8 +8,8 @@ import sys
 import time
 
 EV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(EV, "..", "brain"))
 sys.path.insert(0, EV)
+sys.path.insert(0, os.path.dirname(EV))
 
 from lib.assertions import _descends_from, _lineage_intact
 from lib.tooltests import Galaxy

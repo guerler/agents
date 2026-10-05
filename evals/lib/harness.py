@@ -82,6 +82,10 @@ class Session:
                 raise RuntimeError(f"the agent refused {request['op']}: {reply['error']}")
             return reply["result"]
 
+    async def call(self, name, args):
+        """One tool without a model, through the guards a turn applies: for a claim or a drive."""
+        return await self._request({"op": "call", "name": name, "args": args})
+
     async def settle(self):
         """One pass over the session's unfinished Galaxy work, as the page makes between turns."""
         return await self._request({"op": "settle"})
