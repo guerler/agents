@@ -170,12 +170,16 @@ class RunResult:
 
     @property
     def chat_text(self):
-        """Everything the shell renders as the agent's replies, in order."""
-        return "\n\n".join(
-            m["content"]
-            for m in self.messages
-            if isinstance(m, dict) and m.get("role") == "assistant" and m.get("content")
-        )
+        """Everything the shell renders, in order, including the `finish` summary."""
+        parts = []
+        for m in self.messages:
+            if not isinstance(m, dict) or not m.get("content"):
+                continue
+            if m.get("role") == "assistant":
+                parts.append(m["content"])
+            elif m.get("role") == "tool" and m.get("name") == "finish":
+                parts.append(m["content"])
+        return "\n\n".join(parts)
 
 
 def declared_base(model):
