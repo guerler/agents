@@ -806,14 +806,14 @@
         "get_histories": "83cbccdf408a472a",
         "list_history_ids": "88ad52890f4200e5",
         "get_history_details": "1e0e223ac411cc55",
-        "get_history_contents": "f2822066d6f13d65",
+        "get_history_contents": "cfc9e0f158b6b6a5",
         "get_job_details": "9643df670dd957fe",
         "get_dataset_details": "cdc7a24c57f17e44",
         "get_collection_details": "e92c9556ff548fd1",
         "download_dataset": "3108558eabe2e8ad",
         "upload_file": "f6b4d869df115d8f",
         "upload_file_from_url": "e1029599679a6733",
-        "get_invocations": "06378ea715f2b5cf",
+        "get_invocations": "2e609199e632ecf8",
         "get_iwc_workflows": "aa45e9c23b187121",
         "search_iwc_workflows": "4f1478479f2219a2",
         "get_iwc_workflow_details": "f3c8d8af0a274569",
@@ -831,7 +831,7 @@
         "list_pages": "2d75ee5b241ebba2",
         "get_page": "914d18fff350a52b",
         "create_page": "3b5d201260671e38",
-        "update_page": "d71867ef853cd032",
+        "update_page": "efcb01b0d72554bd",
         "list_page_revisions": "903f5fdb2f40b0e4",
         "get_page_revision": "1abbfe999c99a88e",
         "revert_page_revision": "fd5854861cc04e7b"
@@ -1062,10 +1062,10 @@
           "history_id": "string!",
           "limit": "integer=100",
           "offset": "integer=0",
-          "order": "string(hid-asc|hid-dsc|create_time-asc|create_time-dsc|update_time-dsc|name-asc)=hid-asc",
+          "order": "string(hid-asc|hid-dsc|create_time-asc|create_time-dsc|update_time-asc|update_time-dsc|name-asc|name-dsc|extension-asc|extension-dsc|size-asc|size-dsc)=hid-asc",
           "visible": "boolean=true"
         },
-        "prose": "74c915df092e9c04"
+        "prose": "3012524eb3619228"
       },
       "get_history_details": {
         "params": {
@@ -1082,7 +1082,7 @@
           "view": "string=collection",
           "workflow_id": "string|null"
         },
-        "prose": "bd03475dcbacd3d8"
+        "prose": "e76275bc9ed69646"
       },
       "get_iwc_workflow_details": {
         "params": {
@@ -1415,7 +1415,7 @@
           "section_heading": "string|null",
           "title": "string|null"
         },
-        "prose": "500f182806a6ae50"
+        "prose": "6cb17a766d607b09"
       },
       "upload_file": {
         "params": {
