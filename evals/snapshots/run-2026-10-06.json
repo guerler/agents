@@ -1,0 +1,1311 @@
+{
+ "date": "2026-10-06",
+ "model": "js2-gpt-oss-120b",
+ "commit": "97cfcbe5",
+ "note": "olit.021 baseline (97cfcbe5, before the final noteFailure and vega matcher fixes); 9 errored runs replaced by reruns, 3 still environment",
+ "runs": 92,
+ "tiers": {
+  "parity": {
+   "scenarios": 15,
+   "clean": 9,
+   "failing": 5,
+   "environment": 1
+  },
+  "grounded": {
+   "scenarios": 45,
+   "clean": 27,
+   "failing": 16,
+   "environment": 2
+  }
+ },
+ "scenarios": [
+  {
+   "scenario": "analysis-cat-two-datasets",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (8 messages, 6 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolOutput.produced: the agent added no dataset to the history"
+   ],
+   "verdict": "fail",
+   "max_steps": 3
+  },
+  {
+   "scenario": "analysis-column-statistics",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "download_dataset",
+     "run_python",
+     "run_python"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "analysis-csv-columns",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (5 messages, 4 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolCalls.mustInclude: never called download_dataset with {'dataset_id': '2f4dd6942dbe124c'}",
+    "toolCalls.mustInclude: never called run_python",
+    "chatText.mustMatch: chat never matched /\\b500\\b/",
+    "chatText.mustMatch: chat never matched /\\b268\\b/",
+    "chatText.mustMatch: chat never matched /\\b109[.,][89]/",
+    "chatText.mustMatch: chat never matched /\\b141[.,][23]/"
+   ],
+   "verdict": "fail",
+   "max_steps": 3
+  },
+  {
+   "scenario": "approval-leads-to-execution",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (11 messages, 8 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolCalls.mustInclude: never called create_history",
+    "plan.exists: no `## Plan X: <title> [routing]` block in chat"
+   ],
+   "verdict": "fail",
+   "max_steps": 3
+  },
+  {
+   "scenario": "async-work-suspends-and-resumes",
+   "tier": "grounded",
+   "runs": [
+    "error"
+   ],
+   "tools": [
+    []
+   ],
+   "failures": [
+    "error: TurnFailed: litellm.BadRequestError: Hosted_vllmException - Unknown role: final"
+   ],
+   "verdict": "environment",
+   "max_steps": null
+  },
+  {
+   "scenario": "basics-history-contents",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-instance-orientation",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_server_info",
+     "get_tool_panel",
+     "run_python",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "basics-workflow-inventory",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "chart-unnamed-reaches-the-user",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "download_dataset",
+     "run_python",
+     "upload_file",
+     "get_dataset_details",
+     "notebook_resume",
+     "vega_dataset",
+     "update_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 9
+  },
+  {
+   "scenario": "collection-from-paired-fasta",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "collection-from-paired-reads",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "get_collection_details"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (7 messages, 6 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "collection-from-single-fasta",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "notebook_resume"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "gate-holds-before-approval",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "gate-refuses-destructive",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "notebook_resume",
+     "get_page",
+     "update_history"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "gtn-tutorial-completed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_fetch",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_details",
+     "get_tool_details",
+     "search_tools_by_name",
+     "get_tool_details",
+     "run_tool",
+     "get_tool_input_template",
+     "get_dataset_details",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "get_job_details",
+     "notebook_resume",
+     "get_job_details",
+     "update_page",
+     "get_history_contents",
+     "get_dataset_details",
+     "get_dataset_details",
+     "run_tool",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 27
+  },
+  {
+   "scenario": "gtn-tutorial-data-fetched",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_fetch",
+     "notebook_resume",
+     "upload_file_from_url",
+     "get_history_contents",
+     "get_dataset_details",
+     "update_page",
+     "search_tools_by_name",
+     "get_dataset_details",
+     "get_dataset_details",
+     "get_tool_details",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "update_page",
+     "search_tools_by_name",
+     "get_tool_details",
+     "run_tool",
+     "get_dataset_details",
+     "run_tool",
+     "run_tool",
+     "update_page",
+     "get_job_details",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "run_tool",
+     "get_dataset_details",
+     "run_tool",
+     "get_job_details",
+     "get_tool_details",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /\\bUnited\\s+States\\b/",
+    "chatText.mustMatch: chat never matched /1[\\s,\u202f\u00a0]?596/"
+   ],
+   "verdict": "fail",
+   "max_steps": 10
+  },
+  {
+   "scenario": "instance-tool-count",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_tool_panel",
+     "run_python"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "iwc-question-finds-a-workflow",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details",
+     "notebook_resume"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "notices-an-empty-result",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "picks-something-and-runs-it",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_search"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (7 messages, 6 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "history.producedDatasets: 0 successful dataset(s) beyond the staged input, wanted 1; the work did not happen on Galaxy",
+    "anyOf: no acceptable outcome: never called invoke_workflow | never called run_tool"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "plan-collections-tags-datatype",
+   "tier": "grounded",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "record-page-holds-content",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "refuses-to-analyse-failed-data",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "report-page-holds-content",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "create_page",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "reports-a-failed-invocation",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_invocations"
+    ]
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /(?i)\\b(fail(ed|ure)?|error|did\\s+not\\s+succeed|unsuccessful)\\b/",
+    "chatText.mustMatch: chat never matched /(?i)Filter1|filter on a missing column/"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "reports-a-failed-job",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "research-glucose-bmi",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "download_dataset",
+     "run_python",
+     "upload_file",
+     "vega_dataset",
+     "vega_dataset",
+     "vega_dataset",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [
+    "record.mustMention: the record never mentions '```vega'"
+   ],
+   "verdict": "fail",
+   "max_steps": 9
+  },
+  {
+   "scenario": "session-resumed-after-close",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "get_tool_details",
+     "get_dataset_details",
+     "download_dataset",
+     "notebook_resume",
+     "run_tool",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_dataset_details",
+     "run_tool",
+     "get_page",
+     "get_job_details",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "run_tool",
+     "get_job_details",
+     "get_dataset_details",
+     "get_dataset_details",
+     "get_dataset_details",
+     "get_dataset_details",
+     "get_page",
+     "get_dataset_details",
+     "get_dataset_details",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /\\bUnited\\s+States\\b/",
+    "chatText.mustMatch: chat never matched /6[\\s,   ]?093/"
+   ],
+   "verdict": "fail",
+   "max_steps": 24
+  },
+  {
+   "scenario": "smoke-answers",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "udt-container-tag-resolves",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch",
+     "skills_fetch",
+     "recommend_biocontainer"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "upload-failure-is-noticed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "notebook_resume",
+     "update_history",
+     "update_page",
+     "ena_runs",
+     "get_dataset_details",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "upload-lands-a-usable-datatype",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "download_dataset",
+     "run_python"
+    ]
+   ],
+   "failures": [
+    "history.landedDataset: widest arrived dataset has 1 column(s), wanted at least 5; Galaxy cannot address the fields"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "vega-density-distribution",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "vega_dataset",
+     "notebook_resume"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "vega-layered-spec",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "vega_dataset",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "vega-native-aggregate",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "vega_dataset",
+     "vega_dataset",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "vega-references-dataset",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_tool_details",
+     "get_dataset_details",
+     "run_tool",
+     "get_tool_details"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (11 messages, 10 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolCalls.mustInclude: never called vega_dataset",
+    "artifacts.kind: no vega-lite artifact was produced",
+    "record.exists: this session opened no record page (looked for slug 'olit-fac7537a-3268-4d35-8268-e0e798aa26de')"
+   ],
+   "verdict": "fail",
+   "max_steps": 6
+  },
+  {
+   "scenario": "viz-igv-genome-entry",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "get_dataset_details",
+     "get_visualization_details",
+     "get_visualization_options",
+     "get_visualization_options",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "get_visualization_options",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "get_visualization_options",
+     "get_visualization_options",
+     "show_visualization"
+    ]
+   ],
+   "failures": [
+    "visualization.exists: no saved visualization references the staged dataset; the chart was never written to Galaxy",
+    "budget.maxRepeatedCall: called save_visualization with the same arguments 7 times in a row (allowed 4)"
+   ],
+   "verdict": "fail",
+   "max_steps": 24
+  },
+  {
+   "scenario": "viz-igv-second-track",
+   "tier": "grounded",
+   "runs": [
+    "error"
+   ],
+   "tools": [
+    []
+   ],
+   "failures": [
+    "error: the agent ran past its 480s budget"
+   ],
+   "verdict": "environment",
+   "max_steps": null
+  },
+  {
+   "scenario": "viz-plotly-binds-columns",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    []
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (3 messages, 2 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolCalls.mustInclude: never called save_visualization with {'dataset_id': 'ca174a69842f8df0'}",
+    "artifacts.kind: no visualization artifact was produced",
+    "visualization.exists: no saved visualization references the staged dataset; the chart was never written to Galaxy"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "viz-plotly-tracks-index-columns",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "list_visualizations",
+     "notebook_resume"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (15 messages, 12 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolCalls.mustInclude: never called save_visualization with {'dataset_id': '0a6f41e10c01c0c5'}",
+    "artifacts.kind: no visualization artifact was produced",
+    "visualization.exists: no saved visualization references the staged dataset; the chart was never written to Galaxy"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "viz-plugins-listed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "viz-structure-saved",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "get_visualization_details",
+     "notebook_resume",
+     "save_visualization",
+     "update_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "viz-structure-shown",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (5 messages, 4 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolCalls.mustInclude: never called show_visualization with {'dataset_id': '852ee53d9089b9ff'}",
+    "artifacts.kind: no visualization artifact was produced"
+   ],
+   "verdict": "fail",
+   "max_steps": 3
+  },
+  {
+   "scenario": "workflow-runs-end-to-end",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows",
+     "get_workflow_input_template",
+     "invoke_workflow",
+     "get_invocations",
+     "get_dataset_details",
+     "get_job_details",
+     "get_job_details",
+     "get_invocations",
+     "get_job_details",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 13
+  },
+  {
+   "scenario": "workflow-select-uses-a-legal-value",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "list_workflows",
+     "get_workflow_details"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (7 messages, 6 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolCalls.mustInclude: never called get_workflow_input_template",
+    "toolCalls.mustInclude: never called invoke_workflow",
+    "invocation.exists: no workflow invocation in the staged history"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "behavior-underspecified-ask",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "fail"
+   ],
+   "tools": [
+    [
+     "skills_fetch",
+     "skills_fetch",
+     "run_python",
+     "run_python",
+     "run_python"
+    ],
+    [
+     "get_history_contents"
+    ],
+    [
+     "skills_fetch"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (5 messages, 4 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "behavior.asksClarifyingQuestion: did not ask for clarification"
+   ],
+   "verdict": "fail",
+   "max_steps": 6
+  },
+  {
+   "scenario": "execution-after-approval",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "error"
+   ],
+   "tools": [
+    [
+     "get_tool_details",
+     "notebook_resume",
+     "run_tool",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_job_details",
+     "get_dataset_details",
+     "get_page",
+     "update_page",
+     "finish"
+    ],
+    [
+     "get_tool_details",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "get_page",
+     "update_page"
+    ],
+    []
+   ],
+   "failures": [
+    "error: TurnFailed: litellm.BadRequestError: Hosted_vllmException - Unknown role: final"
+   ],
+   "verdict": "environment",
+   "max_steps": 7
+  },
+  {
+   "scenario": "plan-consults-iwc",
+   "tier": "parity",
+   "runs": [
+    "fail",
+    "fail",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details"
+    ]
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called recommend_iwc_workflows"
+   ],
+   "verdict": "fail",
+   "max_steps": 3
+  },
+  {
+   "scenario": "plan-creation-metagenomics",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "plan-creation-pharmacogenomics",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search"
+    ],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 11
+  },
+  {
+   "scenario": "plan-creation-rnaseq",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "plan-creation-scrna-celltypes",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "plan-creation-somatic-variants",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "routing-clear-galaxy",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "routing-clear-local",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    [
+     "gtn_search"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "smoke-echo",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "standing-instructions-orbit-md",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [
+     "gtn_search"
+    ],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "udt-authoring-container",
+   "tier": "parity",
+   "runs": [
+    "fail",
+    "pass",
+    "fail"
+   ],
+   "tools": [
+    [],
+    [
+     "skills_fetch"
+    ],
+    []
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called skills_fetch with {'path': 'udt-authoring'}",
+    "chatText.mustMatch: chat never matched /container:\\s*[\"']?(?:docker://)?(?:quay\\.io/biocontainers/|depot\\.galaxyproject\\.org/singularity/)/"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "udt-authoring-select-params",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "fail"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ],
+    []
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called skills_fetch with {'path': 'udt-authoring'}"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "udt-authoring-threads",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "fail",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch",
+     "run_python"
+    ],
+    [
+     "skills_fetch",
+     "run_python"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (7 messages, 6 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "chatText.mustInclude: chat never contained 'class: GalaxyUserTool'",
+    "chatText.mustInclude: chat never contained '$GALAXY_SLOTS'"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  }
+ ]
+}
