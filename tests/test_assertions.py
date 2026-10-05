@@ -7,6 +7,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "evals"))
 
 from lib.assertions import _grouped_forms  # noqa: E402
 
+import subject  # noqa: E402
+
 
 def test_a_number_matches_however_the_model_groups_it():
     forms = _grouped_forms("96000")
@@ -46,7 +48,7 @@ def test_not_empty_fails_a_page_that_is_actually_empty():
         _record({"notEmpty": True}, Run(content), failures, set())
         return [f.assertion for f in failures]
 
-    from olit.loop.notebook import STARTER
+    STARTER = subject.describe()["record"]["starter"]
 
     assert grade("") == ["record.notEmpty"]
     assert grade("   \n ") == ["record.notEmpty"]
@@ -58,7 +60,8 @@ def test_not_empty_fails_a_page_that_is_actually_empty():
 def test_not_empty_accepts_content_appended_below_the_starter():
     """The agent had written; it just left the placeholder above its entry."""
     from lib.assertions import _record
-    from olit.loop.notebook import STARTER
+
+    STARTER = subject.describe()["record"]["starter"]
 
     class FakeGalaxy:
         def __init__(self, content):

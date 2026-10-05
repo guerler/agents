@@ -1,10 +1,11 @@
-"""Drive the agent's brain headlessly for one scenario."""
+"""Drive the agent headlessly for one scenario."""
 
 import asyncio
 import json
 import logging
 import os
 import pathlib
+import re
 import runpy
 import subprocess
 import sys
@@ -15,16 +16,108 @@ from datetime import datetime, timezone
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
 
-subject.importable()
-
-from olit.runtime import Session  # noqa: E402
-from olit.substrate.llm import REGISTRY  # noqa: E402
-
 from . import tooltests  # noqa: E402
 from .plan import parse_latest_plan  # noqa: E402
 from .record import recording  # noqa: E402
 
 # The eval substrate is a real Galaxy, deliberately.
+
+
+# A turn result carries the whole transcript, far past asyncio's 64 KiB line default.
+LINE_LIMIT = 1 << 30
+# What a failed session said last, kept for the error a run reports.
+STDERR_TAIL = 40
+
+
+class TurnFailed(Exception):
+    """A turn the agent returned as failed; the status, when the provider stated one."""
+
+    def __init__(self, message):
+        super().__init__(message)
+        stated = re.match(r"(\d{3})\b", message or "")
+        self.status_code = int(stated.group(1)) if stated else None
+
+
+class Session:
+    """One agent session in its own process, spoken to over JSON lines.
+
+    The agent publishes itself as a Node module (`subject.session()`); a request is one line,
+    and a turn streams its events as lines before the line holding its result.
+    """
+
+    def __init__(self, config):
+        self.config = config
+        self._process = None
+        self._stderr = []
+        self._drain = None
+
+    async def init(self):
+        self._process = await asyncio.create_subprocess_exec(
+            *subject.session(),
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            limit=LINE_LIMIT,
+        )
+        self._drain = asyncio.create_task(self._keep_stderr())
+        await self._request({"op": "create", "config": self.config})
+        return self
+
+    async def _keep_stderr(self):
+        async for line in self._process.stderr:
+            self._stderr = [*self._stderr[-(STDERR_TAIL - 1) :], line.decode(errors="replace").rstrip()]
+
+    async def _request(self, request, on_event=None):
+        self._process.stdin.write((json.dumps(request) + "\n").encode())
+        await self._process.stdin.drain()
+        while True:
+            line = await self._process.stdout.readline()
+            if not line:
+                tail = "\n".join(self._stderr[-10:])
+                raise RuntimeError(f"the agent exited during {request['op']}:\n{tail}")
+            reply = json.loads(line)
+            if "event" in reply:
+                if on_event:
+                    on_event(reply["event"])
+                continue
+            if "error" in reply:
+                raise RuntimeError(f"the agent refused {request['op']}: {reply['error']}")
+            return reply["result"]
+
+    async def prepare(self, transcripts, record_page_id=None, history_id=None):
+        return await self._request(
+            {"op": "prepare", "transcripts": transcripts, "record_page_id": record_page_id, "history_id": history_id}
+        )
+
+    async def turn(self, messages, on_event=None, artifacts=None):
+        result = await self._request(
+            {"op": "turn", "messages": messages, "artifacts": artifacts or []}, on_event=on_event
+        )
+        if result.get("error"):
+            raise TurnFailed(result["error"].get("message") or "the turn failed")
+        return result
+
+    async def close(self):
+        """Give the process back; a suite is hundreds of sessions in one interpreter."""
+        process = self._process
+        if process is None or process.returncode is not None:
+            return
+        try:
+            process.stdin.write(b'{"op": "close"}\n')
+            await process.stdin.drain()
+            process.stdin.close()
+            await asyncio.wait_for(process.wait(), timeout=10)
+        except (asyncio.TimeoutError, ConnectionError):
+            process.kill()
+            await process.wait()
+        finally:
+            if self._drain:
+                self._drain.cancel()
+
+
+def _providers():
+    """The agent's provider registry, as it publishes it."""
+    return subject.describe().get("providers") or {}
 
 
 class RunResult:
@@ -94,12 +187,12 @@ def declared_base(model):
 
 def upstream(model):
     """Where this model's completions actually go, which is what a recorder stands in for."""
-    provider = REGISTRY.get(model.get("provider"))
-    return declared_base(model) or (provider.base_url if provider else None)
+    provider = _providers().get(model.get("provider"))
+    return declared_base(model) or (provider["base_url"] if provider else None)
 
 
 def build_config(model, capabilities=None, base_url=None):
-    """Resolve through the brain's provider registry, so evals and the app agree."""
+    """Resolve through the agent's provider registry, so evals and the app agree."""
     # Shared scenarios carry loom's restricted surface; others get the full one.
     capabilities = capabilities or os.environ.get("OLIT_EVAL_CAPABILITIES", "llm,local,read,write")
     base = base_url or declared_base(model)
@@ -126,9 +219,9 @@ def build_config(model, capabilities=None, base_url=None):
 
 def _api_key(model):
     """The registry names the env var; envRequires is the fallback for custom entries."""
-    provider = REGISTRY.get(model.get("provider"))
-    if provider and provider.auth_env:
-        return os.environ.get(provider.auth_env, "")
+    provider = _providers().get(model.get("provider"))
+    if provider and provider.get("auth_env"):
+        return os.environ.get(provider["auth_env"], "")
     for name in model.get("envRequires", []):
         if name.endswith("_KEY"):
             return os.environ.get(name, "")
@@ -229,9 +322,7 @@ async def _run(scenario, model, base_url=None):
     except asyncio.TimeoutError:
         return RunResult([], [], [], error=f"the agent ran past its {budget:.0f}s budget", waited=waited[0])
     finally:
-        # Outside the browser a session holds a node process for galaxy-ops; a suite is
-        # hundreds of sessions in one interpreter, so each one has to give it back.
-        await session.substrate.close()
+        await session.close()
 
 
 def _stage(scenario, config):

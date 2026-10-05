@@ -9,20 +9,17 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
+import description  # noqa: E402
 import subject  # noqa: E402
-
-subject.importable()
-
-from olit.loop import galaxy_tools, notebook  # noqa: E402
 
 from .harness import ADVANCING_STATES  # noqa: E402
 from .plan import count_plans, parse_latest_plan, step_has_description  # noqa: E402
 
 # What the gate protects: compute spent or data mutated before approval.
 RECORD_TOOLS = frozenset(
-    {notebook.NOTEBOOK_RESUME["function"]["name"], "create_page", "update_page", "revert_page_revision"}
+    {subject.describe()["record"]["resume_tool"], "create_page", "update_page", "revert_page_revision"}
 )
-EXECUTION_TOOLS = frozenset(t["name"] for t in galaxy_tools.TOOLS if t["capability"] == "write") - RECORD_TOOLS
+EXECUTION_TOOLS = frozenset(description.write_tools(subject.describe())) - RECORD_TOOLS
 
 # Galaxy has renamed these across releases.
 INVOCATION_DONE = frozenset({"scheduled", "completed"})
@@ -938,7 +935,7 @@ def _record(spec, run, failures, exercised):
         _record_ids_resolve(spec, run, failures, galaxy, content)
 
     if spec.get("notEmpty"):
-        planted = {line.strip() for line in notebook.STARTER.splitlines() if line.strip()}
+        planted = {line.strip() for line in subject.describe()["record"]["starter"].splitlines() if line.strip()}
         added = [line for line in content.splitlines() if line.strip() and line.strip() not in planted]
         if not content.strip():
             failures.append(Failure("record.notEmpty", "the record page exists but its content is empty", "record"))

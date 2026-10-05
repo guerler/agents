@@ -1,7 +1,7 @@
 # olit evals
 
 Scenario-driven behavioural tests, ported from loom's `evals/`. The unit suites in
-`brain/tests` and `src/*.test.ts` check that the machinery is correct; these check
+olit's `src/**/*.test.ts` check that the machinery is correct; these check
 that the **agent behaves like Orbit** — which is the claim the project actually
 rests on, and the one thing a unit test cannot answer.
 
@@ -14,9 +14,9 @@ python evals/run.py --delay 5          # extra pacing on top of the provider's o
 python evals/run.py --repeat 3         # run each scenario 3 times; n=1 hides variance
 ```
 
-**Pacing.** Each model resolves through the brain's provider registry, so the run is
+**Pacing.** Each model resolves through the agent's provider registry, so the run is
 throttled at the endpoint's own rate — Gemini's free tier is 5 requests/minute, and
-that number lives in `providers.py`. `--delay` adds more on top and defaults to none.
+that number lives in olit's `src/agent/providers.ts`. `--delay` adds more on top and defaults to none.
 A per-day quota is a different thing and no amount of pacing fixes it. A quota-limited
 run is reported as `quota`,
 counted in its own column, **not graded, and does not fail the suite** — an exhausted
@@ -41,9 +41,11 @@ vendored copy, for an expectation that is not worth committing.
 
 ## How it runs
 
-loom spawns `loom --mode json` and parses its event stream. Olit needs no
-subprocess: the brain is a Python package, so `lib/harness.py` runs turns on the same
-`Session` the shell does, in-process, with the whole transcript in hand.
+loom spawns `loom --mode json` and parses its event stream, and Olit is driven the same
+way: `lib/harness.py` starts the checkout's `dist/session.mjs` (`npm run build:session`),
+the same `Session` the browser worker runs, and speaks JSON lines to it. A turn streams its
+events before its result, and the result carries the whole transcript. The checkout has to
+be rebuilt after a change to `src/agent/`, or a run grades the previous build.
 
 **Galaxy is stubbed; the LLM is real.** Most scenarios grade planning behaviour, and
 a live Galaxy would add a second source of failure without adding signal. The stub

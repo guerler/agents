@@ -1,20 +1,23 @@
 """The agent under test: where its checkout is, and how its code is reached.
 
 An evaluation runs against a specific commit of an agent. The checkout is named once, here,
-so nothing else in this repo has to know where it lives or how it is installed.
+so nothing else in this repo has to know where it lives or how it is built.
 """
 
 import functools
 import os
 import pathlib
-import sys
 
 import description
 
 ENV = "OLIT_ROOT"
 
-# Where an agent's importable code sits inside its checkout.
-PACKAGE = {"olit": "brain"}
+# What marks a checkout of the agent: the directory its loop lives in.
+SOURCE = {"olit": "src/agent"}
+
+# The agent as one Node module, speaking JSON lines; built from the checkout, never vendored.
+SESSION = {"olit": "dist/session.mjs"}
+BUILD = {"olit": "npm run build:session"}
 
 
 def root(agent="olit"):
@@ -23,17 +26,17 @@ def root(agent="olit"):
     if not value:
         raise SystemExit(f"set {ENV} to a checkout of the agent under test")
     path = pathlib.Path(value).expanduser().resolve()
-    if not (path / PACKAGE[agent]).is_dir():
+    if not (path / SOURCE[agent]).is_dir():
         raise SystemExit(f"{path} does not look like an {agent} checkout")
     return path
 
 
-def importable(agent="olit"):
-    """Put the agent's package on the path, for a harness that drives it in process."""
-    package = str(root(agent) / PACKAGE[agent])
-    if package not in sys.path:
-        sys.path.insert(0, package)
-    return package
+def session(agent="olit"):
+    """The command that runs one session of the agent, for a harness that drives it."""
+    path = root(agent) / SESSION[agent]
+    if not path.is_file():
+        raise SystemExit(f"{path} is not built; run `{BUILD[agent]}` in {root(agent)}")
+    return ["node", str(path)]
 
 
 @functools.lru_cache(maxsize=None)

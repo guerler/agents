@@ -10,17 +10,11 @@ import sys
 import time
 import uuid
 
-# The brain logs every tool call and a parse warning for a corpus SKILL.md whose
 logging.basicConfig(level=logging.ERROR)
-logging.getLogger("olit").setLevel(logging.ERROR)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
-
-import subject  # noqa: E402
-
-subject.importable()
 
 from lib import loom_scenarios  # noqa: E402
 from lib.assertions import DIMENSIONS, evaluate, validate_patterns  # noqa: E402

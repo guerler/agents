@@ -8,10 +8,9 @@ import json
 import os
 import pathlib
 import subprocess
-import sys
 
-# How an agent is asked to describe itself, by name: a script in its checkout.
-DESCRIBE = {"olit": "contract/describe.py"}
+# How an agent is asked to describe itself, by name: its built session, relative to the checkout.
+DESCRIBE = {"olit": ["node", "dist/session.mjs", "--describe"]}
 
 
 def load(source=None, agent="olit"):
@@ -23,7 +22,7 @@ def load(source=None, agent="olit"):
     if path.is_file():
         return json.loads(path.read_text())
     out = subprocess.run(
-        [sys.executable, str(path / DESCRIBE[agent]), "--root", str(path)],
+        [*DESCRIBE[agent], "--root", str(path)],
         cwd=path,
         capture_output=True,
         text=True,
