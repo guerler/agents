@@ -168,7 +168,7 @@
         "symbol": "GALAXY_TERMINOLOGY"
       },
       "label": "PORTED",
-      "note": "Condition not yet ported: olit has no NOT-CONNECTED variant. See catalog gap. loom v0.8.0 added the IWC section and rewrote the routing-tag list; both are ported. The new hybrid/local bullets are not: this build has no local execution. 2026-10-03: the plan-lifecycle pre-draft order and the retirement of `[galaxy]` for `[remote]` are ported. The clause tying the routing tag to what IWC and availability return is omitted, because every olit plan is `[remote]` and the tag turns on nothing."
+      "note": "olit leaves the Galaxy blocks out when Galaxy is unreachable or reads are not granted, in place of loom's NOT-CONNECTED variant. The udt-authoring skill pointer is ported. loom v0.8.0 added the IWC section and rewrote the routing-tag list; both are ported. The new hybrid/local bullets are not: this build has no local execution. 2026-10-03: the plan-lifecycle pre-draft order and the retirement of `[galaxy]` for `[remote]` are ported. The clause tying the routing tag to what IWC and availability return is omitted, because every olit plan is `[remote]` and the tag turns on nothing."
     },
     {
       "id": "prompt.buildSkillsContext",
@@ -431,6 +431,33 @@
       "note": "olit has one project-data channel (the record); loom has two."
     },
     {
+      "id": "prompt.identity",
+      "kind": "prompt-block",
+      "loom": null,
+      "olit": {
+        "file": "src/agent/prompt.ts",
+        "symbol": "IDENTITY"
+      },
+      "label": "ADDED",
+      "note": "One line before loom's blocks. loom sends none: its before_agent_start replaces pi's base prompt. Without it gpt-oss drafted plans past recommend_iwc_workflows in 4 of 6 runs of plan-consults-iwc, against 1 of 6 with it (2026-10-05)."
+    },
+    {
+      "id": "hint.iwc-candidates",
+      "kind": "tool-result-hint",
+      "loom": {
+        "file": "extensions/loom/skill-triggers.ts",
+        "symbol": "applySkillTriggers",
+        "condition": "the iwc-candidates row: a successful galaxy_recommend_iwc_workflows or galaxy_search_iwc_workflows result",
+        "fingerprint": "9219a98704309d20"
+      },
+      "olit": {
+        "file": "src/agent/hints.ts",
+        "symbol": "IWC_CANDIDATES_HINT"
+      },
+      "label": "PORTED",
+      "note": "Appended to both IWC listings, as loom's trigger is; the tool name drops loom's galaxy_ prefix."
+    },
+    {
       "id": "prompt.seedDatasetBlock",
       "kind": "prompt-block",
       "loom": null,
@@ -493,7 +520,7 @@
         "symbol": "fetchFailureHint"
       },
       "label": "ADDED",
-      "note": "loom has no equivalent: its only tool-result hint covers failed workflow invocations, a different trigger that stays unported. The shape is borrowed from it -- append the imperative to a result that already reports the failure, rather than refusing the call that caused it. Galaxy names the url and the status but cannot say that writing another url from memory is the wrong next move, which is what a measured session did eight times. Pairs with tool.ena_runs, which is the answer the hint names."
+      "note": "loom has no equivalent: its tool-result hints cover failed workflow invocations, IWC listings and tool-name confusables, none a failed fetch. The shape is borrowed -- append the imperative to a result that already reports the failure, rather than refusing the call that caused it. Galaxy names the url and the status but cannot say that writing another url from memory is the wrong next move, which is what a measured session did eight times. Pairs with tool.ena_runs, which is the answer the hint names."
     },
     {
       "id": "tool.get_invocations.outcome",
@@ -702,7 +729,8 @@
       }
     },
     "identity_prompt": {
-      "fingerprint": "8155bf06b1c9a194"
+      "fingerprint": "2b969367a25f3254",
+      "text": "You are Olit, a co-scientist that orchestrates the Galaxy bioinformatics platform.\nYou run entirely in the user's browser; you already have their authenticated Galaxy\nsession, so there is no connect step. Everything that touches Galaxy or runs code\nhappens through a tool call.\n\nMost tasks follow the same shape: pick or create a history, get data into it, run a\nGalaxy tool on the data, then read results back from the history.\n\nThree kinds of \"tool\" exist here and are easy to confuse:\n- Your tools (the operations listed to you) are things like get_histories, run_tool,\n  invoke_workflow, upload_file_from_url.\n- Galaxy tools (FastQC, Trimmomatic, Bowtie2, ...) are bioinformatics programs inside\n  Galaxy. They are NOT in your tool list. Find them with search_tools_by_name or\n  search_tools_by_keywords, then execute via run_tool(history_id, tool_id, inputs).\n  Use get_tool_input_template(tool_id) to see a tool's expected inputs.\n- Galaxy visualizations (IGV, Plotly, tabulator, ...) are display plugins with their own\n  operations: list_visualizations, show_visualization and save_visualization. Showing,\n  opening or adding a track to one goes there, never to a tool search.\n\nFor a multi-step analysis goal, call recommend_iwc_workflows first to find a vetted\nIntergalactic Workflow Commission (IWC) workflow, then import_workflow_from_iwc and\ninvoke_workflow; search_iwc_workflows is keyword search for a workflow the user names. User-defined tools (created via create_user_tool) are run with\nrun_user_tool, not run_tool.\n\nPages are Galaxy-flavored markdown documents: a history-attached page is a \"Notebook\",\na standalone page a \"Report\". Manage them with list_pages / get_page / create_page /\nupdate_page. Page content embeds datasets through directives that use ENCODED ids\n(e.g. history_dataset_display(history_dataset_id=<encoded-dataset-id>)), which you get\nfrom get_history_contents / get_dataset_details. Never write a literal id you have not\nread from a tool result in this session.\n\nBeyond Galaxy you also have:\n- skills_fetch(repo, path): load operational know-how on demand. The \"Skills\n  repositories\" section below lists what exists and the exact path for each.\n- run_python(code): run Python locally in the browser (Pyodide; numpy and pandas;\n  state persists). Use for quick local computation and inspection. It runs in the\n  browser, not on Galaxy.\n- vega_dataset(dataset_id, spec): chart one tabular dataset inline with a Vega-Lite\n  spec you write. Leave `data` out of it: the spec is pointed at the dataset here.\n- finish(summary): call when the task is complete.\n\nYou both talk and act. Chat carries dialogue and status \u2014 questions, a plan draft\nawaiting approval, a parameter table, a short end-of-turn summary. Tools carry\neverything that touches Galaxy or runs code. A turn that ends in chat is normal and\nexpected: that is how you hand a decision back to the user.\n\nWhen the task is complete, call finish; its summary is your closing reply, so state the\nresult itself."
     },
     "skills": {
       "files": {
@@ -1288,7 +1316,7 @@
       },
       "notebook_resume": {
         "params": {},
-        "prose": "02932ba108eed805"
+        "prose": "1234fe9643d717a4"
       },
       "organize_datasets": {
         "params": {

@@ -133,11 +133,11 @@ BREAKS = [
         edits=[
             (
                 "src/agent/session.ts",
-                '            .filter((m) => !(m.role === "assistant" && m.stopReason === "error")),\n'
-                "      new_messages: failed ? [] : kept,",
-                '            .filter((m) => !(m.role === "assistant" && m.stopReason === "error"))\n'
-                "            .map(silenced), // FALSIFY: reply dropped\n"
-                "      new_messages: failed ? [] : kept.map(silenced),",
+                '        .filter((m) => !(m.role === "assistant" && m.stopReason === "error")),\n'
+                "      new_messages: kept,",
+                '        .filter((m) => !(m.role === "assistant" && m.stopReason === "error"))\n'
+                "        .map(silenced), // FALSIFY: reply dropped\n"
+                "      new_messages: kept.map(silenced),",
             ),
             (
                 "src/agent/session.ts",

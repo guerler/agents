@@ -85,7 +85,8 @@ BLOCKS = [
         "suppressed in local mode; otherwise emits a CONNECTED or a NOT CONNECTED variant",
         "GALAXY_TERMINOLOGY",
         "PORTED",
-        "Condition not yet ported: olit has no NOT-CONNECTED variant. See catalog gap. "
+        "olit leaves the Galaxy blocks out when Galaxy is unreachable or reads are not granted, "
+        "in place of loom's NOT-CONNECTED variant. The udt-authoring skill pointer is ported. "
         "loom v0.8.0 added the IWC section and rewrote the routing-tag list; both are ported. "
         "The new hybrid/local bullets are not: this build has no local execution. "
         "2026-10-03: the plan-lifecycle pre-draft order and the retirement of `[galaxy]` for "
@@ -228,6 +229,29 @@ EXTRA = [
         "olit has one project-data channel (the record); loom has two.",
     ),
     (
+        "prompt.identity",
+        "prompt-block",
+        None,
+        ("src/agent/prompt.ts", "IDENTITY"),
+        "ADDED",
+        "One line before loom's blocks. loom sends none: its before_agent_start replaces pi's base "
+        "prompt. Without it gpt-oss drafted plans past recommend_iwc_workflows in 4 of 6 runs of "
+        "plan-consults-iwc, against 1 of 6 with it (2026-10-05).",
+    ),
+    (
+        "hint.iwc-candidates",
+        "tool-result-hint",
+        (
+            "extensions/loom/skill-triggers.ts",
+            "applySkillTriggers",
+            "the iwc-candidates row: a successful galaxy_recommend_iwc_workflows or "
+            "galaxy_search_iwc_workflows result",
+        ),
+        ("src/agent/hints.ts", "IWC_CANDIDATES_HINT"),
+        "PORTED",
+        "Appended to both IWC listings, as loom's trigger is; the tool name drops loom's galaxy_ prefix.",
+    ),
+    (
         "prompt.seedDatasetBlock",
         "prompt-block",
         None,
@@ -284,8 +308,8 @@ EXTRA = [
         None,
         ("src/agent/hints.ts", "fetchFailureHint"),
         "ADDED",
-        "loom has no equivalent: its only tool-result hint covers failed workflow invocations, "
-        "a different trigger that stays unported. The shape is borrowed from it -- append the "
+        "loom has no equivalent: its tool-result hints cover failed workflow invocations, IWC "
+        "listings and tool-name confusables, none a failed fetch. The shape is borrowed -- append the "
         "imperative to a result that already reports the failure, rather than refusing the call "
         "that caused it. Galaxy names the url and the status but cannot say that writing another "
         "url from memory is the wrong next move, which is what a measured session did eight "
