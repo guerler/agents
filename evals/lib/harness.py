@@ -349,6 +349,7 @@ def _stage(scenario, config):
         staged = stage_dataset(config, scenario["dataset"], wait)
         if scenario.get("workflows"):
             staged["workflow_ids"] = import_workflows(staged["galaxy"], scenario["workflows"])
+            staged.setdefault("imported_workflow_ids", []).extend(staged["workflow_ids"].values())
         return staged
     if scenario.get("workflows"):
         return stage_workflows(config, scenario["workflows"], wait)
@@ -583,14 +584,26 @@ def _empty_history(config, scenario):
 
 
 def import_workflows(galaxy, spec):
-    """The fixture workflows, freshly imported. Returns {filename: workflow_id}."""
+    """The fixture workflows, freshly imported. Returns {filename: workflow_id}.
+
+    Nothing is looked up by name to make room: a workflow of the same name may be the user's.
+    The run deletes what it imported, by the ids returned here (remove_imported_workflows).
+    """
     base = pathlib.Path(__file__).resolve().parent.parent / "fixtures" / "workflows"
     definitions = {name: json.loads((base / name).read_text()) for name in spec["files"]}
-    wanted = {d["name"] for d in definitions.values()}
-    for w in galaxy.call("api/workflows") or []:
-        if w.get("name") in wanted:
-            galaxy.call(f"api/workflows/{w['id']}", "DELETE")
     return {name: galaxy.call("api/workflows", "POST", {"workflow": d})["id"] for name, d in definitions.items()}
+
+
+def remove_imported_workflows(staged):
+    """Delete exactly the workflows this run imported, by id."""
+    if not staged:
+        return
+    for workflow_id in staged.get("imported_workflow_ids", []):
+        try:
+            staged["galaxy"].call(f"api/workflows/{workflow_id}", "DELETE")
+        except Exception:
+            # Cleanup must never decide a run; a workflow left behind is named in the log.
+            print(f"  could not delete imported workflow {workflow_id}", flush=True)
 
 
 def stage_workflows(config, spec, timeout):
@@ -603,6 +616,7 @@ def stage_workflows(config, spec, timeout):
         "history_id": history_id,
         "dataset_ids": {},
         "workflow_ids": ids,
+        "imported_workflow_ids": list(ids.values()),
         "test": None,
         "tool_id": None,
         "session_id": config["session_id"],
@@ -657,7 +671,10 @@ def stage_dataset(config, spec, timeout):
     if spec.get("thenRuns"):
         staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id, spec["thenRuns"], timeout)
     if spec.get("thenInvokes"):
-        staged["invocation_id"] = _stage_invocation(galaxy, history_id, dataset_id, spec["thenInvokes"], timeout)
+        staged["invocation_id"], workflow_id = _stage_invocation(
+            galaxy, history_id, dataset_id, spec["thenInvokes"], timeout
+        )
+        staged.setdefault("imported_workflow_ids", []).append(workflow_id)
     return staged
 
 
@@ -741,7 +758,7 @@ def _stage_invocation(galaxy, history_id, dataset_id, spec, timeout):
             f"{settled.get('state')!r} with jobs {states}; the scenario would not be testing "
             f"what it claims"
         )
-    return invocation["id"]
+    return invocation["id"], workflow_id
 
 
 async def _settle(session, events, timeout, waited, interval=10):

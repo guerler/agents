@@ -21,6 +21,7 @@ from lib.assertions import DIMENSIONS, evaluate, validate_patterns  # noqa: E402
 from lib.harness import (  # noqa: E402
     label_record_page,
     load_scenarios,
+    remove_imported_workflows,
     required_env,
     run_scenario,
     save_session,
@@ -191,6 +192,8 @@ def main():
                         verdict = "ERROR"
                         note = f"could not grade: {type(exc).__name__}: {exc}"
                         run.error = run.error or note
+                # After grading, which reads what the run staged.
+                remove_imported_workflows(getattr(run, "staged", None))
                 # Flushed per result: a full matrix runs for many minutes, and Python
                 tag = f" #{run_index + 1}" if runs > 1 else ""
                 budget = f" {run.steps}/{run.max_steps} steps" if run.max_steps else ""
