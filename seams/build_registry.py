@@ -295,7 +295,7 @@ EXTRA = [
         "tool.get_invocations.outcome",
         "tool-result-projection",
         ("extensions/loom/tools.ts", "checkInvocations", "a poll of an in-flight invocation recorded in the notebook"),
-        ("src/agent/invocation-outcome.ts", "settle"),
+        ("@galaxyproject/galaxy-ops/browser", "invocationOutcome"),
         "PORTED",
         "loom's transition rules, applied to what the agent reads instead of to a notebook "
         "block: FAILED_JOB_STATES, and the two questions of whether Galaxy has stopped "
@@ -303,7 +303,8 @@ EXTRA = [
         "scheduling, so a run whose jobs errored still reads `completed` there, and a measured "
         "session reported it as clean. One divergence: loom folds a cancelled run into `failed` "
         "because its record has no third word, and a tool result has room to say `cancelled`. "
-        "The session's watch (src/agent/watch.ts) settles watched invocations with the same function.",
+        "The rule now lives in galaxy-ops, whose get_invocations reports it as `outcome` on both "
+        "surfaces; the session's watch (src/agent/watch.ts) imports it to settle watched invocations.",
     ),
 ]
 

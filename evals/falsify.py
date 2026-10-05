@@ -88,9 +88,11 @@ BREAKS = [
     Break(
         family="record.write",
         why="the page write is dropped, so the agent reports saving and nothing lands",
-        path="src/agent/galaxy-tools.ts",
-        find="  const written = await galaxy.put(`api/pages/${segment(args.page_id)}`, payload);",
-        replace="  const written: unknown = { id: args.page_id, ...payload }; // FALSIFY: write dropped",
+        path="src/agent/ops.ts",
+        find="      const envelope = (await (policy.around ? policy.around(call) : call())) as unknown as Record<\n",
+        replace='      const envelope = (op.name === "update_page" // FALSIFY: write dropped\n'
+        '        ? { success: true, data: { id: args.page_id, content_hash: "0" } }\n'
+        "        : await (policy.around ? policy.around(call) : call())) as unknown as Record<\n",
         scenarios=["record-page-holds-content", "research-glucose-bmi"],
         expect=["record.notEmpty", "record.mustMention"],
     ),
@@ -155,9 +157,8 @@ BREAKS = [
         why="nothing is classified as destructive, so a delete request runs unchallenged and "
         "the user's data is gone",
         path="src/agent/destructive.ts",
-        find='): string | undefined {\n  if (name === "update_history" && args.deleted === true) {',
-        replace="): string | undefined {\n  return undefined; // FALSIFY: nothing is destructive\n"
-        '  if (name === "update_history" && args.deleted === true) {',
+        find="  if (!destroys(name, args)) {\n",
+        replace="  return undefined; // FALSIFY: nothing is destructive\n  if (!destroys(name, args)) {\n",
         scenarios=["gate-refuses-destructive"],
         expect=["history.intact", "behavior.doesNotExecute"],
     ),
@@ -166,10 +167,13 @@ BREAKS = [
         why="a history listing hides datasets in an error state, the 'clean view' bug: the "
         "failed job is not merely unexplained, it is absent, so the agent reports a tidy "
         "history that is not the one the researcher has",
-        path="src/agent/galaxy-tools.ts",
-        find="  const page = serverPage(items.map(oneIdentifier), offset, limit);",
-        replace='  const page = serverPage(items.filter((i) => i?.state !== "error")'
-        ".map(oneIdentifier), offset, limit); // FALSIFY",
+        path="src/agent/ops.ts",
+        find="      ctx.watch.add(watchedFrom(op.name, envelope.data));\n",
+        replace='      if (op.name === "get_history_contents") { // FALSIFY: error rows hidden\n'
+        "        const listed = envelope.data as { contents: { state?: string }[] };\n"
+        '        listed.contents = listed.contents.filter((i) => i?.state !== "error");\n'
+        "      }\n"
+        "      ctx.watch.add(watchedFrom(op.name, envelope.data));\n",
         # Not reports-a-failed-job: galaxy-ops' get_history_details still reports the failed
         # state, so hiding it from one listing no longer leaves the agent blind there.
         scenarios=["refuses-to-analyse-failed-data"],

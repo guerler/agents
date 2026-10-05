@@ -505,11 +505,11 @@
         "fingerprint": "1dff1ee76de5e5be"
       },
       "olit": {
-        "file": "src/agent/invocation-outcome.ts",
-        "symbol": "settle"
+        "file": "@galaxyproject/galaxy-ops/browser",
+        "symbol": "invocationOutcome"
       },
       "label": "PORTED",
-      "note": "loom's transition rules, applied to what the agent reads instead of to a notebook block: FAILED_JOB_STATES, and the two questions of whether Galaxy has stopped scheduling and whether any job is still moving. Galaxy's invocation state describes scheduling, so a run whose jobs errored still reads `completed` there, and a measured session reported it as clean. One divergence: loom folds a cancelled run into `failed` because its record has no third word, and a tool result has room to say `cancelled`. The session's watch (src/agent/watch.ts) settles watched invocations with the same function."
+      "note": "loom's transition rules, applied to what the agent reads instead of to a notebook block: FAILED_JOB_STATES, and the two questions of whether Galaxy has stopped scheduling and whether any job is still moving. Galaxy's invocation state describes scheduling, so a run whose jobs errored still reads `completed` there, and a measured session reported it as clean. One divergence: loom folds a cancelled run into `failed` because its record has no third word, and a tool result has room to say `cancelled`. The rule now lives in galaxy-ops, whose get_invocations reports it as `outcome` on both surfaces; the session's watch (src/agent/watch.ts) imports it to settle watched invocations."
     }
   ],
   "layers": {
@@ -806,14 +806,14 @@
         "get_histories": "83cbccdf408a472a",
         "list_history_ids": "88ad52890f4200e5",
         "get_history_details": "1e0e223ac411cc55",
-        "get_history_contents": "ed5f0f3866481b60",
-        "get_job_details": "bac1708059e31200",
+        "get_history_contents": "f2822066d6f13d65",
+        "get_job_details": "9643df670dd957fe",
         "get_dataset_details": "cdc7a24c57f17e44",
         "get_collection_details": "e92c9556ff548fd1",
         "download_dataset": "3108558eabe2e8ad",
         "upload_file": "f6b4d869df115d8f",
         "upload_file_from_url": "e1029599679a6733",
-        "get_invocations": "acca76a257a5bd83",
+        "get_invocations": "06378ea715f2b5cf",
         "get_iwc_workflows": "aa45e9c23b187121",
         "search_iwc_workflows": "4f1478479f2219a2",
         "get_iwc_workflow_details": "f3c8d8af0a274569",
@@ -829,9 +829,9 @@
         "delete_user_tool": "b445d0902812a4de",
         "run_user_tool": "ee2c3a5c7098f316",
         "list_pages": "2d75ee5b241ebba2",
-        "get_page": "a6b118c5bfa9c10b",
+        "get_page": "914d18fff350a52b",
         "create_page": "3b5d201260671e38",
-        "update_page": "cac0fd3f73deca63",
+        "update_page": "d71867ef853cd032",
         "list_page_revisions": "903f5fdb2f40b0e4",
         "get_page_revision": "1abbfe999c99a88e",
         "revert_page_revision": "fd5854861cc04e7b"
@@ -937,14 +937,12 @@
         }
       },
       "loop": {
-        "source": "brain/olit/loop/agent.py, brain/olit/compaction.py, brain/olit/loop/paging.py",
+        "source": "brain/olit/loop/agent.py, brain/olit/compaction.py",
         "upstream": {
           "keep_recent_tokens": 20000,
           "max_steps": null,
           "max_tool_result_bytes": null,
           "reserve_tokens": 16384,
-          "row_bytes_cap": null,
-          "row_cap": null,
           "tool_execution": "parallel",
           "tool_result_max_chars": 2000
         },
@@ -953,16 +951,12 @@
           "max_steps": "ADDED",
           "max_tool_result_bytes": "ADDED",
           "reserve_tokens": "PORTED",
-          "row_bytes_cap": "ADDED",
-          "row_cap": "ADDED",
           "tool_execution": "DIVERGES",
           "tool_result_max_chars": "PORTED"
         },
         "notes": {
           "max_steps": "A backstop for an unattended tab; pi's loop is `while (true)`. Raised 40 -> 100 on 2026-09-24: cryptic-exon-q1 spent 40 steps on a real RNA-seq analysis and was still working. Configurable, and a spent budget appends a `max-steps` entry to the run's `guards`.",
           "max_tool_result_bytes": "pi caps bash and read only and never truncates an MCP result. Olit discards a single oversized result rather than losing the turn.",
-          "row_cap": "With row_bytes_cap, the two limits pi's truncate uses, applied to Galaxy list reads.",
-          "row_bytes_cap": "A row count alone does not bound cost when the rows are fat.",
           "tool_execution": "KNOWN LIMITATION. pi runs a batch through executeToolCallsParallel unless a tool declares executionMode sequential. Olit dispatches in call order, so a batch of five reads costs five round-trips. Closing it means splitting `dispatch` into pi's sequential prepare and concurrent execute phases; the gates, the destructive-op modal and the single Pyodide namespace all sit in the prepare half. Tracked separately, not forced for parity."
         },
         "olit": {
@@ -970,8 +964,6 @@
           "max_steps": 100,
           "max_tool_result_bytes": 262144,
           "reserve_tokens": 16384,
-          "row_bytes_cap": 50000,
-          "row_cap": 100,
           "tool_execution": "sequential",
           "tool_result_max_chars": 2000
         }
@@ -1010,9 +1002,9 @@
         "params": {
           "annotation": "string|null",
           "content": "string|null",
-          "history_id": "any",
-          "slug": "any",
-          "title": "any"
+          "history_id": "string|null",
+          "slug": "string|null",
+          "title": "string|null"
         },
         "prose": "39440aad971e75ae"
       },
@@ -1058,7 +1050,7 @@
       },
       "get_histories": {
         "params": {
-          "limit": "any",
+          "limit": "integer|null",
           "name": "string|null",
           "offset": "integer=0"
         },
@@ -1066,14 +1058,14 @@
       },
       "get_history_contents": {
         "params": {
-          "deleted": "boolean",
+          "deleted": "boolean=false",
           "history_id": "string!",
-          "limit": "integer",
-          "offset": "integer",
-          "order": "string",
-          "visible": "boolean"
+          "limit": "integer=100",
+          "offset": "integer=0",
+          "order": "string(hid-asc|hid-dsc|create_time-asc|create_time-dsc|update_time-dsc|name-asc)=hid-asc",
+          "visible": "boolean=true"
         },
-        "prose": "c52e394575ebb0d4"
+        "prose": "74c915df092e9c04"
       },
       "get_history_details": {
         "params": {
@@ -1083,14 +1075,14 @@
       },
       "get_invocations": {
         "params": {
-          "history_id": "string",
-          "invocation_id": "string",
-          "limit": "integer",
-          "step_details": "boolean",
-          "view": "string",
-          "workflow_id": "string"
+          "history_id": "string|null",
+          "invocation_id": "string|null",
+          "limit": "integer|null",
+          "step_details": "boolean=false",
+          "view": "string=collection",
+          "workflow_id": "string|null"
         },
-        "prose": "dd15599ae0fb8925"
+        "prose": "bd03475dcbacd3d8"
       },
       "get_iwc_workflow_details": {
         "params": {
@@ -1108,16 +1100,16 @@
       "get_job_details": {
         "params": {
           "dataset_id": "string!",
-          "history_id": "string"
+          "history_id": "string|null"
         },
-        "prose": "6d0d8ddbc6c3ed70"
+        "prose": "39666bb09eb7b775"
       },
       "get_page": {
         "params": {
-          "include_rendered": "boolean",
+          "include_rendered": "boolean=false",
           "page_id": "string!"
         },
-        "prose": "5d59d05747faebc2"
+        "prose": "311b6ff393c7b2f4"
       },
       "get_page_revision": {
         "params": {
@@ -1192,7 +1184,7 @@
       },
       "get_workflow_details": {
         "params": {
-          "version": "any",
+          "version": "integer|null",
           "workflow_id": "string!"
         },
         "prose": "d5c660ccca3817fd"
@@ -1228,10 +1220,10 @@
         "params": {
           "history_id": "string|null",
           "history_name": "string|null",
-          "inputs": "any",
+          "inputs": "object|string|null",
           "inputs_by": "string=step_index",
           "parameters_normalized": "boolean=false",
-          "params": "any",
+          "params": "object|string|null",
           "workflow_id": "string!"
         },
         "prose": "dbf429b7f1aad537"
@@ -1262,7 +1254,7 @@
       },
       "list_pages": {
         "params": {
-          "history_id": "any",
+          "history_id": "string|null",
           "limit": "integer=100",
           "offset": "integer=0",
           "search": "string|null",
@@ -1410,20 +1402,20 @@
           "history_id": "string!",
           "name": "string|null",
           "published": "boolean|null",
-          "tags": "any"
+          "tags": "array|null"
         },
         "prose": "a2f0869be04ae455"
       },
       "update_page": {
         "params": {
-          "content": "string",
-          "expect_hash": "string",
+          "content": "string|null",
+          "expect_hash": "string|null",
           "page_id": "string!",
-          "section_content": "string",
-          "section_heading": "string",
-          "title": "string"
+          "section_content": "string|null",
+          "section_heading": "string|null",
+          "title": "string|null"
         },
-        "prose": "9573967b3fb91d15"
+        "prose": "500f182806a6ae50"
       },
       "upload_file": {
         "params": {

@@ -179,21 +179,21 @@ def check_layers(data, agent):
         # "ready-to-fill skeleton" wording over a raw schema passthrough for months.
         shaped = surface.get("shaped_returns") or {}
         if shaped:
-            covered = description.promised_fields(agent)
+            covered = description.declared_results(agent)
             writes = description.write_tools(agent)
             for name in sorted(shaped):
                 if name in allowed:
                     continue
                 keys = ", ".join(shaped[name])
-                if not covered.get(name) and name not in writes:
-                    # Only a field the agent declares gets read back off a live result, whoever
-                    # runs the tool; an undeclared promise is checked by nothing.
+                if name not in covered and name not in writes:
+                    # galaxy-ops reads every declared shape back off a result in its own tests;
+                    # a tool with no declaration has its shape checked by nothing.
                     out.append(
                         (
                             "SHAPE",
                             f"layer.tool-return/{name}",
-                            f"galaxy-mcp returns {{{keys}}}; the agent declares no promised "
-                            f"field for this tool, so nothing verifies the shape",
+                            f"galaxy-mcp returns {{{keys}}}; no result shape is declared for this tool, "
+                            f"so nothing verifies it",
                         )
                     )
     return out

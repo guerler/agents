@@ -52,9 +52,9 @@ def write_tools(description):
     return {name for name, tool in description["tools"].items() if tool.get("capability") == "write"}
 
 
-def promised_fields(description):
-    """name -> the result fields the agent declares and reads back off a live result."""
-    return {name: tool.get("promised_fields") or [] for name, tool in description["tools"].items()}
+def declared_results(description):
+    """Tools whose result shape galaxy-ops declares, which it reads back off a result in its tests."""
+    return {name for name, tool in description["tools"].items() if tool.get("result")}
 
 
 def tool_contracts(description):

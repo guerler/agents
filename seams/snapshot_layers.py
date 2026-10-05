@@ -59,14 +59,12 @@ POLICY_UPSTREAM = {
         "built without tools cannot show that field.",
     },
     "loop": {
-        "source": "brain/olit/loop/agent.py, brain/olit/compaction.py, brain/olit/loop/paging.py",
+        "source": "brain/olit/loop/agent.py, brain/olit/compaction.py",
         "upstream": {
             "keep_recent_tokens": 20000,
             "max_steps": None,
             "max_tool_result_bytes": None,
             "reserve_tokens": 16384,
-            "row_bytes_cap": None,
-            "row_cap": None,
             "tool_execution": "parallel",
             "tool_result_max_chars": 2000,
         },
@@ -75,8 +73,6 @@ POLICY_UPSTREAM = {
             "max_steps": "ADDED",
             "max_tool_result_bytes": "ADDED",
             "reserve_tokens": "PORTED",
-            "row_bytes_cap": "ADDED",
-            "row_cap": "ADDED",
             "tool_execution": "DIVERGES",
             "tool_result_max_chars": "PORTED",
         },
@@ -84,8 +80,6 @@ POLICY_UPSTREAM = {
             "max_steps": "A backstop for an unattended tab; pi's loop is `while (true)`. Raised 40 -> 100 on 2026-09-24: cryptic-exon-q1 spent 40 steps on a real RNA-seq analysis and was still working. Configurable, and a spent budget appends a `max-steps` entry to the run's `guards`.",
             "max_tool_result_bytes": "pi caps bash and read only and never truncates an MCP result. Olit "
             "discards a single oversized result rather than losing the turn.",
-            "row_cap": "With row_bytes_cap, the two limits pi's truncate uses, applied to Galaxy list reads.",
-            "row_bytes_cap": "A row count alone does not bound cost when the rows are fat.",
             "tool_execution": "KNOWN LIMITATION. pi runs a batch through executeToolCallsParallel unless a "
             "tool declares executionMode sequential. Olit dispatches in call order, so a "
             "batch of five reads costs five round-trips. Closing it means splitting "
