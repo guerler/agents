@@ -106,8 +106,8 @@ ALLOWED_TOOL_DIVERGENCE = {
     "connect": "no connection step: olit is served by Galaxy",
     "download_dataset": "DIVERGES: writes the dataset into the browser's in-memory filesystem, where run_python reads it, and returns a preview; there is no disk path to take, so `file_path` and its options are gone.",
     "upload_file": "DIVERGES: uploads a file from the browser's in-memory filesystem (what run_python wrote), never the user's disk, and takes `file_name`, `file_type` and `dbkey` for content that has no name of its own.",
-    "get_history_contents": "DIVERGES: galaxy-mcp fetches every item in the history and pages client-side, so it can report `total_items`; an 8,000-dataset history makes that untenable. olit lets Galaxy page, asks for one row past the limit, and answers in galaxy-ops' envelope -- rows under `data`, `pagination` beside them -- with `total_items` null while more pages remain. Also omits `dataset_id` from each item (see the agent-safe projection principle).",
-    "upload_file_from_url": "DIVERGES: passes `auto_decompress: true` on the fetch element. Galaxy's own uploader defaults it to true (client/src/composables/upload/uploadOptionModel.ts:67); the API defaults to false (lib/galaxy/schema/fetch_data.py:46) and galaxy-mcp passes nothing, so a `.gz` URL declared as its uncompressed type lands as gzip bytes wearing the wrong label. Observed on 4/4 cryptic-exon-q1 runs: the model names the logical format and drops the `.gz`, and every downstream tool then fails.",
+    "get_history_contents": "DIVERGES: galaxy-mcp fetches every item in the history and pages client-side, so it can report `total_items`; an 8,000-dataset history makes that untenable. olit lets Galaxy page, asks for one row past the limit, and answers with the data both upstream surfaces return -- `{history_id, contents}`, `pagination` beside it -- with `total_items` null while more pages remain. Also omits `dataset_id` from each item (see the agent-safe projection principle).",
+    "upload_file_from_url": "DIVERGES in route only: olit posts to the fetch API with `auto_decompress: true`, which that API defaults to false (lib/galaxy/schema/fetch_data.py:46); galaxy-mcp and galaxy-ops run the upload1 tool, whose hidden `auto_decompress` is already Yes (tools/data_source/upload.xml:45). The 4/4 cryptic-exon-q1 failures (a `.gz` URL declared as its uncompressed type landing as gzip bytes) were olit's own fetch path before it set the flag, not galaxy-mcp's. Pending one live gz check, then olit runs galaxy-ops' op.",
     "recommend_biocontainer": "ADDED: galaxy-ops ships this operation only in its Node build, "
     "because the mulled hash uses node:crypto. olit's browser version takes the udt-authoring "
     "skill's second route, the quay.io tag API, which quay.io serves cross-origin. Keeps "
@@ -136,8 +136,9 @@ ALLOWED_TOOL_DIVERGENCE = {
     "returns the whole match set. Unported, not a decision.",
     "search_tools_by_name": "DIVERGES: upstream added limit/offset; olit has not ported them and "
     "returns the whole match set. Unported, not a decision.",
-    "run_tool": "DIVERGES: upstream added tool_version, which asks Galaxy for a particular version "
-    "and falls back when it is absent; olit lets Galaxy choose. Unported, not a decision.",
+    "run_tool": "DIVERGES: refuses inputs that resolve to a dataset in another history (claim c2), "
+    "and answers Galaxy's HTTP 500 input errors ('invalid key structure', 'has no attribute') with "
+    "the tool's input template. tool_version is forwarded as upstream does.",
     "create_page": "DIVERGES: upstream refuses the whole tool on a server too old to attach a page "
     "to a history; olit has no version gate and its description does not claim one.",
     "list_pages": "DIVERGES: upstream refuses the whole tool on a server without the history_id "
