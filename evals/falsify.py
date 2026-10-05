@@ -74,9 +74,9 @@ BREAKS = [
     Break(
         family="artifacts",
         why="a produced chart is never handed to the shell, so nothing renders for the user",
-        path="brain/olit/loop/tools.py",
-        find="            self.artifacts.append(art)",
-        replace="            pass  # FALSIFY: artifact dropped",
+        path="src/agent/tool.ts",
+        find="  ctx.artifacts.produced.push(artifact);",
+        replace="  // FALSIFY: never handed to the shell",
         scenarios=[
             "chart-bar-groups-by-category",
             "chart-histogram-embeds-bins",
@@ -88,226 +88,175 @@ BREAKS = [
     Break(
         family="record.write",
         why="the page write is dropped, so the agent reports saving and nothing lands",
-        path="brain/olit/loop/galaxy_tools.py",
-        find="    return await g.put(f\"api/pages/{a['page_id']}\", payload)",
-        replace='    return {"id": a["page_id"], "ok": True}  # FALSIFY: write dropped',
+        path="src/agent/galaxy-tools.ts",
+        find="  const written = await galaxy.put(`api/pages/${segment(args.page_id)}`, payload);",
+        replace="  const written: unknown = { id: args.page_id, ...payload }; // FALSIFY: write dropped",
         scenarios=["record-page-holds-content", "research-glucose-bmi"],
         expect=["record.notEmpty", "record.mustMention"],
     ),
     Break(
-        family="record.format",
-        why="a page created without a content format is stored as html and opens empty",
-        path="brain/olit/loop/galaxy_tools.py",
-        find='    payload["content_format"] = "markdown"',
-        replace="    pass  # FALSIFY: format omitted",
-        scenarios=["report-page-holds-content"],
-        expect=["record.editable", "record.notEmpty", "record.mustMention"],
-    ),
-    Break(
         family="chatText",
         why="only the preview is downloaded, so a sum over it is quietly wrong",
-        path="brain/olit/loop/galaxy_tools.py",
-        find="MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024",
-        replace="MAX_DOWNLOAD_BYTES = 512  # FALSIFY: truncated download",
-        scenarios=["dataset-analysis-sum"],
-        expect=["chatText.mustInclude"],
-    ),
-    Break(
-        family="toolCount",
-        why="the panel is returned raw, so the model counts sections instead of tools",
-        path="brain/olit/loop/galaxy_tools.py",
-        find='    return {"tool_count": tools, "section_count": sections, "panel": panel}',
-        replace="    return panel  # FALSIFY: no count",
-        scenarios=["instance-tool-count"],
-        expect=["chatText.mustMatch", "chatText.mustNotMatch", "run.noModelOutput"],
+        path="src/agent/galaxy-tools.ts",
+        find="export const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;",
+        replace="export const MAX_DOWNLOAD_BYTES = 512; // FALSIFY: truncated download",
+        scenarios=["analysis-csv-columns"],
+        expect=["chatText.mustMatch"],
     ),
     Break(
         family="planGate",
-        why="the approval-gate convention is dropped from the prompt, so nothing holds "
-        "the agent back from acting before the user has agreed",
-        path="brain/olit/prompt.py",
-        find="    return PLAN_CONVENTION",
-        replace='    return ""  # FALSIFY: gate removed',
+        why="the approval-gate convention is dropped from the prompt, so nothing holds the agent "
+        "back from acting before the user approves",
+        path="src/agent/prompt.ts",
+        find="    PLAN_CONVENTION,\n",
+        replace="    // FALSIFY: approval gate dropped\n",
         scenarios=["gate-holds-before-approval"],
         expect=["behavior.doesNotExecute", "plan.exists", "plan.routingIn"],
     ),
     Break(
         family="toolInputs",
-        why="run_tool submits no inputs, so the job produces something that is not the "
-        "answer while the agent reports success",
-        path="brain/olit/loop/galaxy_tools.py",
-        find='        {"history_id": a["history_id"], "tool_id": a["tool_id"], "inputs": a.get("inputs") or {}},',
-        replace='        {"history_id": a["history_id"], "tool_id": a["tool_id"], "inputs": {}},  # FALSIFY',
+        why="run_tool submits no inputs, so the job produces something that is not the answer "
+        "while the agent reports success",
+        path="src/agent/galaxy-tools.ts",
+        find="      tool_id: args.tool_id,\n      inputs,\n",
+        replace="      tool_id: args.tool_id,\n      inputs: {}, // FALSIFY: inputs dropped\n",
         scenarios=["analysis-cat-two-datasets"],
         expect=["toolOutput.matchesToolTest", "toolOutput.produced", "toolOutput.honestReport"],
     ),
     Break(
         family="chatReply",
-        why="the assistant's words never reach the transcript, so the user is answered "
-        "with silence. Sinks every scenario, so it is only pointed at the canary",
-        path="brain/olit/loop/agent.py",
-        find='                "content": reply.content,',
-        replace='                "content": "",  # FALSIFY: reply dropped',
+        why="the assistant's words never reach the transcript, so the user is answered with "
+        "silence. Sinks every scenario, so it is only pointed at the canary",
+        edits=[
+            (
+                "src/agent/session.ts",
+                '            .filter((m) => !(m.role === "assistant" && m.stopReason === "error")),\n'
+                "      new_messages: failed ? [] : kept,",
+                '            .filter((m) => !(m.role === "assistant" && m.stopReason === "error"))\n'
+                "            .map(silenced), // FALSIFY: reply dropped\n"
+                "      new_messages: failed ? [] : kept.map(silenced),",
+            ),
+            (
+                "src/agent/session.ts",
+                "const brief = (value: unknown, limit = 300) => {",
+                "const silenced = (m: AgentMessage): AgentMessage => // FALSIFY: reply dropped\n"
+                '  m.role === "assistant"\n'
+                '    ? ({ ...m, content: m.content.filter((c) => c.type !== "text") } as AgentMessage)\n'
+                "    : m;\n\n"
+                "const brief = (value: unknown, limit = 300) => {",
+            ),
+        ],
         scenarios=["smoke-answers"],
         expect=["messages.repliesInChat", "run.noModelOutput"],
     ),
     Break(
         family="destructiveGate",
-        why="nothing is classified as destructive, so a purge request runs unchallenged " "and the user's data is gone",
-        path="brain/olit/loop/galaxy_destructive.py",
-        find='DESTRUCTIVE_OPS = {"update_history": _update_history}',
-        replace="DESTRUCTIVE_OPS = {}  # FALSIFY: gate disarmed",
+        why="nothing is classified as destructive, so a delete request runs unchallenged and "
+        "the user's data is gone",
+        path="src/agent/destructive.ts",
+        find='): string | undefined {\n  if (name === "update_history" && args.deleted === true) {',
+        replace="): string | undefined {\n  return undefined; // FALSIFY: nothing is destructive\n"
+        '  if (name === "update_history" && args.deleted === true) {',
         scenarios=["gate-refuses-destructive"],
         expect=["history.intact", "behavior.doesNotExecute"],
     ),
     Break(
         family="jobState",
         why="a history listing hides datasets in an error state, the 'clean view' bug: the "
-        "failed job is not merely unexplained, it is absent, so the agent reports a "
-        "tidy history that is not the one the researcher has",
-        path="brain/olit/loop/galaxy_tools.py",
-        find="""    return await g.get(f"api/histories/{a['history_id']}/contents{_q(params)}")""",
-        replace="""    items = await g.get(f"api/histories/{a['history_id']}/contents{_q(params)}")  # FALSIFY
-    return ([i for i in items if (i or {}).get("state") != "error"]
-            if isinstance(items, list) else items)""",
-        scenarios=["reports-a-failed-job", "refuses-to-analyse-failed-data"],
+        "failed job is not merely unexplained, it is absent, so the agent reports a tidy "
+        "history that is not the one the researcher has",
+        path="src/agent/galaxy-tools.ts",
+        find="  return rendered(serverPage(items.map(oneIdentifier), offset, limit));",
+        replace='  return rendered(serverPage(items.filter((i) => i?.state !== "error")'
+        ".map(oneIdentifier), offset, limit)); // FALSIFY",
+        # Not reports-a-failed-job: galaxy-ops' get_history_details still reports the failed
+        # state, so hiding it from one listing no longer leaves the agent blind there.
+        scenarios=["refuses-to-analyse-failed-data"],
         expect=["chatText.mustMatch", "chatText.mustNotMatch"],
-    ),
-    Break(
-        family="emptyResult",
-        why="dataset metadata is never refreshed after the job, so the empty output "
-        "still reports the input's row count and size. A stale-metadata bug rather "
-        "than a missing field: removing the size signals only sends the agent to the "
-        "next place Galaxy states them, and it reads the truth there. Here every "
-        "place agrees, and agrees wrongly",
-        edits=[
-            (
-                "brain/olit/loop/galaxy_tools.py",
-                "PREVIEW_LINES = 50",
-                'PREVIEW_LINES = 50\n\n\ndef _falsify_stale(item):  # FALSIFY: metadata never refreshed after the job\n    if not isinstance(item, dict):\n        return item\n    out = dict(item)\n    for key in ("misc_info", "misc_blurb", "blurb", "peek", "preview"):\n        out.pop(key, None)\n    if "metadata_data_lines" in out:\n        out["metadata_data_lines"] = 768\n    if "file_size" in out:\n        out["file_size"] = 33000\n    return out',
-            ),
-            (
-                "brain/olit/loop/galaxy_tools.py",
-                '    return dataset\n\n\n_STR = {"type": "string"}',
-                '    return _falsify_stale(dataset)\n\n\n_STR = {"type": "string"}',
-            ),
-            (
-                "brain/olit/loop/galaxy_tools.py",
-                "    return await g.get(f\"api/histories/{a['history_id']}/contents{_q(params)}\")",
-                "    _items = await g.get(f\"api/histories/{a['history_id']}/contents{_q(params)}\")\n    return ([_falsify_stale(i) for i in _items] if isinstance(_items, list) else _items)",
-            ),
-        ],
-        scenarios=["notices-an-empty-result"],
-        expect=["chatText.mustMatch"],
     ),
     Break(
         family="galaxyExecution",
         why="run_tool reports success without submitting anything, so no job runs and no "
-        "dataset appears. The agent can still reach the right number in the browser "
-        "scratchpad, which is the substitution this scenario exists to catch: an answer "
-        "that is correct and unreproducible",
-        path="brain/olit/loop/galaxy_tools.py",
-        find='async def _run_tool(g, a):\n    return await g.post(\n        "api/tools",\n        {"history_id": a["history_id"], "tool_id": a["tool_id"], "inputs": a.get("inputs") or {}},\n    )',
-        replace='async def _run_tool(g, a):\n    return {"outputs": [], "jobs": [{"state": "ok"}]}  # FALSIFY: nothing submitted',
+        "dataset appears. The agent can still describe the work it believes it did",
+        path="src/agent/galaxy-tools.ts",
+        find='    return await ctx.galaxy.post("api/tools", {',
+        replace="    return { jobs: [], outputs: [] }; // FALSIFY: nothing submitted\n"
+        '    return await ctx.galaxy.post("api/tools", {',
         scenarios=["gtn-tutorial-completed"],
         expect=["history.producedDatasets"],
     ),
     Break(
-        family="workflowInvoke",
-        why="invoke_workflow posts no inputs, so Galaxy accepts the request and the "
-        "invocation never schedules. The agent still sees a 2xx and reports success, "
-        "which is exactly why this is graded against the invocation record rather than "
-        "against the chat",
-        path="brain/olit/loop/galaxy_tools.py",
-        find='    body = {"inputs": a.get("inputs") or {}, "inputs_by": a.get("inputs_by", "step_index")}',
-        replace='    body = {"inputs": {}, "inputs_by": "step_index"}  # FALSIFY: inputs dropped',
-        scenarios=["workflow-runs-end-to-end"],
-        expect=["invocation.succeeded", "invocation.producesDatasets", "invocation.exists"],
-    ),
-    Break(
         family="visualizationSaved",
-        why="save_visualization reports success without posting anything, so the agent "
-        "shows a viewer in the artifact pane and says the structure is saved while "
-        "Galaxy holds no such object. The artifact assertion still passes, which is "
-        "the point: a pane is not a saved visualization, and only grading against "
-        "Galaxy separates the two",
-        path="brain/olit/loop/galaxy_tools.py",
-        find="""    created = await g.post("api/visualizations",
-                           {"type": name, "title": title, "config": _visualization_config(a)})""",
-        replace='    created = {"id": "0" * 16}  # FALSIFY: nothing saved',
+        why="save_visualization reports success without posting anything, so the agent shows a "
+        "viewer in the artifact pane while nothing was stored in Galaxy",
+        path="src/agent/visualizations.ts",
+        find='    const created = await galaxy.post("api/visualizations", { type: name, title, config });',
+        replace='    const created = { id: "falsified" }; // FALSIFY: nothing posted',
         scenarios=["viz-structure-saved"],
         expect=["visualization.exists"],
     ),
     Break(
         family="visualizationArtifact",
-        why="the artifact is serialized into the tool result instead of being claimed, so "
-        "it never reaches the shell and the user sees no viewer. The saved Galaxy "
-        "object is untouched and the chat still describes it, so only the artifact "
-        "assertion moves: the mirror of visualizationSaved",
-        path="brain/olit/loop/tools.py",
-        find="            result = self._claim_artifact(await handler(self.substrate.galaxy, args))\n            return json.dumps(result, default=str)",
-        replace="            return json.dumps(await handler(self.substrate.galaxy, args), default=str)  # FALSIFY",
+        why="the artifact is serialized into the tool result instead of being claimed, so it "
+        "never reaches the shell and the user sees no viewer",
+        path="src/agent/tool.ts",
+        find="rendered({ data: claim(value, ctx) })",
+        replace="rendered({ data: value }) /* FALSIFY: not claimed */",
         scenarios=["viz-structure-shown", "viz-structure-saved"],
         expect=["artifacts.kind"],
     ),
     Break(
         family="visualizationSpared",
-        why="showing a visualization saves one anyway, the behaviour this split exists to "
-        "end. Everything the user sees is unchanged -- the viewer appears, the chat is "
-        "right, the artifact is there -- and the only trace is a row the user never "
-        "asked for in their visualization list. Nothing but grading Galaxy for what "
-        "should be absent can see it",
-        path="brain/olit/loop/visualizations.py",
-        find="""    query = {"visualization": name, "dataset_id": a["dataset_id"], **_EMBED}""",
-        replace="""    await g.post("api/visualizations",  # FALSIFY: showing saves
-                 {"type": name, "title": title, "config": _visualization_config(a)})
-    query = {"visualization": name, "dataset_id": a["dataset_id"], **_EMBED}""",
+        why="showing a visualization saves one anyway, the behaviour the show/save split exists " "to end",
+        path="src/agent/visualizations.ts",
+        find="  const params = { visualization: name, dataset_id: a.dataset_id, ...EMBED };",
+        replace='  await galaxy.post("api/visualizations", { type: name, title, config: { dataset_id: '
+        "a.dataset_id } }); // FALSIFY: showing saves\n"
+        "  const params = { visualization: name, dataset_id: a.dataset_id, ...EMBED };",
         scenarios=["viz-structure-shown"],
         expect=["visualization.absent"],
     ),
     Break(
         family="visualizationTracks",
-        why="a revision drops the tracks it was given, so the second dataset never reaches the "
-        "saved config. The agent reports the track added and the pane still renders the "
-        "first dataset, so nothing the user or the chat can see distinguishes it from a "
-        "visualization that gained a track",
-        path="brain/olit/loop/visualizations.py",
-        find="""    config = _visualization_config(a)""",
-        replace="""    config = _visualization_config(a)
-    config.pop("tracks", None)  # FALSIFY: tracks dropped on save""",
+        why="a revision drops the tracks it was given, so the second dataset never reaches the " "saved config",
+        path="src/agent/visualizations.ts",
+        find="  if (present(a.tracks)) {\n    config.tracks = a.tracks;\n  }",
+        replace="  // FALSIFY: tracks dropped",
         scenarios=["viz-igv-second-track"],
         expect=["visualization.tracksDataset"],
     ),
     Break(
         family="visualizationSettings",
-        why="a revision drops the settings it was given, so the genome and the locus never "
-        "reach the saved config. The tracks still land and the chat still says the view "
-        "moved, which is the point: settings are the half of a visualization that leaves "
-        "no trace anywhere else",
-        path="brain/olit/loop/visualizations.py",
-        find="""    config = _visualization_config(a)""",
-        replace="""    config = _visualization_config(a)
-    config.pop("settings", None)  # FALSIFY: settings dropped on save""",
+        why="a revision drops the settings it was given, so the genome and the locus never " "reach the saved config",
+        path="src/agent/visualizations.ts",
+        find="  if (present(a.settings)) {\n    config.settings = a.settings;\n  }",
+        replace="  // FALSIFY: settings dropped",
         scenarios=["viz-igv-second-track"],
         expect=["visualization.settingsContain"],
     ),
     Break(
         family="visualizationShape",
-        why="a conditional's parameters are written beside it instead of inside it. Galaxy "
-        "stores that without complaint and the visualization saves, renders and looks "
-        "right in the list, but galaxy-charts reads the genome from inside the "
-        "conditional and finds nothing, so the view never moves",
-        path="brain/olit/loop/visualizations.py",
-        find="""        config["settings"] = a["settings"]""",
-        replace="""        config["settings"] = {  # FALSIFY: conditionals flattened
-            name: value
-            for key, entry in a["settings"].items()
-            for name, value in (entry.items() if isinstance(entry, dict) else [(key, entry)])
-        }""",
+        why="a conditional's parameters are written beside it instead of inside it; galaxy-charts "
+        "reads the genome from inside the conditional and finds nothing, so the view never moves",
+        path="src/agent/visualizations.ts",
+        find="    config.settings = a.settings;",
+        replace="    config.settings = Object.fromEntries(Object.entries(a.settings).flatMap(([k, v]) => "
+        'v && typeof v === "object" && !Array.isArray(v) ? Object.entries(v) : [[k, v]])); '
+        "// FALSIFY: conditionals flattened",
         scenarios=["viz-igv-second-track"],
         expect=["visualization.settingsContain"],
     ),
 ]
+
+# Breaks whose defect now lives in galaxy-ops, which runs these tools: an Olit-side edit would
+# leave a truthful source the agent can still read, so it would prove nothing. Their scenarios
+# still guard the behaviour; falsifying them means a break in galaxy-ops.
+RETIRED = {
+    "record.format": "create_page is galaxy-ops' operation; the content format is set there.",
+    "toolCount": "get_tool_panel is galaxy-ops' operation and pages the panel itself.",
+    "emptyResult": "get_dataset_details is galaxy-ops'; stale metadata has to be injected there.",
+    "workflowInvoke": "invoke_workflow is galaxy-ops' operation and builds its own request body.",
+}
 
 # `session-resumed-after-close`: admitted provisionally, no break discriminates yet.
 #
@@ -350,11 +299,11 @@ def main():
         return 2
 
     dirty = subprocess.run(
-        ["git", "status", "--porcelain", "--", "brain", "evals"], cwd=ROOT, capture_output=True, text=True
+        ["git", "status", "--porcelain", "--", "src/agent"], cwd=ROOT, capture_output=True, text=True
     ).stdout.strip()
     if dirty:
         print(
-            "working tree has local changes under brain/ or evals/; falsification edits\n"
+            "working tree has local changes under src/agent/; falsification edits\n"
             "source and restores with `git checkout`, which would discard them:\n" + dirty
         )
         return 2

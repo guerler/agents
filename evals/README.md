@@ -47,19 +47,15 @@ the same `Session` the browser worker runs, and speaks JSON lines to it. A turn 
 events before its result, and the result carries the whole transcript. The checkout has to
 be rebuilt after a change to `src/agent/`, or a run grades the previous build.
 
-**Galaxy is stubbed; the LLM is real.** Most scenarios grade planning behaviour, and
-a live Galaxy would add a second source of failure without adding signal. The stub
-answers plausibly rather than erroring, because a tool that fails teaches the model to
-stop calling tools, which would confound the measurement.
+**Galaxy and the LLM are both real.** A scenario stages its own history on the Galaxy named
+by `GALAXY_URL`, so a tool call reaches the server it would reach in the browser.
 
-**One scenario grades the data path instead.** `dataset-analysis-sum` fetches real
-dataset bytes through `download_dataset` and computes over the file with `run_python`.
-It exists because grading only *which tool calls are emitted* left a blind spot: two
-live failures — inline dataset content breaking tool-call JSON on tabs and newlines,
-and a gateway 500 once a real tool result was echoed back — sat entirely outside what
-the plan scenarios measure. The fixture is 61 lines against a 50-line preview cap, so a
-model that sums the preview rather than reading the file answers 58800 instead of
-96000, and is marked wrong rather than passing by luck.
+**Some scenarios grade the data path.** `analysis-csv-columns` and its siblings fetch real
+dataset bytes through `download_dataset` and compute over the file with `run_python`. Grading
+only *which tool calls are emitted* left a blind spot: inline dataset content breaking tool-call
+JSON, and a gateway 500 once a real tool result was echoed back, sat outside what the plan
+scenarios measure. A model that computes over the preview rather than the file answers wrongly
+and is marked wrong rather than passing by luck; the `chatText` falsify break proves it.
 
 **A scenario sets its own tool surface.** A scenario shared with loom carries loom's
 `--tools` restriction and is run under the matching capability manifest, so both suites
@@ -131,7 +127,7 @@ What the adapter translates, and why each is a divergence rather than a bug:
 
 **`scenarios/` holds only what cannot cross**, and should stay small. Today: the approval
 gate (`execution-after-approval`, `gate-holds-before-approval`), which asserts a property
-loom expresses differently; `dataset-analysis-sum`; and `smoke-answers`. Anything added
+loom expresses differently; `analysis-csv-columns`; and `smoke-answers`. Anything added
 here that loom could also run belongs upstream instead.
 
 **A few scenarios are model-knowledge probes, and their description says so in its first

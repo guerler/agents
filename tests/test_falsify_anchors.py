@@ -2,15 +2,13 @@
 
 falsify.py edits real source to prove a scenario can fail. `Break.apply` refuses to patch when its
 anchor is not unique, so a stale break stops the suite rather than testing nothing -- but it only
-says so when someone runs the suite against a model and a Galaxy. Seventeen of nineteen breaks had
-decayed before this test existed and the suite could not run at all, which meant no scenario had a
-current proof that it can fail. Anchors are checked here instead, where a rename shows immediately.
+says so when someone runs the suite against a model and a Galaxy. Anchors are checked here
+instead, where a rename shows immediately.
 
-The thirteen anchors below are the decay found on 2026-09-28; the eight after them went when the
-brain moved to TypeScript on 2026-10-05, and every break still names a Python path. Re-anchoring one is not a text edit:
-the break has to inject a defect that still sinks the scenarios it names, and only a real run
-proves it does. Each is expected to fail until then, strictly, so a fixed anchor fails here and
-the entry gets deleted.
+On 2026-10-05 the breaks moved from the Python brain to src/agent/. Four were retired rather than
+moved, because the code they broke now belongs to galaxy-ops (falsify.RETIRED says why for each).
+An anchor that exists is not yet a proof: only a falsify run shows a break still sinks its
+scenarios, and PROVEN records the ones that have been shown to on the TypeScript agent.
 """
 
 import importlib.util
@@ -21,31 +19,22 @@ import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-# The decay found on 2026-09-28, by family, file and position in falsify.BREAKS.
-DECAYED = {
-    "artifacts:tools:0.0",
-    "record.write:galaxy_tools:1.0",
-    "record.format:galaxy_tools:2.0",
-    "toolCount:galaxy_tools:4.0",
-    "toolInputs:galaxy_tools:6.0",
-    "chatReply:agent:7.0",
-    "jobState:galaxy_tools:9.0",
-    "emptyResult:galaxy_tools:10.1",
-    "emptyResult:galaxy_tools:10.2",
-    "galaxyExecution:galaxy_tools:11.0",
-    "workflowInvoke:galaxy_tools:12.0",
-    "visualizationSaved:galaxy_tools:13.0",
-    "visualizationArtifact:tools:14.0",
-    # The rest were current until the Python brain was removed on 2026-10-05. Each needs the
-    # same defect injected into src/agent/ and a run showing it still sinks its scenarios.
-    "chatText:galaxy_tools:3.0",
-    "planGate:prompt:5.0",
-    "destructiveGate:galaxy_destructive:8.0",
-    "emptyResult:galaxy_tools:10.0",
-    "visualizationSpared:visualizations:15.0",
-    "visualizationTracks:visualizations:16.0",
-    "visualizationSettings:visualizations:17.0",
-    "visualizationShape:visualizations:18.0",
+# Anchors that have stopped matching and await a validated re-anchor; strictly expected to fail.
+DECAYED: set[str] = set()
+
+# Families a falsify run has shown to sink their scenarios on the TypeScript agent, each against a
+# scenario that passed without the break (gemini-3.1-flash-lite, 2026-10-05/06). The rest are
+# anchored, typecheck when applied, and fail olit's unit tests, but await a live run.
+PROVEN = {
+    "chatReply",
+    "chatText",
+    "destructiveGate",
+    "jobState",
+    "record.write",
+    "toolInputs",
+    "visualizationArtifact",
+    "visualizationSaved",
+    "visualizationSpared",
 }
 
 
@@ -78,3 +67,20 @@ def test_the_anchor_a_break_patches_is_present_exactly_once(family, path, find, 
     assert target.exists(), f"{family}: {path} is gone from the subject"
     found = target.read_text().count(find)
     assert found == 1, f"{family}: anchor appears {found}x in {path}; the break cannot patch it"
+
+
+def test_a_retired_break_is_documented_and_gone_from_the_suite():
+    module = _falsify()
+    active = {brk.family for brk in module.BREAKS}
+    assert set(module.RETIRED).isdisjoint(active)
+    assert all(reason.strip() for reason in module.RETIRED.values())
+
+
+def test_every_break_targets_the_typescript_agent():
+    for brk in _falsify().BREAKS:
+        for path, _, _ in brk.edits:
+            assert path.startswith("src/agent/"), f"{brk.family} still names {path}"
+
+
+def test_every_proven_family_is_a_live_break():
+    assert PROVEN <= {brk.family for brk in _falsify().BREAKS}
