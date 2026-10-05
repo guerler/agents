@@ -8,8 +8,6 @@ import re
 import runpy
 import sys
 import time
-import uuid
-from datetime import datetime, timezone
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
@@ -83,20 +81,27 @@ class Session:
             return reply["result"]
 
     async def call(self, name, args):
-        """One tool without a model, through the guards a turn applies: for a claim or a drive."""
+        """One tool without a model, through the guards a run applies: for a claim or a drive."""
         return await self._request({"op": "call", "name": name, "args": args})
 
-    async def settle(self):
-        """One pass over the session's unfinished Galaxy work, as the page makes between turns."""
-        return await self._request({"op": "settle"})
-
-    async def turn(self, messages, on_event=None, artifacts=None):
-        result = await self._request(
-            {"op": "turn", "messages": messages, "artifacts": artifacts or []}, on_event=on_event
-        )
+    async def turn(self, text, on_event=None):
+        """The user's message, answered: the conversation lives in the session, not here."""
+        result = await self._request({"op": "turn", "text": text}, on_event=on_event)
         if result.get("error"):
             raise TurnFailed(result["error"].get("message") or "the turn failed")
         return result
+
+    async def settle(self, timeout, on_event=None):
+        """Wait for submitted work and the follow-ups it starts, as an open tab would."""
+        return await self._request({"op": "settle", "timeout": timeout}, on_event=on_event)
+
+    async def restart(self):
+        """A tab closed and opened again with nothing stored: a new conversation on the same record."""
+        await self._request({"op": "restart"})
+
+    async def export(self):
+        """The conversation as a saved session, as the page saves it."""
+        return await self._request({"op": "export"})
 
     async def close(self):
         """Give the process back; a suite is hundreds of sessions in one interpreter."""
@@ -139,12 +144,12 @@ class RunResult:
         config=None,
         stalled=False,
         waited=0.0,
-        agent_messages=None,
+        document=None,
     ):
         # The chat-shaped transcript grading reads.
         self.messages = messages
-        # The agent's own transcript, which a saved session holds.
-        self.agent_messages = agent_messages or []
+        # The conversation as a saved session, which the page would store.
+        self.document = document
         # What the session ran under, so a caller can find the page it opened.
         self.config = config
         # Charts and diagrams routed to the shell, never into the model's context.
@@ -244,13 +249,16 @@ def _api_key(model):
     return ""
 
 
-def label_record_page(config, scenario_id, model_id):
+def label_record_page(run, scenario_id, model_id):
     """Title the session's record page after the scenario, and say where to read it.
 
     The agent already saved it: `notebook_resume` creates a Galaxy page under a slug derived
     from the session id. Untitled that way it is a uuid among hundreds, so this names it.
     """
-    slug = f"olit-{config.get('session_id')}"
+    if not run.document:
+        return None
+    config = run.config
+    slug = f"olit-{run.document['session']['id']}"
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     try:
         pages = galaxy.call(f"api/pages?search=slug:{slug}") or []
@@ -265,49 +273,18 @@ def label_record_page(config, scenario_id, model_id):
         return None
 
 
-# The shell's session document, whose shape `src/session-document.ts` owns.
-SESSION_SCHEMA = 2
-# The prompt section the session refreshes each turn, stale the moment it is stored.
-RECORD_SECTION = "record"
-
-
-def storable_messages(messages):
-    """`storableMessages`: the seed and the refreshed record block are regenerated on open."""
-    return [
-        m
-        for i, m in enumerate(messages or [])
-        if not (i == 0 and m.get("role") == "system")
-        and not (m.get("role") == "system" and RECORD_SECTION in (m.get("sections") or {}))
-    ]
-
-
 def save_session(config, scenario_id, model_id, run):
-    """Save the run as an Olit visualization, so it reopens in the UI as a session.
+    """Save the run as an Olit visualization, so it reopens in the UI as a conversation.
 
-    The agent saves its record page itself; the session document is the shell's job, and an
-    eval has no shell. Without this a run is reviewable only as JSONL.
+    The agent saves its record page itself; saving the conversation is the page's job, and an
+    eval has no page. Without this a run is reviewable only as JSONL.
     """
+    if not run.document:
+        return None
     root = config["galaxy_root"]
     galaxy = tooltests.Galaxy(root, config.get("galaxy_key", ""))
-    now = datetime.now(timezone.utc).isoformat()
     title = f"eval: {scenario_id} [{model_id}]"
-    document = {
-        "olit_session": SESSION_SCHEMA,
-        "session": {
-            "id": config["session_id"],
-            "title": title,
-            "createdAt": now,
-            "updatedAt": now,
-            "turn": sum(1 for m in run.agent_messages if m.get("role") == "user"),
-            "models": [{"provider": model_id, "firstTurn": 1, "lastTurn": 1}],
-            "usage": {"input": 0, "output": 0, "cost": None},
-        },
-        "messages": storable_messages(run.agent_messages),
-        "artifacts": run.artifacts or [],
-    }
-    staged = getattr(run, "staged", None) or {}
-    if staged.get("history_id"):
-        document["history_id"] = staged["history_id"]
+    document = {**run.document, "session": {**run.document["session"], "title": title}}
     try:
         created = galaxy.call(
             "api/visualizations", method="POST", body={"title": title, "config": document, "type": "olit"}
@@ -320,9 +297,8 @@ def save_session(config, scenario_id, model_id, run):
 
 async def _run(scenario, model, base_url=None):
     config = build_config(model, scenario.get("capabilities"), base_url)
-    # A run is a session, and a session owns its record page; the browser shell supplies
-    # this from the saved document.
-    config["session_id"] = str(uuid.uuid4())
+    if scenario.get("systemPrompt"):
+        config["instructions"] = scenario["systemPrompt"]
     # Staging is the environment's work, so it is timed by the environment's clock and sits
     # outside the budget that measures the agent.
     waited = [0.0]
@@ -362,106 +338,76 @@ def _stage(scenario, config):
 
 async def _drive(scenario, session, config, staged, waited=None):
     waited = waited if waited is not None else [0.0]
-    # No record page is staged: the session makes its own, as it does in the browser, and each
-    # turn prepares its context itself.
-    # The page seeds an empty system message the session writes its prompt into.
-    transcripts = [{"role": "system", "content": scenario.get("systemPrompt", "")}]
-
     tools_called = []
-    messages = transcripts
     logs = []
     events = []
     refused = []
-    # Graded at the end, and handed back to each turn so a page can place an earlier chart.
+    # Graded at the end; the session itself keeps them for the turns that follow.
     artifacts = []
-    exhausted = False
-    # The most any single turn needed, which is what the cap actually constrains.
-    steps = 0
-    cap = 0
-    # `restartAfter` models closing the browser and coming back with nothing stored.
+    seed = [{"role": "system", "content": scenario.get("systemPrompt", "")}]
+    # Every turn the run had, in the chat shape grading reads; `transcript` is the session's
+    # own view of its conversation, which a restart replaces.
+    graded = list(seed)
+    transcript = list(seed)
+    state = {"exhausted": False, "steps": 0, "cap": 0, "result": {}}
     restart_after = scenario.get("restartAfter")
-    opening = list(messages)
-    # `messages` is the agent's own transcript, handed back unread; grading reads the chat
-    # shape each turn exports beside it.
-    graded = [{"role": m["role"], "content": m.get("content")} for m in messages if m["role"] in ("system", "user")]
-    transcript = list(graded)
     approval = scenario.get("approveWhenPlanned")
-    for index, turn in enumerate(scenario["inputs"], start=1):
-        if restart_after and index == restart_after + 1:
-            messages = list(opening)
-            events.append("session_restart")
-        messages = [*messages, {"role": "user", "content": turn}]
-        graded.append({"role": "user", "content": turn})
-        events.append("turn_start")
-        result = await session.turn(messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts)
-        messages = result.get("messages") or messages
-        transcript = result.get("transcript") or transcript
+
+    def note(ev):
+        _note(ev, tools_called, events, refused)
+
+    def absorb(text, result):
+        nonlocal transcript
+        graded.append({"role": "user", "content": text})
         graded.extend(result.get("new_transcript") or [])
+        transcript = seed + (result.get("transcript") or [])
         logs.extend(result.get("logs") or [])
         artifacts.extend(result.get("artifacts") or [])
-        exhausted = exhausted or bool(result.get("exhausted"))
-        steps = max(steps, int(result.get("steps") or 0))
-        cap = int(result.get("max_steps") or 0) or cap
-        # Only after run() returns: a turn that dies mid-flight must not look complete.
+        state["exhausted"] = state["exhausted"] or bool(result.get("exhausted"))
+        # The most any single turn needed, which is what the cap actually constrains.
+        state["steps"] = max(state["steps"], int(result.get("steps") or 0))
+        state["cap"] = int(result.get("max_steps") or 0) or state["cap"]
+        state["result"] = result
+
+    async def turn(text):
+        events.append("turn_start")
+        result = await session.turn(text, note)
+        absorb(text, result)
+        # Only after the turn returns: a turn that dies mid-flight must not look complete.
         events.append("turn_end")
+
+    for index, text in enumerate(scenario["inputs"], start=1):
+        if restart_after and index == restart_after + 1:
+            await session.restart()
+            events.append("session_restart")
+        await turn(text)
         if staged:
-            wait = galaxy_wait_timeout()
-            text, limit = await _settle(session, events, wait, waited)
-            for _ in range(limit):
-                if not text:
-                    break
-                events.append("auto_follow_up")
-                messages = [*messages, {"role": "user", "content": text}]
-                graded.append({"role": "user", "content": text})
-                events.append("turn_start")
-                result = await session.turn(
-                    messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts
-                )
-                messages = result.get("messages") or messages
-                transcript = result.get("transcript") or transcript
-                graded.extend(result.get("new_transcript") or [])
-                logs.extend(result.get("logs") or [])
-                artifacts.extend(result.get("artifacts") or [])
-                exhausted = exhausted or bool(result.get("exhausted"))
-                steps = max(steps, int(result.get("steps") or 0))
-                cap = int(result.get("max_steps") or 0) or cap
-                events.append("turn_end")
-                text, limit = await _settle(session, events, wait, waited)
+            await _settle(session, events, galaxy_wait_timeout(), waited, note, absorb)
         # One approval, only for a run that stopped at the gate; the gate itself is untouched.
-        if approval and _awaiting_approval(result.get("new_transcript")):
+        if approval and _awaiting_approval(state["result"].get("new_transcript")):
             approval, text = None, scenario["approveWhenPlanned"]
-            messages = [*messages, {"role": "user", "content": text}]
-            graded.append({"role": "user", "content": text})
             events.append("approval_sent")
-            events.append("turn_start")
-            result = await session.turn(
-                messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts
-            )
-            messages = result.get("messages") or messages
-            transcript = result.get("transcript") or transcript
-            graded.extend(result.get("new_transcript") or [])
-            logs.extend(result.get("logs") or [])
-            artifacts.extend(result.get("artifacts") or [])
-            exhausted = exhausted or bool(result.get("exhausted"))
-            steps = max(steps, int(result.get("steps") or 0))
-            cap = int(result.get("max_steps") or 0) or cap
-            events.append("turn_end")
+            await turn(text)
             if staged:
-                await _settle(session, events, galaxy_wait_timeout(), waited)
+                await _settle(session, events, galaxy_wait_timeout(), waited, note, absorb)
+    document = await session.export()
+    if staged:
+        # The record is the session's, named after its id, which the agent chose.
+        staged["session_id"] = document["session"]["id"]
     return RunResult(
         graded if restart_after else transcript,
         logs,
         tools_called,
         events=events,
         artifacts=artifacts,
-        exhausted=exhausted,
+        exhausted=state["exhausted"],
         staged=staged,
-        steps=steps,
-        max_steps=cap,
+        steps=state["steps"],
+        max_steps=state["cap"],
         config=config,
         refused=refused,
-        agent_messages=messages,
         waited=waited[0],
+        document=document,
     )
 
 
@@ -557,7 +503,6 @@ def stage_tool_test(config, spec, timeout):
         "dataset_ids": ids,
         "test": test,
         "tool_id": tool_id,
-        "session_id": config["session_id"],
     }
 
 
@@ -571,7 +516,6 @@ def stage_empty(config, name):
         "dataset_ids": {},
         "test": None,
         "tool_id": None,
-        "session_id": config["session_id"],
     }
 
 
@@ -617,7 +561,6 @@ def stage_workflows(config, spec, timeout):
         "imported_workflow_ids": list(ids.values()),
         "test": None,
         "tool_id": None,
-        "session_id": config["session_id"],
     }
 
 
@@ -664,7 +607,6 @@ def stage_dataset(config, spec, timeout):
         "dataset_ids": dataset_ids,
         "test": None,
         "tool_id": None,
-        "session_id": config["session_id"],
     }
     if spec.get("thenRuns"):
         staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id, spec["thenRuns"], timeout)
@@ -759,25 +701,23 @@ def _stage_invocation(galaxy, history_id, dataset_id, spec, timeout):
     return invocation["id"], workflow_id
 
 
-async def _settle(session, events, timeout, waited, interval=10):
-    """Wait for the work the session submitted, through the same settle step the page polls.
+async def _settle(session, events, timeout, waited, on_event, absorb):
+    """Wait for the work the session submitted and the follow-ups it delivers, as a tab would.
 
-    Returns the follow-up the page would deliver, held batches joined into one turn as the page
-    joins them, and how many automatic turns it allows. Galaxy's clock, not the agent's.
+    The session decides what to follow up on and how many times in a row; each follow-up comes
+    back as a turn of its own. Galaxy's clock, not the agent's.
     """
     started = time.monotonic()
-    prompts, limit = [], 0
     try:
-        while True:
-            result = await session.settle()
-            limit = result.get("max_auto_follow_ups") or limit
-            if result.get("settled"):
-                events.append("work_settled")
-            if result.get("follow_up"):
-                prompts.append(result["follow_up"])
-            if not result.get("pending") or time.monotonic() - started >= timeout:
-                break
-            await asyncio.sleep(interval)
+        result = await session.settle(timeout, on_event)
     finally:
         waited[0] += time.monotonic() - started
-    return "\n\n".join(prompts), limit
+    if result.get("settled"):
+        events.append("work_settled")
+    for follow_up in result.get("follow_ups") or []:
+        events.append("auto_follow_up")
+        events.append("turn_start")
+        if follow_up.get("error"):
+            raise TurnFailed(follow_up["error"].get("message") or "the follow-up failed")
+        absorb(follow_up["text"], follow_up)
+        events.append("turn_end")

@@ -203,7 +203,7 @@ def main():
                 for f in failures[1:]:
                     print(f"          {f}")
                 if not args.no_pages and run.config:
-                    page = label_record_page(run.config, scenario["id"], model["id"])
+                    page = label_record_page(run, scenario["id"], model["id"])
                     if page:
                         print(f"          notebook: {page}", flush=True)
                 if not args.no_sessions and run.config and run.messages:

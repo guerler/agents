@@ -130,25 +130,9 @@ BREAKS = [
         family="chatReply",
         why="the assistant's words never reach the transcript, so the user is answered with "
         "silence. Sinks every scenario, so it is only pointed at the canary",
-        edits=[
-            (
-                "src/agent/session.ts",
-                '        .filter((m) => !(m.role === "assistant" && m.stopReason === "error")),\n'
-                "      new_messages: kept,",
-                '        .filter((m) => !(m.role === "assistant" && m.stopReason === "error"))\n'
-                "        .map(silenced), // FALSIFY: reply dropped\n"
-                "      new_messages: kept.map(silenced),",
-            ),
-            (
-                "src/agent/session.ts",
-                "const brief = (value: unknown, limit = 300) => {",
-                "const silenced = (m: AgentMessage): AgentMessage => // FALSIFY: reply dropped\n"
-                '  m.role === "assistant"\n'
-                '    ? ({ ...m, content: m.content.filter((c) => c.type !== "text") } as AgentMessage)\n'
-                "    : m;\n\n"
-                "const brief = (value: unknown, limit = 300) => {",
-            ),
-        ],
+        path="src/agent/report.ts",
+        find='      const out: ChatMessage = { role: "assistant", content: contentText(m.content) || null };\n',
+        replace='      const out: ChatMessage = { role: "assistant", content: null }; // FALSIFY: reply dropped\n',
         scenarios=["smoke-answers"],
         expect=["messages.repliesInChat", "run.noModelOutput"],
     ),
