@@ -138,8 +138,12 @@ class RunResult:
         config=None,
         stalled=False,
         waited=0.0,
+        agent_messages=None,
     ):
+        # The chat-shaped transcript grading reads.
         self.messages = messages
+        # The agent's own transcript, which a saved session holds.
+        self.agent_messages = agent_messages or []
         # What the session ran under, so a caller can find the page it opened.
         self.config = config
         # Charts and diagrams routed to the shell, never into the model's context.
@@ -250,9 +254,16 @@ def label_record_page(config, scenario_id, model_id):
 
 
 # The shell's session document, whose shape `src/session-document.ts` owns.
-SESSION_SCHEMA = 1
+SESSION_SCHEMA = 2
 # The block the brain refreshes each turn, stale the moment it is stored.
 RECORD_MARKER = "<!-- olit:record -->"
+
+
+def _text(content):
+    """A pi message's text, whether its content is a string or a list of blocks."""
+    if isinstance(content, str):
+        return content
+    return "".join(c.get("text", "") for c in content or [] if isinstance(c, dict))
 
 
 def storable_messages(messages):
@@ -261,7 +272,7 @@ def storable_messages(messages):
         m
         for i, m in enumerate(messages or [])
         if not (i == 0 and m.get("role") == "system")
-        and not (m.get("role") == "system" and RECORD_MARKER in (m.get("content") or ""))
+        and not (m.get("role") == "system" and RECORD_MARKER in _text(m.get("content")))
     ]
 
 
@@ -282,13 +293,12 @@ def save_session(config, scenario_id, model_id, run):
             "title": title,
             "createdAt": now,
             "updatedAt": now,
-            "turn": len(storable_messages(run.messages)),
+            "turn": sum(1 for m in run.agent_messages if m.get("role") == "user"),
             "models": [{"provider": model_id, "firstTurn": 1, "lastTurn": 1}],
             "usage": {"input": 0, "output": 0, "cost": None},
         },
-        "messages": storable_messages(run.messages),
+        "messages": storable_messages(run.agent_messages),
         "artifacts": run.artifacts or [],
-        "toolErrors": list(run.refused or []),
     }
     staged = getattr(run, "staged", None) or {}
     if staged.get("history_id"):
@@ -364,7 +374,10 @@ async def _drive(scenario, session, config, staged, waited=None):
     # `restartAfter` models closing the browser and coming back with nothing stored.
     restart_after = scenario.get("restartAfter")
     opening = list(messages)
-    graded = list(messages)
+    # `messages` is the agent's own transcript, handed back unread; grading reads the chat
+    # shape each turn exports beside it.
+    graded = [{"role": m["role"], "content": m.get("content")} for m in messages if m["role"] in ("system", "user")]
+    transcript = list(graded)
     approval = scenario.get("approveWhenPlanned")
     for index, turn in enumerate(scenario["inputs"], start=1):
         if restart_after and index == restart_after + 1:
@@ -375,7 +388,8 @@ async def _drive(scenario, session, config, staged, waited=None):
         events.append("turn_start")
         result = await session.turn(messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts)
         messages = result.get("messages") or messages
-        graded.extend(result.get("new_messages") or [])
+        transcript = result.get("transcript") or transcript
+        graded.extend(result.get("new_transcript") or [])
         logs.extend(result.get("logs") or [])
         artifacts.extend(result.get("artifacts") or [])
         exhausted = exhausted or bool(result.get("exhausted"))
@@ -398,7 +412,8 @@ async def _drive(scenario, session, config, staged, waited=None):
                     messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts
                 )
                 messages = result.get("messages") or messages
-                graded.extend(result.get("new_messages") or [])
+                transcript = result.get("transcript") or transcript
+                graded.extend(result.get("new_transcript") or [])
                 logs.extend(result.get("logs") or [])
                 artifacts.extend(result.get("artifacts") or [])
                 exhausted = exhausted or bool(result.get("exhausted"))
@@ -407,7 +422,7 @@ async def _drive(scenario, session, config, staged, waited=None):
                 events.append("turn_end")
                 landed = await _timed(waited, _settle_pending, staged, events, wait)
         # One approval, only for a run that stopped at the gate; the gate itself is untouched.
-        if approval and _awaiting_approval(result.get("new_messages")):
+        if approval and _awaiting_approval(result.get("new_transcript")):
             approval, text = None, scenario["approveWhenPlanned"]
             messages = [*messages, {"role": "user", "content": text}]
             graded.append({"role": "user", "content": text})
@@ -417,7 +432,8 @@ async def _drive(scenario, session, config, staged, waited=None):
                 messages, lambda ev: _note(ev, tools_called, events, refused), artifacts=artifacts
             )
             messages = result.get("messages") or messages
-            graded.extend(result.get("new_messages") or [])
+            transcript = result.get("transcript") or transcript
+            graded.extend(result.get("new_transcript") or [])
             logs.extend(result.get("logs") or [])
             artifacts.extend(result.get("artifacts") or [])
             exhausted = exhausted or bool(result.get("exhausted"))
@@ -427,7 +443,7 @@ async def _drive(scenario, session, config, staged, waited=None):
             if staged:
                 await _timed(waited, _settle_pending, staged, events, galaxy_wait_timeout())
     return RunResult(
-        graded if restart_after else messages,
+        graded if restart_after else transcript,
         logs,
         tools_called,
         events=events,
@@ -438,6 +454,7 @@ async def _drive(scenario, session, config, staged, waited=None):
         max_steps=cap,
         config=config,
         refused=refused,
+        agent_messages=messages,
         waited=waited[0],
     )
 
