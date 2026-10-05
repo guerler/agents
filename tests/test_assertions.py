@@ -90,21 +90,6 @@ def test_not_empty_accepts_content_appended_below_the_starter():
     assert grade(STARTER + "\n## Record\n\nRan Grouping1\n") == []
 
 
-def test_chat_text_includes_what_finish_said():
-    """The shell renders `finish`'s summary as the closing reply, so grading must see it."""
-    from lib.harness import RunResult
-
-    run = RunResult(
-        [
-            {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "finish"}}]},
-            {"role": "tool", "name": "finish", "content": "The histogram shows a normal spread."},
-        ],
-        [],
-        [],
-    )
-    assert "normal spread" in run.chat_text
-
-
 def test_chat_text_ignores_other_tool_results():
     """A tool's data is not something the user read."""
     from lib.harness import RunResult

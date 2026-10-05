@@ -170,16 +170,12 @@ class RunResult:
 
     @property
     def chat_text(self):
-        """Everything the shell renders, in order, including the `finish` summary."""
-        parts = []
-        for m in self.messages:
-            if not isinstance(m, dict) or not m.get("content"):
-                continue
-            if m.get("role") == "assistant":
-                parts.append(m["content"])
-            elif m.get("role") == "tool" and m.get("name") == "finish":
-                parts.append(m["content"])
-        return "\n\n".join(parts)
+        """Everything the shell renders as the agent's replies, in order."""
+        return "\n\n".join(
+            m["content"]
+            for m in self.messages
+            if isinstance(m, dict) and m.get("role") == "assistant" and m.get("content")
+        )
 
 
 def declared_base(model):
@@ -364,10 +360,8 @@ async def _drive(scenario, session, config, staged, waited=None):
     waited = waited if waited is not None else [0.0]
     # No record page is staged: the session makes its own, as it does in the browser, and each
     # turn prepares its context itself.
-    # The plugin's own prompt, which the page seeds every conversation with, unless a scenario
-    # deliberately replaces it.
-    seed = scenario.get("systemPrompt") or (subject.describe().get("identity_prompt") or {}).get("text")
-    transcripts = [{"role": "system", "content": seed or "You are olit."}]
+    # The page seeds an empty system message the session writes its prompt into.
+    transcripts = [{"role": "system", "content": scenario.get("systemPrompt", "")}]
 
     tools_called = []
     messages = transcripts
