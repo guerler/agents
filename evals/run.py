@@ -18,7 +18,13 @@ sys.path.insert(0, HERE)
 
 from lib import loom_scenarios  # noqa: E402
 from lib.assertions import DIMENSIONS, evaluate, validate_patterns  # noqa: E402
-from lib.harness import label_record_page, load_scenarios, run_scenario, save_session  # noqa: E402
+from lib.harness import (  # noqa: E402
+    label_record_page,
+    load_scenarios,
+    required_env,
+    run_scenario,
+    save_session,
+)
 
 # HTTP 429 means out of budget, not a behavioural failure; graded separately.
 QUOTA_STATUS = 429
@@ -35,7 +41,7 @@ def available_models(matrix, only):
     for model in matrix["models"]:
         if only and only not in model["id"]:
             continue
-        missing = [v for v in model.get("envRequires", []) if not os.environ.get(v)]
+        missing = [v for v in required_env(model) if not os.environ.get(v)]
         (skipped if missing else usable).append((model, missing))
     return [m for m, _ in usable], skipped
 

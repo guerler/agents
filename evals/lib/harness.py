@@ -226,6 +226,13 @@ def build_config(model, capabilities=None, base_url=None):
     return config
 
 
+def required_env(model):
+    """What a model needs set to run: its key variable as the registry names it, and envRequires."""
+    provider = _providers().get(model.get("provider"))
+    names = [provider["auth_env"]] if provider and provider.get("auth_env") else []
+    return names + [v for v in model.get("envRequires", []) if v not in names]
+
+
 def _api_key(model):
     """The registry names the env var; envRequires is the fallback for custom entries."""
     provider = _providers().get(model.get("provider"))
