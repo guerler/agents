@@ -252,15 +252,8 @@ def label_record_page(config, scenario_id, model_id):
 
 # The shell's session document, whose shape `src/session-document.ts` owns.
 SESSION_SCHEMA = 2
-# The block the brain refreshes each turn, stale the moment it is stored.
-RECORD_MARKER = "<!-- olit:record -->"
-
-
-def _text(content):
-    """A pi message's text, whether its content is a string or a list of blocks."""
-    if isinstance(content, str):
-        return content
-    return "".join(c.get("text", "") for c in content or [] if isinstance(c, dict))
+# The prompt section the session refreshes each turn, stale the moment it is stored.
+RECORD_SECTION = "record"
 
 
 def storable_messages(messages):
@@ -269,7 +262,7 @@ def storable_messages(messages):
         m
         for i, m in enumerate(messages or [])
         if not (i == 0 and m.get("role") == "system")
-        and not (m.get("role") == "system" and RECORD_MARKER in _text(m.get("content")))
+        and not (m.get("role") == "system" and RECORD_SECTION in (m.get("sections") or {}))
     ]
 
 
