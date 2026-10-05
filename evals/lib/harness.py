@@ -209,6 +209,10 @@ def build_config(model, capabilities=None, base_url=None):
     max_steps = os.environ.get("OLIT_EVAL_MAX_STEPS", "").strip()
     if max_steps:
         config["max_steps"] = int(max_steps)
+    # An output ceiling for endpoints that reserve credit against the model's maximum otherwise.
+    max_tokens = os.environ.get("OLIT_EVAL_MAX_TOKENS", "").strip()
+    if max_tokens:
+        config["ai_max_tokens"] = int(max_tokens)
     galaxy_root = os.environ.get("GALAXY_URL", "").strip()
     config["galaxy_root"] = galaxy_root.rstrip("/") + "/"
     config["galaxy_key"] = os.environ.get("GALAXY_API_KEY", "")
@@ -348,7 +352,10 @@ async def _drive(scenario, session, config, staged, waited=None):
     waited = waited if waited is not None else [0.0]
     # No record page is staged: the session makes its own, as it does in the browser, and each
     # turn prepares its context itself.
-    transcripts = [{"role": "system", "content": scenario.get("systemPrompt", "You are olit.")}]
+    # The plugin's own prompt, which the page seeds every conversation with, unless a scenario
+    # deliberately replaces it.
+    seed = scenario.get("systemPrompt") or (subject.describe().get("identity_prompt") or {}).get("text")
+    transcripts = [{"role": "system", "content": seed or "You are olit."}]
 
     tools_called = []
     messages = transcripts
