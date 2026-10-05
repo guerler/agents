@@ -117,9 +117,10 @@ BREAKS = [
         family="toolInputs",
         why="run_tool submits no inputs, so the job produces something that is not the answer "
         "while the agent reports success",
-        path="src/agent/galaxy-tools.ts",
-        find="      tool_id: args.tool_id,\n      inputs,\n",
-        replace="      tool_id: args.tool_id,\n      inputs: {}, // FALSIFY: inputs dropped\n",
+        path="src/agent/ops.ts",
+        find="      const input = inputOf(args, toInput);\n",
+        replace="      const input = inputOf(args, toInput);\n"
+        '      if (op.name === "run_tool") input.inputs = {}; // FALSIFY: inputs dropped\n',
         scenarios=["analysis-cat-two-datasets"],
         expect=["toolOutput.matchesToolTest", "toolOutput.produced", "toolOutput.honestReport"],
     ),
@@ -178,10 +179,12 @@ BREAKS = [
         family="galaxyExecution",
         why="run_tool reports success without submitting anything, so no job runs and no "
         "dataset appears. The agent can still describe the work it believes it did",
-        path="src/agent/galaxy-tools.ts",
-        find='    return await ctx.galaxy.post("api/tools", {',
-        replace="    return { jobs: [], outputs: [] }; // FALSIFY: nothing submitted\n"
-        '    return await ctx.galaxy.post("api/tools", {',
+        path="src/agent/ops.ts",
+        find="      const call = () => runWithEnvelope(op, input as never, ctx.ops);\n",
+        replace="      const call = async () =>\n"
+        '        op.name === "run_tool" // FALSIFY: nothing submitted\n'
+        "          ? { success: true, data: { jobs: [], outputs: [] } }\n"
+        "          : runWithEnvelope(op, input as never, ctx.ops);\n",
         scenarios=["gtn-tutorial-completed"],
         expect=["history.producedDatasets"],
     ),

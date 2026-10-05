@@ -136,8 +136,7 @@ ALLOWED_TOOL_DIVERGENCE = {
     "search_tools_by_name": "DIVERGES: upstream added limit/offset; olit has not ported them and "
     "returns the whole match set. Unported, not a decision.",
     "run_tool": "DIVERGES: refuses inputs that resolve to a dataset in another history (claim c2), "
-    "and answers Galaxy's HTTP 500 input errors ('invalid key structure', 'has no attribute') with "
-    "the tool's input template. tool_version is forwarded as upstream does.",
+    "an Olit policy checked before galaxy-ops' run_tool runs; the call itself is galaxy-ops'.",
     "create_page": "DIVERGES: upstream refuses the whole tool on a server too old to attach a page "
     "to a history; olit has no version gate and its description does not claim one.",
     "list_pages": "DIVERGES: upstream refuses the whole tool on a server without the history_id "

@@ -772,7 +772,7 @@
         "search_iwc_workflows": "DIVERGES: upstream added limit/offset; olit has not ported them and returns the whole match set. Unported, not a decision.",
         "search_tools_by_keywords": "DIVERGES: upstream added limit/offset; olit has not ported them and returns the whole match set. Unported, not a decision.",
         "search_tools_by_name": "DIVERGES: upstream added limit/offset; olit has not ported them and returns the whole match set. Unported, not a decision.",
-        "run_tool": "DIVERGES: refuses inputs that resolve to a dataset in another history (claim c2), and answers Galaxy's HTTP 500 input errors ('invalid key structure', 'has no attribute') with the tool's input template. tool_version is forwarded as upstream does.",
+        "run_tool": "DIVERGES: refuses inputs that resolve to a dataset in another history (claim c2), an Olit policy checked before galaxy-ops' run_tool runs; the call itself is galaxy-ops'.",
         "create_page": "DIVERGES: upstream refuses the whole tool on a server too old to attach a page to a history; olit has no version gate and its description does not claim one.",
         "list_pages": "DIVERGES: upstream refuses the whole tool on a server without the history_id query parameter; olit has no version gate.",
         "get_server_info": "DIVERGES: upstream reports unsupported_tools and version_known, both of which come from its version gate; olit has neither.",
@@ -1341,9 +1341,9 @@
           "history_id": "string!",
           "inputs": "object!",
           "tool_id": "string!",
-          "tool_version": "string"
+          "tool_version": "string|null"
         },
-        "prose": "8e405e65e686a5de"
+        "prose": "a52b92981ad399cc"
       },
       "run_user_tool": {
         "params": {
