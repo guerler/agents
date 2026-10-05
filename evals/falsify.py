@@ -166,9 +166,9 @@ BREAKS = [
         "failed job is not merely unexplained, it is absent, so the agent reports a tidy "
         "history that is not the one the researcher has",
         path="src/agent/galaxy-tools.ts",
-        find="  return rendered(serverPage(items.map(oneIdentifier), offset, limit));",
-        replace='  return rendered(serverPage(items.filter((i) => i?.state !== "error")'
-        ".map(oneIdentifier), offset, limit)); // FALSIFY",
+        find="  const page = serverPage(items.map(oneIdentifier), offset, limit);",
+        replace='  const page = serverPage(items.filter((i) => i?.state !== "error")'
+        ".map(oneIdentifier), offset, limit); // FALSIFY",
         # Not reports-a-failed-job: galaxy-ops' get_history_details still reports the failed
         # state, so hiding it from one listing no longer leaves the agent blind there.
         scenarios=["refuses-to-analyse-failed-data"],
