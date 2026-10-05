@@ -33,18 +33,13 @@ def load(source=None, agent="olit"):
 
 
 def defines(description, module, symbol):
-    """Whether the agent still defines this symbol in this module."""
-    key = "olit/" + module.split("brain/olit/", 1)[-1]
-    return symbol in (description["symbols"].get(key) or [])
+    """Whether the agent still defines this symbol in this module, keyed as it publishes it."""
+    return symbol in (description["symbols"].get(module) or [])
 
 
 def tool_table(description):
     """name -> fingerprint of (description, parameter names), for comparison upstream."""
     return {name: tool["signature"] for name, tool in description["tools"].items()}
-
-
-def passthrough_handlers(description):
-    return {name for name, tool in description["tools"].items() if tool["passthrough"]}
 
 
 def delegated_tools(description):
@@ -60,10 +55,6 @@ def write_tools(description):
 def promised_fields(description):
     """name -> the result fields the agent declares and reads back off a live result."""
     return {name: tool.get("promised_fields") or [] for name, tool in description["tools"].items()}
-
-
-def tool_requests(description):
-    return {name: tool["query"] for name, tool in description["tools"].items() if tool["query"]}
 
 
 def tool_contracts(description):

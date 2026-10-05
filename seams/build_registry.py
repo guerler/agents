@@ -24,7 +24,7 @@ BLOCKS = [
     (
         "buildActiveModelBlock",
         'emitted when an active LLM provider is configured (`if (!active) return ""`)',
-        "active_model_block",
+        "activeModelBlock",
         "PORTED",
         "olit gates on the resolved target instead of config.",
     ),
@@ -35,7 +35,7 @@ BLOCKS = [
         "NA",
         "Orbit beta-tester code; no counterpart.",
     ),
-    ("buildCurrentDateBlock", "unconditional", "current_date_block", "PORTED", ""),
+    ("buildCurrentDateBlock", "unconditional", "currentDateBlock", "PORTED", ""),
     (
         "buildOperatingDisciplineBlock",
         "unconditional",
@@ -223,7 +223,7 @@ EXTRA = [
             "setupContextInjection",
             "every turn that injects notebook or workspace context",
         ),
-        ("brain/olit/runtime.py", "_inject_record"),
+        ("src/agent/session.ts", "injectRecord"),
         "PORTED",
         "olit has one project-data channel (the record); loom has two.",
     ),
@@ -231,26 +231,13 @@ EXTRA = [
         "prompt.seedDatasetBlock",
         "prompt-block",
         None,
-        ("brain/olit/prompt.py", "seed_dataset_block"),
+        ("src/agent/prompt.ts", "seedDatasetBlock"),
         "ADDED",
         "loom has no equivalent because nothing opens it on a dataset. Galaxy mounts olit as a "
         "visualization plugin, so the user can arrive with one already selected, and naming it is "
         'what makes a bare "plot it" resolvable: the referent is otherwise only in the shell\'s '
         "chat, which never reaches the model. Emitted only when a dataset was supplied, so a bare "
         "start produces byte-identical system text.",
-    ),
-    (
-        "prompt.GALAXY_PARTLY_AVAILABLE",
-        "prompt-block",
-        None,
-        ("brain/olit/prompt.py", "GALAXY_PARTLY_AVAILABLE"),
-        "ADDED",
-        "loom has no equivalent because it reaches Galaxy through one channel: MCP is connected or "
-        "it is not, which its NOT CONNECTED block already covers. olit has two -- galaxy-ops for "
-        "most tools and direct REST for the rest -- so ops can fail to load while Galaxy itself "
-        "answers. This block names the tools that still work in that state rather than letting the "
-        "agent discover the boundary one failure at a time. Emitted only when ops are unavailable, "
-        "so a healthy session produces byte-identical system text.",
     ),
     (
         "prompt.galaxyArtifactLinkGuidance",
@@ -260,7 +247,7 @@ EXTRA = [
             "GALAXY_ARTIFACT_LINK_GUIDANCE",
             "unconditional upstream; here only once the Galaxy root is known",
         ),
-        ("brain/olit/prompt.py", "ARTIFACT_LINKS"),
+        ("src/agent/prompt.ts", "ARTIFACT_LINKS"),
         "PORTED",
         "Two deviations. loom names the connected server in its own connection block and warns "
         "against using it for an artifact recorded elsewhere; olit is served by the one Galaxy it "
@@ -273,7 +260,7 @@ EXTRA = [
         "prompt.buildChatFormattingBlock.assembled",
         "prompt-block",
         ("extensions/loom/context.ts", "buildChatFormattingBlock", "unconditional"),
-        ("brain/olit/prompt.py", "chat_formatting_block"),
+        ("src/agent/prompt.ts", "chatFormattingBlock"),
         "PORTED",
         "loom interpolates the artifact-link convention at the tail of this block; the function is "
         "what does the same here, so the constant beside it stays the block's own text.",
@@ -282,7 +269,7 @@ EXTRA = [
         "tool.ena_runs",
         "tool",
         None,
-        ("brain/olit/loop/ena.py", "ENA_RUNS"),
+        ("src/agent/ena.ts", "enaTools"),
         "ADDED",
         "loom has no equivalent because Orbit reaches ENA through a general shell. ENA's FASTQ "
         "paths are not derivable from an accession -- the shard directory is its first six "
@@ -295,7 +282,7 @@ EXTRA = [
         "hint.fetch-failure",
         "tool-result-hint",
         None,
-        ("brain/olit/loop/fetch_failure_hint.py", "ARCHIVE_HINT"),
+        ("src/agent/hints.ts", "fetchFailureHint"),
         "ADDED",
         "loom has no equivalent: its only tool-result hint covers failed workflow invocations, "
         "a different trigger that stays unported. The shape is borrowed from it -- append the "
@@ -308,7 +295,7 @@ EXTRA = [
         "tool.get_invocations.outcome",
         "tool-result-projection",
         ("extensions/loom/tools.ts", "checkInvocations", "a poll of an in-flight invocation recorded in the notebook"),
-        ("brain/olit/loop/invocation_outcome.py", "settle"),
+        ("src/agent/invocation-outcome.ts", "settle"),
         "PORTED",
         "loom's transition rules, applied to what the agent reads instead of to a notebook "
         "block: FAILED_JOB_STATES, and the two questions of whether Galaxy has stopped "
@@ -316,7 +303,7 @@ EXTRA = [
         "scheduling, so a run whose jobs errored still reads `completed` there, and a measured "
         "session reported it as clean. One divergence: loom folds a cancelled run into `failed` "
         "because its record has no third word, and a tool result has room to say `cancelled`. "
-        "Mirrors src/invocations.ts:settleInvocation, which applies the same rule for the user.",
+        "The session's watch (src/agent/watch.ts) settles watched invocations with the same function.",
     ),
 ]
 
@@ -374,7 +361,7 @@ def main():
         src = extract.ts_symbol(loom_ctx, symbol)
         if src is None:
             raise SystemExit(f"loom symbol not found: {symbol}")
-        if olit_symbol and not description.defines(agent, "brain/olit/prompt.py", olit_symbol):
+        if olit_symbol and not description.defines(agent, "src/agent/prompt.ts", olit_symbol):
             raise SystemExit(f"{agent['agent']} does not define {olit_symbol}")
         rows.append(
             {
@@ -386,7 +373,7 @@ def main():
                     "condition": condition,
                     "fingerprint": extract.fingerprint(src),
                 },
-                "olit": ({"file": "brain/olit/prompt.py", "symbol": olit_symbol} if olit_symbol else None),
+                "olit": ({"file": "src/agent/prompt.ts", "symbol": olit_symbol} if olit_symbol else None),
                 "label": label,
                 "note": note,
             }
@@ -396,7 +383,7 @@ def main():
         sec = extract.section(galaxy_src, heading)
         if sec is None:
             raise SystemExit(f"loom section not found: {heading}")
-        if olit_symbol and not description.defines(agent, "brain/olit/prompt.py", olit_symbol):
+        if olit_symbol and not description.defines(agent, "src/agent/prompt.ts", olit_symbol):
             raise SystemExit(f"{agent['agent']} does not define {olit_symbol}")
         slug = heading.split()[0].lower().strip("'")
         rows.append(
@@ -410,7 +397,7 @@ def main():
                     "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
                     "fingerprint": extract.fingerprint(sec),
                 },
-                "olit": ({"file": "brain/olit/prompt.py", "symbol": olit_symbol} if olit_symbol else None),
+                "olit": ({"file": "src/agent/prompt.ts", "symbol": olit_symbol} if olit_symbol else None),
                 "label": label,
                 "note": note,
             }
@@ -420,7 +407,7 @@ def main():
         src = extract.ts_symbol(loom_ctx, symbol)
         if src is None:
             raise SystemExit(f"loom symbol not found: {symbol}")
-        if not description.defines(agent, "brain/olit/prompt.py", olit_symbol):
+        if not description.defines(agent, "src/agent/prompt.ts", olit_symbol):
             raise SystemExit(f"{agent['agent']} does not define {olit_symbol}")
         rows.append(
             {
@@ -433,7 +420,7 @@ def main():
                     "condition": condition,
                     "fingerprint": extract.fingerprint(src),
                 },
-                "olit": {"file": "brain/olit/prompt.py", "symbol": olit_symbol},
+                "olit": {"file": "src/agent/prompt.ts", "symbol": olit_symbol},
                 "label": label,
                 "note": note,
             }
@@ -453,7 +440,7 @@ def main():
                     "condition": condition,
                     "fingerprint": extract.fingerprint(src),
                 },
-                "olit": {"file": "brain/olit/prompt.py", "symbol": olit_symbol},
+                "olit": {"file": "src/agent/prompt.ts", "symbol": olit_symbol},
                 "label": label,
                 "note": note,
             }

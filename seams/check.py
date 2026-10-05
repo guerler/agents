@@ -144,14 +144,6 @@ def check_layers(data, agent):
     out.extend(_policy_rows(data.get("policy") or {}, agent))
     out.extend(
         _map_rows(
-            "tool-request",
-            data.get("tool_request") or {},
-            description.tool_requests(agent),
-            "the Galaxy query this tool builds has changed",
-        )
-    )
-    out.extend(
-        _map_rows(
             "tool-contract",
             data.get("tool_contract") or {},
             description.tool_contracts(agent),
@@ -187,32 +179,21 @@ def check_layers(data, agent):
         # "ready-to-fill skeleton" wording over a raw schema passthrough for months.
         shaped = surface.get("shaped_returns") or {}
         if shaped:
-            passthrough = description.passthrough_handlers(agent)
-            delegated = description.delegated_tools(agent)
             covered = description.promised_fields(agent)
             writes = description.write_tools(agent)
             for name in sorted(shaped):
                 if name in allowed:
                     continue
                 keys = ", ".join(shaped[name])
-                if name in passthrough:
+                if not covered.get(name) and name not in writes:
+                    # Only a field the agent declares gets read back off a live result, whoever
+                    # runs the tool; an undeclared promise is checked by nothing.
                     out.append(
                         (
                             "SHAPE",
                             f"layer.tool-return/{name}",
-                            f"galaxy-mcp returns {{{keys}}}; the agent passes the response through",
-                        )
-                    )
-                elif name in delegated and not covered.get(name) and name not in writes:
-                    # Delegation moved the result out of the agent, so no static read of its
-                    # code can see the shape. Only a field the agent declares gets read back
-                    # off a live result; an undeclared promise is checked by nothing.
-                    out.append(
-                        (
-                            "SHAPE",
-                            f"layer.tool-return/{name}",
-                            f"galaxy-mcp returns {{{keys}}}; the agent delegates this tool and "
-                            f"declares no promised field, so nothing verifies the shape",
+                            f"galaxy-mcp returns {{{keys}}}; the agent declares no promised "
+                            f"field for this tool, so nothing verifies the shape",
                         )
                     )
     return out
@@ -336,7 +317,6 @@ def main():
         + len((data.get("loom_modules") or {}).get("fingerprints") or {})
         + (1 if (data.get("identity_prompt") or {}).get("fingerprint") else 0)
         + len(data.get("policy") or {})
-        + len(data.get("tool_request") or {})
         + len(data.get("tool_contract") or {})
     )
     print(f"\n{len(registry)} seams + {counted} layer entries checked, " f"{len(problems)} need attention")

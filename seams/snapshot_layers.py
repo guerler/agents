@@ -35,7 +35,6 @@ LAYERS = (
     "pi",
     "tool_surface",
     "policy",
-    "tool_request",
     "tool_contract",
 )
 
@@ -105,26 +104,20 @@ POLICY_UPSTREAM = {
 
 ALLOWED_TOOL_DIVERGENCE = {
     "connect": "no connection step: olit is served by Galaxy",
-    "download_dataset": "no local filesystem; returns content instead",
-    "upload_file": "no access to the user's disk",
-    "get_workflow_input_template": "drops the optional `verbose` parameter",
-    "invoke_workflow": "drops the optional `parameters_normalized` parameter",
-    "get_history_contents": "DIVERGES: galaxy-mcp fetches every item in the history and pages client-side, so it can report `total_items`; an 8,000-dataset history makes that untenable. olit lets Galaxy page, asks for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope. Also omits `dataset_id` from each item (see the agent-safe projection principle).",
+    "download_dataset": "DIVERGES: writes the dataset into the browser's in-memory filesystem, where run_python reads it, and returns a preview; there is no disk path to take, so `file_path` and its options are gone.",
+    "upload_file": "DIVERGES: uploads a file from the browser's in-memory filesystem (what run_python wrote), never the user's disk, and takes `file_name`, `file_type` and `dbkey` for content that has no name of its own.",
+    "get_history_contents": "DIVERGES: galaxy-mcp fetches every item in the history and pages client-side, so it can report `total_items`; an 8,000-dataset history makes that untenable. olit lets Galaxy page, asks for one row past the limit, and answers in galaxy-ops' envelope -- rows under `data`, `pagination` beside them -- with `total_items` null while more pages remain. Also omits `dataset_id` from each item (see the agent-safe projection principle).",
     "upload_file_from_url": "DIVERGES: passes `auto_decompress: true` on the fetch element. Galaxy's own uploader defaults it to true (client/src/composables/upload/uploadOptionModel.ts:67); the API defaults to false (lib/galaxy/schema/fetch_data.py:46) and galaxy-mcp passes nothing, so a `.gz` URL declared as its uncompressed type lands as gzip bytes wearing the wrong label. Observed on 4/4 cryptic-exon-q1 runs: the model names the logical format and drops the `.gz`, and every downstream tool then fails.",
-    "get_histories": "DIVERGES: galaxy-mcp returns every history by default and adds a `pagination` block with `total_items` only when a limit is given, paying for a second unbounded fetch to count. olit always bounds the page at ROW_CAP, asks Galaxy for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope it already uses for list_workflows and get_tool_panel. No `total`: the server was never asked for one.",
-    "recommend_biocontainer": "ADDED: galaxy-mcp resolves a conda package set through "
-    "`galaxy.tool_util.deps.mulled.recommend`, which needs galaxy-tool-util and cannot run in "
-    "Pyodide. The udt-authoring skill names the second route for exactly this case, the quay.io "
-    "tag API, and quay.io serves it cross-origin so the browser can take it. Keeps galaxy-mcp's "
-    "response shape, and answers `found: false` for a multi-package set rather than guessing: a "
-    "mulled-v2 tag is a hash over the set, which a tag listing cannot reveal.",
+    "recommend_biocontainer": "ADDED: galaxy-ops ships this operation only in its Node build, "
+    "because the mulled hash uses node:crypto. olit's browser version takes the udt-authoring "
+    "skill's second route, the quay.io tag API, which quay.io serves cross-origin. Keeps "
+    "galaxy-mcp's response shape, and answers `found: false` for a multi-package set rather than "
+    "guessing: a mulled-v2 tag is a hash over the set, which a tag listing cannot reveal.",
     "update_page": "ADDED: takes `section_heading`/`section_content` to replace one section, and `expect_hash` to refuse a write when the page changed since it was read. Uses Galaxy's own djb2 hash and section semantics (sectionDiffUtils.ts, page_assistant.py) so Olit and Galaxy's page assistant agree. Also sends `edit_source: agent`.",
-    "get_tool_panel": "ADDED: galaxy-mcp returns the raw panel, ~25k tokens on a 170-tool server and unbounded on a public one. olit returns section, id, name and description, and takes a `section` filter. Returns the paging envelope {items, shown, total, truncated, next_offset} instead of a bare list, and takes limit/offset.",
-    "list_workflows": 'DIVERGES: galaxy-mcp filters `name` as a lowercase substring of the workflow name. olit compares alphanumerics only and also matches tags, so "rna seq" finds "RNA-seq quantification" and anything tagged rna-seq. Delegating to Galaxy\'s own ?search is not the fix: it drops raw terms under four characters, so "rna seq" there matches every workflow. Returns the paging envelope {items, shown, total, truncated, next_offset} instead of a bare list, and takes limit/offset.',
     "list_visualizations": "ADDED: galaxy-mcp has no visualization surface at all. Asks Galaxy which installed plugins accept a dataset (api/plugins?dataset_id=) rather than matching extensions client-side, which gets subclassing right, and marks the visualization the datatype itself declares. Answers only what can render the dataset: the columns it used to return made a column lookup double as a plugin advertisement, and tabular charting drifted off vintent_dataset because of it. Columns come from get_dataset_details.",
     "show_visualization": "ADDED: renders a dataset with an installed plugin and saves nothing, the common case. galaxy-mcp has no equivalent; Galaxy's own UI reaches this through /visualizations/display, which needs the plugin name as well as the id.",
     "save_visualization": "ADDED: stores a durable Galaxy visualization the user keeps and can share. Split from show_visualization so that displaying a chart does not add a row to the user's visualization list, and because only a saved config can carry settings and tracks.",
-    "get_visualization_details": "ADDED: galaxy-mcp has no visualization surface. Returns one plugin's inputs joined with what galaxy-charts stores for each input type, so settings and tracks are written to a stated shape instead of inferred from parameter names, and a caller can tell a genome input from a track input. The shapes come from galaxy-charts' published contract, vendored under brain/olit/vendor and pinned; Galaxy declares which inputs exist, galaxy-charts owns what they store. Per plugin rather than on the listing: the caller needs exactly one.",
+    "get_visualization_details": "ADDED: galaxy-mcp has no visualization surface. Returns one plugin's inputs joined with what galaxy-charts stores for each input type, so settings and tracks are written to a stated shape instead of inferred from parameter names, and a caller can tell a genome input from a track input. The shapes come from galaxy-charts' published contract, imported from the package; Galaxy declares which inputs exist, galaxy-charts owns what they store. Per plugin rather than on the listing: the caller needs exactly one.",
     "get_visualization": "ADDED: galaxy-mcp has no visualization surface. Returns a saved visualization's current settings and tracks so a revision changes them rather than rebuilding them: save_visualization replaces the config wholesale, and reconstructing it blind drops whatever the plugin itself wrote there. Same read-before-write shape as get_page before update_page.",
     "vega_dataset": "ADDED: galaxy-mcp has no visualization surface. The route for a chart no "
     "installed plugin covers: a Vega-Lite spec the model writes, rendered inline and placeable in "
@@ -158,6 +151,14 @@ ALLOWED_TOOL_DIVERGENCE = {
     "revert_page_revision": "DIVERGES: upstream returns the new revision the way get_page_revision "
     "does, with content_editor_source; olit does not report that field.",
     "get_job_details": "DIVERGES: galaxy-mcp fetches api/jobs/{id}; olit adds full=true so a failed job's stderr is readable, which is what invocation_outcome tells the model to reach for. That flag also carries tool_stdout/tool_stderr/job_stdout/job_stderr/stdout/stderr, hundreds of KB for a chatty tool, so each log field is trimmed to its last 4 KB on a line boundary with a notice naming the full size.",
+    "run_python": "ADDED: Python in the browser (Pyodide), for computing over what download_dataset placed there; galaxy-mcp has no local execution.",
+    "skills_fetch": "ADDED: reads a vendored Galaxy Skills file; Orbit fetches skills from GitHub, olit ships them with the build.",
+    "notebook_resume": "ADDED: opens or creates the session's record page, the shape Orbit's notebook takes as a Galaxy Page.",
+    "gtn_search": "ADDED: Galaxy Training Network search; Orbit reaches it through its shell.",
+    "gtn_fetch": "ADDED: reads one Galaxy Training Network page, host-scoped like gtn_search.",
+    "ena_runs": "ADDED: ENA run listing with exact FASTQ urls; Orbit reaches ENA through its shell (see seam tool.ena_runs).",
+    "lineage_report": "ADDED: an Olit process that reports a dataset's provenance chain; galaxy-mcp has no equivalent.",
+    "organize_datasets": "ADDED: an Olit process that builds collections from a history's datasets; galaxy-mcp has no equivalent.",
 }
 
 
@@ -312,7 +313,6 @@ def _builders(agent, existing, mcp_path):
         "pi": lambda: layers.pi_manifest(LOOM) or (existing.get("pi") or {}),
         "tool_surface": tool_surface,
         "policy": lambda: {n: {**d, "olit": description.policy(agent, n)} for n, d in POLICY_UPSTREAM.items()},
-        "tool_request": lambda: description.tool_requests(agent),
         "tool_contract": lambda: description.tool_contracts(agent),
     }
 

@@ -10,8 +10,8 @@
         "fingerprint": "1723121f233e6676"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
-        "symbol": "active_model_block"
+        "file": "src/agent/prompt.ts",
+        "symbol": "activeModelBlock"
       },
       "label": "PORTED",
       "note": "olit gates on the resolved target instead of config."
@@ -39,8 +39,8 @@
         "fingerprint": "7d95acbcbd06a490"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
-        "symbol": "current_date_block"
+        "file": "src/agent/prompt.ts",
+        "symbol": "currentDateBlock"
       },
       "label": "PORTED",
       "note": ""
@@ -55,7 +55,7 @@
         "fingerprint": "0f7a2fec6e42cc6d"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "OPERATING_DISCIPLINE"
       },
       "label": "PORTED",
@@ -71,7 +71,7 @@
         "fingerprint": "6dd5ffac1e78e9b6"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "VERIFICATION"
       },
       "label": "PORTED",
@@ -87,7 +87,7 @@
         "fingerprint": "7cd8e64165fb6a42"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "PLAN_CONVENTION"
       },
       "label": "PORTED",
@@ -103,7 +103,7 @@
         "fingerprint": "118227c08a40851f"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "PARAMETER_REVIEW"
       },
       "label": "PORTED",
@@ -119,7 +119,7 @@
         "fingerprint": "83e382327bed50aa"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "CHAT_FORMATTING"
       },
       "label": "PORTED",
@@ -135,7 +135,7 @@
         "fingerprint": "b4fd24d4b5abe3b3"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "RECORD_WRITES"
       },
       "label": "REPLACED",
@@ -164,7 +164,7 @@
         "fingerprint": "93cca7c23db94506"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "GALAXY_TERMINOLOGY"
       },
       "label": "PORTED",
@@ -206,7 +206,7 @@
         "fingerprint": "83b926a66b3823f7"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "NO_LOCAL_SHELL"
       },
       "label": "PORTED",
@@ -249,7 +249,7 @@
         "fingerprint": "02c67ea0a2f74b51"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "GETTING_DATA_IN"
       },
       "label": "REPLACED",
@@ -266,7 +266,7 @@
         "fingerprint": "99060782a6586f4c"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "INVOKING_WORKFLOW"
       },
       "label": "PORTED",
@@ -283,7 +283,7 @@
         "fingerprint": "72e65b4f0d1ca93a"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "FINDING_A_WORKFLOW"
       },
       "label": "PORTED",
@@ -300,7 +300,7 @@
         "fingerprint": "27e4954fc10ac3aa"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "EXECUTING_A_STEP"
       },
       "label": "PORTED",
@@ -317,7 +317,7 @@
         "fingerprint": "300a0a18c1129362"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "DRAFTING_A_PLAN"
       },
       "label": "PORTED",
@@ -376,7 +376,7 @@
         "fingerprint": "93cca7c23db94506"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "GALAXY_UNAVAILABLE"
       },
       "label": "PORTED",
@@ -392,7 +392,7 @@
         "fingerprint": "7b499a0f78e0fe1b"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "GALAXY_PAGE_MARKDOWN"
       },
       "label": "PORTED",
@@ -408,7 +408,7 @@
         "fingerprint": "233d2c82223b592a"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "IMPORTING_SRA"
       },
       "label": "PORTED",
@@ -424,8 +424,8 @@
         "fingerprint": "7bccf8818f81058e"
       },
       "olit": {
-        "file": "brain/olit/runtime.py",
-        "symbol": "_inject_record"
+        "file": "src/agent/session.ts",
+        "symbol": "injectRecord"
       },
       "label": "PORTED",
       "note": "olit has one project-data channel (the record); loom has two."
@@ -435,22 +435,11 @@
       "kind": "prompt-block",
       "loom": null,
       "olit": {
-        "file": "brain/olit/prompt.py",
-        "symbol": "seed_dataset_block"
+        "file": "src/agent/prompt.ts",
+        "symbol": "seedDatasetBlock"
       },
       "label": "ADDED",
       "note": "loom has no equivalent because nothing opens it on a dataset. Galaxy mounts olit as a visualization plugin, so the user can arrive with one already selected, and naming it is what makes a bare \"plot it\" resolvable: the referent is otherwise only in the shell's chat, which never reaches the model. Emitted only when a dataset was supplied, so a bare start produces byte-identical system text."
-    },
-    {
-      "id": "prompt.GALAXY_PARTLY_AVAILABLE",
-      "kind": "prompt-block",
-      "loom": null,
-      "olit": {
-        "file": "brain/olit/prompt.py",
-        "symbol": "GALAXY_PARTLY_AVAILABLE"
-      },
-      "label": "ADDED",
-      "note": "loom has no equivalent because it reaches Galaxy through one channel: MCP is connected or it is not, which its NOT CONNECTED block already covers. olit has two -- galaxy-ops for most tools and direct REST for the rest -- so ops can fail to load while Galaxy itself answers. This block names the tools that still work in that state rather than letting the agent discover the boundary one failure at a time. Emitted only when ops are unavailable, so a healthy session produces byte-identical system text."
     },
     {
       "id": "prompt.galaxyArtifactLinkGuidance",
@@ -462,7 +451,7 @@
         "fingerprint": "8eee1a780400bfd8"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
+        "file": "src/agent/prompt.ts",
         "symbol": "ARTIFACT_LINKS"
       },
       "label": "PORTED",
@@ -478,8 +467,8 @@
         "fingerprint": "83e382327bed50aa"
       },
       "olit": {
-        "file": "brain/olit/prompt.py",
-        "symbol": "chat_formatting_block"
+        "file": "src/agent/prompt.ts",
+        "symbol": "chatFormattingBlock"
       },
       "label": "PORTED",
       "note": "loom interpolates the artifact-link convention at the tail of this block; the function is what does the same here, so the constant beside it stays the block's own text."
@@ -489,8 +478,8 @@
       "kind": "tool",
       "loom": null,
       "olit": {
-        "file": "brain/olit/loop/ena.py",
-        "symbol": "ENA_RUNS"
+        "file": "src/agent/ena.ts",
+        "symbol": "enaTools"
       },
       "label": "ADDED",
       "note": "loom has no equivalent because Orbit reaches ENA through a general shell. ENA's FASTQ paths are not derivable from an accession -- the shard directory is its first six characters and the numbered subdirectory depends on its length -- and whether a run is paired is a property of the run, not its name. A live session guessed four URLs and all four 404'd, one of them for a run that has no second mate at all. Read-only and host-scoped to www.ebi.ac.uk, the same shape as gtn_search/gtn_fetch."
@@ -500,8 +489,8 @@
       "kind": "tool-result-hint",
       "loom": null,
       "olit": {
-        "file": "brain/olit/loop/fetch_failure_hint.py",
-        "symbol": "ARCHIVE_HINT"
+        "file": "src/agent/hints.ts",
+        "symbol": "fetchFailureHint"
       },
       "label": "ADDED",
       "note": "loom has no equivalent: its only tool-result hint covers failed workflow invocations, a different trigger that stays unported. The shape is borrowed from it -- append the imperative to a result that already reports the failure, rather than refusing the call that caused it. Galaxy names the url and the status but cannot say that writing another url from memory is the wrong next move, which is what a measured session did eight times. Pairs with tool.ena_runs, which is the answer the hint names."
@@ -516,11 +505,11 @@
         "fingerprint": "1dff1ee76de5e5be"
       },
       "olit": {
-        "file": "brain/olit/loop/invocation_outcome.py",
+        "file": "src/agent/invocation-outcome.ts",
         "symbol": "settle"
       },
       "label": "PORTED",
-      "note": "loom's transition rules, applied to what the agent reads instead of to a notebook block: FAILED_JOB_STATES, and the two questions of whether Galaxy has stopped scheduling and whether any job is still moving. Galaxy's invocation state describes scheduling, so a run whose jobs errored still reads `completed` there, and a measured session reported it as clean. One divergence: loom folds a cancelled run into `failed` because its record has no third word, and a tool result has room to say `cancelled`. Mirrors src/invocations.ts:settleInvocation, which applies the same rule for the user."
+      "note": "loom's transition rules, applied to what the agent reads instead of to a notebook block: FAILED_JOB_STATES, and the two questions of whether Galaxy has stopped scheduling and whether any job is still moving. Galaxy's invocation state describes scheduling, so a run whose jobs errored still reads `completed` there, and a measured session reported it as clean. One divergence: loom folds a cancelled run into `failed` because its record has no third word, and a tool result has room to say `cancelled`. The session's watch (src/agent/watch.ts) settles watched invocations with the same function."
     }
   ],
   "layers": {
@@ -766,21 +755,16 @@
       "version": "1.11.0.dev0",
       "allowed_divergence": {
         "connect": "no connection step: olit is served by Galaxy",
-        "download_dataset": "no local filesystem; returns content instead",
-        "upload_file": "no access to the user's disk",
-        "get_workflow_input_template": "drops the optional `verbose` parameter",
-        "invoke_workflow": "drops the optional `parameters_normalized` parameter",
-        "get_history_contents": "DIVERGES: galaxy-mcp fetches every item in the history and pages client-side, so it can report `total_items`; an 8,000-dataset history makes that untenable. olit lets Galaxy page, asks for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope. Also omits `dataset_id` from each item (see the agent-safe projection principle).",
+        "download_dataset": "DIVERGES: writes the dataset into the browser's in-memory filesystem, where run_python reads it, and returns a preview; there is no disk path to take, so `file_path` and its options are gone.",
+        "upload_file": "DIVERGES: uploads a file from the browser's in-memory filesystem (what run_python wrote), never the user's disk, and takes `file_name`, `file_type` and `dbkey` for content that has no name of its own.",
+        "get_history_contents": "DIVERGES: galaxy-mcp fetches every item in the history and pages client-side, so it can report `total_items`; an 8,000-dataset history makes that untenable. olit lets Galaxy page, asks for one row past the limit, and answers in galaxy-ops' envelope -- rows under `data`, `pagination` beside them -- with `total_items` null while more pages remain. Also omits `dataset_id` from each item (see the agent-safe projection principle).",
         "upload_file_from_url": "DIVERGES: passes `auto_decompress: true` on the fetch element. Galaxy's own uploader defaults it to true (client/src/composables/upload/uploadOptionModel.ts:67); the API defaults to false (lib/galaxy/schema/fetch_data.py:46) and galaxy-mcp passes nothing, so a `.gz` URL declared as its uncompressed type lands as gzip bytes wearing the wrong label. Observed on 4/4 cryptic-exon-q1 runs: the model names the logical format and drops the `.gz`, and every downstream tool then fails.",
-        "get_histories": "DIVERGES: galaxy-mcp returns every history by default and adds a `pagination` block with `total_items` only when a limit is given, paying for a second unbounded fetch to count. olit always bounds the page at ROW_CAP, asks Galaxy for one row past the limit, and returns the {items, shown, truncated, next_offset} envelope it already uses for list_workflows and get_tool_panel. No `total`: the server was never asked for one.",
-        "recommend_biocontainer": "ADDED: galaxy-mcp resolves a conda package set through `galaxy.tool_util.deps.mulled.recommend`, which needs galaxy-tool-util and cannot run in Pyodide. The udt-authoring skill names the second route for exactly this case, the quay.io tag API, and quay.io serves it cross-origin so the browser can take it. Keeps galaxy-mcp's response shape, and answers `found: false` for a multi-package set rather than guessing: a mulled-v2 tag is a hash over the set, which a tag listing cannot reveal.",
+        "recommend_biocontainer": "ADDED: galaxy-ops ships this operation only in its Node build, because the mulled hash uses node:crypto. olit's browser version takes the udt-authoring skill's second route, the quay.io tag API, which quay.io serves cross-origin. Keeps galaxy-mcp's response shape, and answers `found: false` for a multi-package set rather than guessing: a mulled-v2 tag is a hash over the set, which a tag listing cannot reveal.",
         "update_page": "ADDED: takes `section_heading`/`section_content` to replace one section, and `expect_hash` to refuse a write when the page changed since it was read. Uses Galaxy's own djb2 hash and section semantics (sectionDiffUtils.ts, page_assistant.py) so Olit and Galaxy's page assistant agree. Also sends `edit_source: agent`.",
-        "get_tool_panel": "ADDED: galaxy-mcp returns the raw panel, ~25k tokens on a 170-tool server and unbounded on a public one. olit returns section, id, name and description, and takes a `section` filter. Returns the paging envelope {items, shown, total, truncated, next_offset} instead of a bare list, and takes limit/offset.",
-        "list_workflows": "DIVERGES: galaxy-mcp filters `name` as a lowercase substring of the workflow name. olit compares alphanumerics only and also matches tags, so \"rna seq\" finds \"RNA-seq quantification\" and anything tagged rna-seq. Delegating to Galaxy's own ?search is not the fix: it drops raw terms under four characters, so \"rna seq\" there matches every workflow. Returns the paging envelope {items, shown, total, truncated, next_offset} instead of a bare list, and takes limit/offset.",
         "list_visualizations": "ADDED: galaxy-mcp has no visualization surface at all. Asks Galaxy which installed plugins accept a dataset (api/plugins?dataset_id=) rather than matching extensions client-side, which gets subclassing right, and marks the visualization the datatype itself declares. Answers only what can render the dataset: the columns it used to return made a column lookup double as a plugin advertisement, and tabular charting drifted off vintent_dataset because of it. Columns come from get_dataset_details.",
         "show_visualization": "ADDED: renders a dataset with an installed plugin and saves nothing, the common case. galaxy-mcp has no equivalent; Galaxy's own UI reaches this through /visualizations/display, which needs the plugin name as well as the id.",
         "save_visualization": "ADDED: stores a durable Galaxy visualization the user keeps and can share. Split from show_visualization so that displaying a chart does not add a row to the user's visualization list, and because only a saved config can carry settings and tracks.",
-        "get_visualization_details": "ADDED: galaxy-mcp has no visualization surface. Returns one plugin's inputs joined with what galaxy-charts stores for each input type, so settings and tracks are written to a stated shape instead of inferred from parameter names, and a caller can tell a genome input from a track input. The shapes come from galaxy-charts' published contract, vendored under brain/olit/vendor and pinned; Galaxy declares which inputs exist, galaxy-charts owns what they store. Per plugin rather than on the listing: the caller needs exactly one.",
+        "get_visualization_details": "ADDED: galaxy-mcp has no visualization surface. Returns one plugin's inputs joined with what galaxy-charts stores for each input type, so settings and tracks are written to a stated shape instead of inferred from parameter names, and a caller can tell a genome input from a track input. The shapes come from galaxy-charts' published contract, imported from the package; Galaxy declares which inputs exist, galaxy-charts owns what they store. Per plugin rather than on the listing: the caller needs exactly one.",
         "get_visualization": "ADDED: galaxy-mcp has no visualization surface. Returns a saved visualization's current settings and tracks so a revision changes them rather than rebuilding them: save_visualization replaces the config wholesale, and reconstructing it blind drops whatever the plugin itself wrote there. Same read-before-write shape as get_page before update_page.",
         "vega_dataset": "ADDED: galaxy-mcp has no visualization surface. The route for a chart no installed plugin covers: a Vega-Lite spec the model writes, rendered inline and placeable in the record with {{artifact}}, where save_visualization would need a plugin and would add a row to the user's visualization list. olit owns only the data boundary -- it points the spec at the dataset rather than letting a spec carry a copy of the rows -- so columns are named as the dataset names them, positionally where it names none.",
         "get_visualization_options": "ADDED: galaxy-mcp has no visualization surface. Resolves a parameter's options from wherever the declaration says they live -- a remote json list, a Galaxy data table, or the declared options -- which is the same lookup galaxy-charts performs to build the input form, using the browser fetch olit already has. Without it the agent invents an option, and where the stored value is an object copied verbatim it cannot invent a usable one. Each option carries the value to store, so matching a label and filling the field is one call; `search` narrows a long list.",
@@ -796,7 +780,15 @@
         "run_user_tool": "DIVERGES: upstream preflights supplied datasets and collections against the tool definition before submitting; olit sends the call and lets Galaxy judge it.",
         "get_page_revision": "DIVERGES: upstream reports content_editor_source, saying where the editable markdown came from; olit returns the markdown without it.",
         "revert_page_revision": "DIVERGES: upstream returns the new revision the way get_page_revision does, with content_editor_source; olit does not report that field.",
-        "get_job_details": "DIVERGES: galaxy-mcp fetches api/jobs/{id}; olit adds full=true so a failed job's stderr is readable, which is what invocation_outcome tells the model to reach for. That flag also carries tool_stdout/tool_stderr/job_stdout/job_stderr/stdout/stderr, hundreds of KB for a chatty tool, so each log field is trimmed to its last 4 KB on a line boundary with a notice naming the full size."
+        "get_job_details": "DIVERGES: galaxy-mcp fetches api/jobs/{id}; olit adds full=true so a failed job's stderr is readable, which is what invocation_outcome tells the model to reach for. That flag also carries tool_stdout/tool_stderr/job_stdout/job_stderr/stdout/stderr, hundreds of KB for a chatty tool, so each log field is trimmed to its last 4 KB on a line boundary with a notice naming the full size.",
+        "run_python": "ADDED: Python in the browser (Pyodide), for computing over what download_dataset placed there; galaxy-mcp has no local execution.",
+        "skills_fetch": "ADDED: reads a vendored Galaxy Skills file; Orbit fetches skills from GitHub, olit ships them with the build.",
+        "notebook_resume": "ADDED: opens or creates the session's record page, the shape Orbit's notebook takes as a Galaxy Page.",
+        "gtn_search": "ADDED: Galaxy Training Network search; Orbit reaches it through its shell.",
+        "gtn_fetch": "ADDED: reads one Galaxy Training Network page, host-scoped like gtn_search.",
+        "ena_runs": "ADDED: ENA run listing with exact FASTQ urls; Orbit reaches ENA through its shell (see seam tool.ena_runs).",
+        "lineage_report": "ADDED: an Olit process that reports a dataset's provenance chain; galaxy-mcp has no equivalent.",
+        "organize_datasets": "ADDED: an Olit process that builds collections from a history's datasets; galaxy-mcp has no equivalent."
       },
       "upstream": {
         "connect": "caf57caed25afac8",
@@ -928,7 +920,11 @@
         "note": "pi-ai emits temperature and max_tokens only when set (api/openai-completions.js:589,595) and reaches top_p only through the samplingParams bag; loom sets none of them, so an Orbit request runs at the provider's own defaults. Olit must not impose its own or a benchmark measures the defaults rather than the runtime. pi reaches tool_choice only when a caller passes one (api/openai-completions.js:626) and loom never does, so a request carrying tools states no choice either; the with_tools slice exists because a request built without tools cannot show that field.",
         "olit": {
           "body_keys": [
-            "model"
+            "model",
+            "prompt_cache_key",
+            "prompt_cache_retention",
+            "stream",
+            "stream_options"
           ],
           "sampling": {
             "max_tokens": null,
@@ -975,7 +971,7 @@
           "max_steps": 100,
           "max_tool_result_bytes": 262144,
           "reserve_tokens": 16384,
-          "row_bytes_cap": 32768,
+          "row_bytes_cap": 50000,
           "row_cap": 100,
           "tool_execution": "sequential",
           "tool_result_max_chars": 2000
@@ -998,49 +994,18 @@
         ]
       }
     },
-    "tool_request": {
-      "get_history_contents": {
-        "limit": null,
-        "offset": null,
-        "order": null,
-        "q": null,
-        "qv": null,
-        "v": "dev"
-      },
-      "get_invocations": {
-        "history_id": null,
-        "limit": null,
-        "step_details": null,
-        "view": null,
-        "workflow_id": null
-      },
-      "get_job_details": {
-        "full": true
-      },
-      "list_visualizations": {
-        "dataset_id": null
-      },
-      "save_visualization": {
-        "visualization": null,
-        "visualization_id": null
-      },
-      "show_visualization": {
-        "dataset_id": null,
-        "visualization": null
-      }
-    },
     "tool_contract": {
       "cancel_workflow_invocation": {
         "params": {
           "invocation_id": "string!"
         },
-        "prose": "9eb061fe7167467b"
+        "prose": "8f18dd86fed21858"
       },
       "create_history": {
         "params": {
           "history_name": "string!"
         },
-        "prose": "5e20d31de5a00eff"
+        "prose": "12bf5a4fe0714df5"
       },
       "create_page": {
         "params": {
@@ -1050,19 +1015,19 @@
           "slug": "string",
           "title": "string"
         },
-        "prose": "ec88c917d8f3c361"
+        "prose": "39440aad971e75ae"
       },
       "create_user_tool": {
         "params": {
           "representation": "object!"
         },
-        "prose": "fd63d09bb44bcbe5"
+        "prose": "552932842a7b29b9"
       },
       "delete_user_tool": {
         "params": {
           "uuid": "string!"
         },
-        "prose": "f2d28564622276bc"
+        "prose": "bc6f6f9958970388"
       },
       "download_dataset": {
         "params": {
@@ -1070,28 +1035,35 @@
         },
         "prose": "4cd5ef39fc894022"
       },
+      "ena_runs": {
+        "params": {
+          "accession": "string!",
+          "limit": "integer"
+        },
+        "prose": "0cacd14929f2a6a7"
+      },
       "get_collection_details": {
         "params": {
           "collection_id": "string!",
-          "max_elements": "integer"
+          "max_elements": "integer=100"
         },
-        "prose": "8650da896e8567f2"
+        "prose": "7cd8eab7e6d8aeb3"
       },
       "get_dataset_details": {
         "params": {
           "dataset_id": "string!",
-          "include_preview": "boolean",
-          "preview_lines": "integer"
+          "include_preview": "boolean=true",
+          "preview_lines": "integer=10"
         },
-        "prose": "99604c1555834ffa"
+        "prose": "6fa971dd03caf9f0"
       },
       "get_histories": {
         "params": {
-          "limit": "integer",
-          "name": "string",
-          "offset": "integer"
+          "limit": "any",
+          "name": "string|null",
+          "offset": "integer=0"
         },
-        "prose": "0468d624a314cd67"
+        "prose": "0421a2d9a953c899"
       },
       "get_history_contents": {
         "params": {
@@ -1108,7 +1080,7 @@
         "params": {
           "history_id": "string!"
         },
-        "prose": "7cf195890924e660"
+        "prose": "55249da98dfa6326"
       },
       "get_invocations": {
         "params": {
@@ -1125,14 +1097,14 @@
         "params": {
           "trs_id": "string!"
         },
-        "prose": "9b88d48bb0e4db0b"
+        "prose": "77da8da623486e1f"
       },
       "get_iwc_workflows": {
         "params": {
-          "limit": "integer",
-          "offset": "integer"
+          "limit": "integer=20",
+          "offset": "integer=0"
         },
-        "prose": "d1970dc0f8752ed4"
+        "prose": "a1df9f7e0c193a52"
       },
       "get_job_details": {
         "params": {
@@ -1153,45 +1125,45 @@
           "page_id": "string!",
           "revision_id": "string!"
         },
-        "prose": "214dcd74a01b20c9"
+        "prose": "f3a975359be8fd21"
       },
       "get_server_info": {
         "params": {},
-        "prose": "a8e42e92e0cadff1"
+        "prose": "726676f314effa87"
       },
       "get_tool_citations": {
         "params": {
           "tool_id": "string!"
         },
-        "prose": "24aa6c36ddb2f967"
+        "prose": "f454383d48d8e65a"
       },
       "get_tool_details": {
         "params": {
-          "io_details": "boolean",
+          "io_details": "boolean=false",
           "tool_id": "string!"
         },
-        "prose": "b537bfcbf13a6e34"
+        "prose": "130835c7a51f448f"
       },
       "get_tool_input_template": {
         "params": {
           "tool_id": "string!"
         },
-        "prose": "25f5dfd1dbd63385"
+        "prose": "93b1df3ccb59794b"
       },
       "get_tool_panel": {
         "params": {
-          "limit": "integer",
-          "offset": "integer",
-          "section_id": "string"
+          "limit": "integer=100",
+          "offset": "integer=0",
+          "section_id": "string|null"
         },
-        "prose": "1cb9966c58aa6985"
+        "prose": "ee541a09ed72e551"
       },
       "get_tool_run_examples": {
         "params": {
           "tool_id": "string!",
           "tool_version": "string"
         },
-        "prose": "2a5e4c77e852cf3e"
+        "prose": "8f53779ed047250e"
       },
       "get_user": {
         "params": {},
@@ -1221,64 +1193,92 @@
       },
       "get_workflow_details": {
         "params": {
-          "version": "integer",
+          "version": "any",
           "workflow_id": "string!"
         },
-        "prose": "a13258e456a2d31d"
+        "prose": "d5c660ccca3817fd"
       },
       "get_workflow_input_template": {
         "params": {
           "history_id": "string",
-          "verbose": "boolean",
+          "verbose": "boolean=false",
           "workflow_id": "string!"
         },
-        "prose": "86523bda519fc5c2"
+        "prose": "b5c037b88d17eded"
+      },
+      "gtn_fetch": {
+        "params": {
+          "url": "string!"
+        },
+        "prose": "f8e721e388b4bba0"
+      },
+      "gtn_search": {
+        "params": {
+          "query": "string",
+          "topic": "string"
+        },
+        "prose": "15012454ccc93fbc"
       },
       "import_workflow_from_iwc": {
         "params": {
           "trs_id": "string!"
         },
-        "prose": "fdaaa15edf5e0979"
+        "prose": "1fe8cdbe0f062d29"
       },
       "invoke_workflow": {
         "params": {
-          "history_id": "string",
-          "history_name": "string",
-          "inputs": "object",
-          "inputs_by": "string",
-          "parameters_normalized": "boolean",
-          "params": "object",
+          "history_id": "string|null",
+          "history_name": "string|null",
+          "inputs": "any",
+          "inputs_by": "string=step_index",
+          "parameters_normalized": "boolean=false",
+          "params": "any",
           "workflow_id": "string!"
         },
-        "prose": "2b4796a9b07d24d6"
+        "prose": "dbf429b7f1aad537"
+      },
+      "lineage_report": {
+        "params": {
+          "dataset_id": "string!",
+          "depth": "integer",
+          "history_id": "string!",
+          "limit": "integer",
+          "src": "string"
+        },
+        "prose": "6264d2f749323c86"
       },
       "list_history_ids": {
-        "params": {},
-        "prose": "c661154113e900ad"
+        "params": {
+          "limit": "integer=100",
+          "offset": "integer=0"
+        },
+        "prose": "7f11c2fa9e376df6"
       },
       "list_page_revisions": {
         "params": {
           "page_id": "string!",
-          "sort_desc": "boolean"
+          "sort_desc": "boolean=false"
         },
-        "prose": "821a28de27b5f4c7"
+        "prose": "171babc2e128d1a7"
       },
       "list_pages": {
         "params": {
           "history_id": "string",
-          "limit": "integer",
-          "offset": "integer",
+          "limit": "integer=100",
+          "offset": "integer=0",
           "search": "string",
-          "show_published": "boolean",
-          "show_shared": "boolean"
+          "show_published": "boolean=false",
+          "show_shared": "boolean=false"
         },
-        "prose": "0aebc4cebe061430"
+        "prose": "4c2eb26e16c53739"
       },
       "list_user_tools": {
         "params": {
-          "active": "boolean"
+          "active": "boolean=true",
+          "limit": "integer=25",
+          "offset": "integer=0"
         },
-        "prose": "f57d85d324cf991c"
+        "prose": "a9f0d850f7b34a22"
       },
       "list_visualizations": {
         "params": {
@@ -1288,41 +1288,63 @@
       },
       "list_workflows": {
         "params": {
-          "limit": "integer",
-          "name": "string",
-          "offset": "integer",
-          "published": "boolean",
-          "workflow_id": "string"
+          "limit": "integer=50",
+          "name": "string|null",
+          "offset": "integer=0",
+          "published": "boolean=false"
         },
-        "prose": "baf0d5c67f37ad8e"
+        "prose": "2592bab50e1fd570"
+      },
+      "notebook_resume": {
+        "params": {},
+        "prose": "02932ba108eed805"
+      },
+      "organize_datasets": {
+        "params": {
+          "collection_name": "string",
+          "datatype": "string",
+          "history_id": "string!",
+          "include": "string",
+          "sample_regex": "string",
+          "structure": "string",
+          "tags": "array"
+        },
+        "prose": "09124e521fbd0ad5"
       },
       "recommend_biocontainer": {
         "params": {
           "packages": "array!"
         },
-        "prose": "3374c9fd857368fd"
+        "prose": "9474625b57cb52b9"
       },
       "recommend_iwc_workflows": {
         "params": {
           "intent": "string!",
-          "limit": "integer"
+          "limit": "integer=5"
         },
-        "prose": "2c6ae329bbbd35ab"
+        "prose": "2c7a4b1faa806148"
       },
       "revert_page_revision": {
         "params": {
           "page_id": "string!",
           "revision_id": "string!"
         },
-        "prose": "5b69ebcd78e4ff8b"
+        "prose": "f2da639861db2e83"
+      },
+      "run_python": {
+        "params": {
+          "code": "string!"
+        },
+        "prose": "6f947eba4e1e6d2d"
       },
       "run_tool": {
         "params": {
           "history_id": "string!",
           "inputs": "object!",
-          "tool_id": "string!"
+          "tool_id": "string!",
+          "tool_version": "string"
         },
-        "prose": "7734a83f62e133e9"
+        "prose": "8e405e65e686a5de"
       },
       "run_user_tool": {
         "params": {
@@ -1330,7 +1352,7 @@
           "inputs": "object!",
           "tool_uuid": "string!"
         },
-        "prose": "b8bb547b8020a24b"
+        "prose": "9c1cceacc61e1b46"
       },
       "save_visualization": {
         "params": {
@@ -1345,21 +1367,27 @@
       },
       "search_iwc_workflows": {
         "params": {
+          "limit": "integer=20",
+          "offset": "integer=0",
           "query": "string!"
         },
-        "prose": "4da63a9464d598b4"
+        "prose": "b5da562f1ed192c3"
       },
       "search_tools_by_keywords": {
         "params": {
-          "keywords": "array!"
+          "keywords": "array!",
+          "limit": "integer=50",
+          "offset": "integer=0"
         },
-        "prose": "af5f6cc91448d05a"
+        "prose": "a25a662cef9ce572"
       },
       "search_tools_by_name": {
         "params": {
+          "limit": "integer=25",
+          "offset": "integer=0",
           "query": "string!"
         },
-        "prose": "9b74d022953b88e1"
+        "prose": "fc6bdc7c1ef958e0"
       },
       "show_visualization": {
         "params": {
@@ -1368,6 +1396,13 @@
           "visualization": "string!"
         },
         "prose": "258784451d3926ba"
+      },
+      "skills_fetch": {
+        "params": {
+          "path": "string!",
+          "repo": "string(olit-skills|galaxy-skills)"
+        },
+        "prose": "271972a427d866e8"
       },
       "update_history": {
         "params": {
@@ -1378,7 +1413,7 @@
           "published": "boolean",
           "tags": "array"
         },
-        "prose": "60469e0baa2260c4"
+        "prose": "a2f0869be04ae455"
       },
       "update_page": {
         "params": {
