@@ -89,3 +89,34 @@ def test_an_unlayered_chart_still_has_its_encodings_read():
         "spec": {"mark": "point", "encoding": {"x": {"field": "BMI"}, "y": {"field": "Glucose"}}},
     }
     assert grade({"mustInclude": [{"kind": "vega-lite", "encodes": ["BMI", "Glucose"]}]}, [flat]) == []
+
+
+SHOWN_IGV = {
+    "kind": "visualization",
+    "title": "VCF on hg18",
+    "visualization": "igv",
+    "dataset_id": "d1",
+    "settings": {"source": {"origin": "igv", "genome": {"id": "hg18", "fastaURL": "https://x/hg18.fasta"}}},
+    "tracks": [{"urlDataset": {"id": "d1"}}],
+}
+
+
+def test_a_visualization_is_graded_on_the_config_it_carries():
+    want = {
+        "kind": "visualization",
+        "plugin": ["igv"],
+        "dataset": "d1",
+        "settingsContain": {"source.origin": "igv", "source.genome.id": "hg18", "source.genome.fastaURL": "hg18.fasta"},
+    }
+    assert grade({"mustInclude": [want]}, [SHOWN_IGV]) == []
+
+
+def test_a_visualization_on_the_wrong_genome_or_dataset_fails_and_says_what_it_carried():
+    want = {"kind": "visualization", "plugin": "igv", "settingsContain": {"source.genome.id": "hg19"}}
+    failures = grade({"mustInclude": [want]}, [SHOWN_IGV])
+    assert len(failures) == 1 and "hg19" in failures[0] and "'plugin': 'igv'" in failures[0]
+    assert grade({"mustInclude": [{"kind": "visualization", "dataset": "d2"}]}, [SHOWN_IGV]) != []
+
+
+def test_a_visualization_of_another_plugin_does_not_match():
+    assert grade({"mustInclude": [{"kind": "visualization", "plugin": "ngl"}]}, [SHOWN_IGV]) != []

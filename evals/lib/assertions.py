@@ -767,19 +767,38 @@ def _mark_of(artifact):
     return raw.get("type") if isinstance(raw, dict) else raw
 
 
+def _setting(config, path):
+    """The value at a dotted path under a visualization config's settings, or None."""
+    node = config.get("settings") or {}
+    for part in path.split("."):
+        node = node.get(part) if isinstance(node, dict) else None
+    return node
+
+
 def _described(want):
     parts = [f"mark={want['mark']!r}"] if want.get("mark") else []
     if want.get("titleContains"):
         parts.append(f"title containing {want['titleContains']!r}")
+    if want.get("plugin"):
+        parts.append(f"plugin {want['plugin']!r}")
+    if want.get("dataset"):
+        parts.append(f"dataset {want['dataset']!r}")
+    for path, value in (want.get("settingsContain") or {}).items():
+        parts.append(f"settings.{path} containing {value!r}")
     return " and ".join(parts) or "that description"
 
 
 def _inventory(made):
-    return [{"kind": a.get("kind"), "mark": _mark_of(a), "title": a.get("title")} for a in made] or "nothing"
+    def entry(a):
+        if a.get("kind") == "visualization":
+            return {"kind": "visualization", "plugin": a.get("visualization"), "settings": a.get("settings")}
+        return {"kind": a.get("kind"), "mark": _mark_of(a), "title": a.get("title")}
+
+    return [entry(a) for a in made] or "nothing"
 
 
 def _artifacts(spec, run, failures, exercised):
-    """Charts routed to the shell: kind, and whether the spec references or embeds."""
+    """Artifacts routed to the shell: kind, a chart's spec, a visualization's config."""
     if not spec:
         return
     exercised.add("artifacts")
@@ -797,6 +816,15 @@ def _artifacts(spec, run, failures, exercised):
         if want.get("titleContains"):
             needle = want["titleContains"].lower()
             matches = [a for a in matches if needle in (a.get("title") or "").lower()]
+        # A visualization artifact carries the whole config it renders, saved or only shown.
+        if want.get("plugin"):
+            plugins = [want["plugin"]] if isinstance(want["plugin"], str) else list(want["plugin"])
+            matches = [a for a in matches if a.get("visualization") in plugins]
+        if want.get("dataset"):
+            dataset = _resolve_staged(want["dataset"], run)
+            matches = [a for a in matches if a.get("dataset_id") == dataset]
+        for path, value in (want.get("settingsContain") or {}).items():
+            matches = [a for a in matches if str(value) in str(_setting(a, path) or "")]
         if not matches:
             failures.append(
                 Failure(
@@ -1170,9 +1198,7 @@ def _visualization(spec, run, failures, exercised):
     for path, wanted in (spec.get("settingsContain") or {}).items():
         seen = set()
         for v in matching:
-            node = ((v.get("latest_revision") or {}).get("config") or {}).get("settings") or {}
-            for part in path.split("."):
-                node = node.get(part) if isinstance(node, dict) else None
+            node = _setting((v.get("latest_revision") or {}).get("config") or {}, path)
             if node is not None:
                 seen.add(str(node))
         if not any(str(wanted) in s for s in seen):
