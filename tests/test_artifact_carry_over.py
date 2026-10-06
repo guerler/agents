@@ -13,20 +13,33 @@ CHART = {"kind": "vega-lite", "title": "Bar Chart"}
 TABLE = {"kind": "vega-lite", "title": "Follow-up"}
 
 
+def result(artifacts, text="ok"):
+    """A tool result carrying `artifacts`, and the answer after it, as entries."""
+    entries = [{"kind": "pi.user", "model": [{"role": "user", "content": text}]}]
+    if artifacts:
+        call = {"type": "toolCall", "id": "c1", "name": "vega_dataset", "arguments": {}}
+        entries.append({"kind": "pi.assistant", "model": [{"role": "assistant", "content": [call]}]})
+        tool = {"role": "toolResult", "toolCallId": "c1", "toolName": "vega_dataset", "content": []}
+        entries.append({"kind": "pi.tool-result", "model": [{**tool, "details": {"artifacts": artifacts}}]})
+    entries.append(
+        {"kind": "pi.assistant", "model": [{"role": "assistant", "content": [{"type": "text", "text": "done"}]}]}
+    )
+    return entries
+
+
 class Session:
     """A session that charts on its first turn, and follows up once with another chart."""
 
     def __init__(self):
         self.asked = []
 
-    async def turn(self, text, on_event=None):
+    async def turn(self, text):
         self.asked.append(text)
-        made = [CHART] if len(self.asked) == 1 else []
-        return {"new_transcript": [], "transcript": [], "artifacts": made, "steps": 1, "max_steps": 100}
+        return {"status": "done", "entries": result([CHART] if len(self.asked) == 1 else [], text)}
 
-    async def settle(self, timeout, on_event=None):
-        follow = {"text": "[Olit automatic Galaxy follow-up]", "artifacts": [TABLE], "steps": 1}
-        return {"settled": [{}], "pending": 0, "follow_ups": [follow] if len(self.asked) == 1 else []}
+    async def settle(self, timeout):
+        follow = result([TABLE], "[Olit automatic Galaxy follow-up]") if len(self.asked) == 1 else []
+        return {"settled": [{}], "pending": 0, "entries": follow}
 
     async def export(self):
         return {"session": {"id": "s1"}}
@@ -36,7 +49,7 @@ def drive(monkeypatch, inputs, staged=None):
     monkeypatch.setattr(harness, "_empty_history", lambda config, scenario: "history1")
     session = Session()
     scenario = {"id": "carry-over", "inputs": inputs}
-    run = asyncio.run(harness._drive(scenario, session, {}, staged))
+    run = asyncio.run(harness._drive(scenario, session, {"max_steps": 100}, staged))
     return session, run
 
 

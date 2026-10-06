@@ -130,9 +130,10 @@ BREAKS = [
         family="chatReply",
         why="the assistant's words never reach the transcript, so the user is answered with "
         "silence. Sinks every scenario, so it is only pointed at the canary",
-        path="src/agent/report.ts",
-        find='      const out: ChatMessage = { role: "assistant", content: contentText(m.content) || null };\n',
-        replace='      const out: ChatMessage = { role: "assistant", content: null }; // FALSIFY: reply dropped\n',
+        path="src/agent/model.ts",
+        find="        out.end(await stream.result());\n",
+        replace="        const m = await stream.result(); // FALSIFY: reply dropped\n"
+        '        out.end({ ...m, content: m.content.filter((c) => c.type !== "text") });\n',
         scenarios=["smoke-answers"],
         expect=["messages.repliesInChat", "run.noModelOutput"],
     ),

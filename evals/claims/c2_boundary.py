@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(EV))
 
 from lib.assertions import _lineage_intact
 from lib.harness import Session
+from lib.scripted import scripted, tool_results
 from lib.tooltests import Galaxy
 
 G = Galaxy(os.environ["GALAXY_URL"], os.environ["GALAXY_API_KEY"])
@@ -53,24 +54,27 @@ staged = {"galaxy": G, "history_id": target, "dataset_ids": {"local.tabular": lo
 
 # --- observation 1: the product guard, through the agent's own run_tool --------------
 async def submit_foreign():
-    session = await Session(
+    call = (
+        "run_tool",
         {
-            "galaxy_root": os.environ["GALAXY_URL"].rstrip("/") + "/",
-            "galaxy_key": os.environ["GALAXY_API_KEY"],
-            "ai_provider": "galaxy",
-        }
-    ).init()
-    try:
-        return await session.call(
-            "run_tool",
+            "history_id": target,
+            "tool_id": "addValue",
+            "inputs": {"input": {"src": "hda", "id": foreign_ds}, "exp": "7"},
+        },
+    )
+    with scripted([[call]]) as url:
+        session = await Session(
             {
-                "history_id": target,
-                "tool_id": "addValue",
-                "inputs": {"input": {"src": "hda", "id": foreign_ds}, "exp": "7"},
-            },
-        )
-    finally:
-        await session.close()
+                "galaxy_root": os.environ["GALAXY_URL"].rstrip("/") + "/",
+                "galaxy_key": os.environ["GALAXY_API_KEY"],
+                "ai_base_url": url,
+                "ai_model": "scripted",
+            }
+        ).init()
+        try:
+            return tool_results((await session.turn("submit it"))["entries"])[0]
+        finally:
+            await session.close()
 
 
 out = asyncio.run(submit_foreign())

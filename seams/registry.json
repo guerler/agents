@@ -969,27 +969,23 @@
         "upstream": {
           "keep_recent_tokens": 20000,
           "max_steps": null,
-          "max_tool_result_bytes": null,
           "reserve_tokens": 16384,
           "tool_execution": "parallel"
         },
         "labels": {
           "keep_recent_tokens": "PORTED",
           "max_steps": "ADDED",
-          "max_tool_result_bytes": "ADDED",
           "reserve_tokens": "PORTED",
           "tool_execution": "DIVERGES"
         },
         "notes": {
-          "max_steps": "A backstop for an unattended tab; pi's loop is `while (true)`. Raised 40 -> 100 on 2026-09-24: cryptic-exon-q1 spent 40 steps on a real RNA-seq analysis and was still working. Configurable, and a spent budget appends a `max-steps` entry to the run's `guards`.",
-          "max_tool_result_bytes": "pi caps bash and read only and never truncates an MCP result. Olit discards a single oversized result rather than losing the turn.",
+          "max_steps": "A backstop for an unattended tab; pi's loop is `while (true)`. pi-durable's `maxTurns`; a spent budget settles the run's input `unanswered` with `turn_limit`.",
           "tool_execution": "KNOWN LIMITATION. pi runs a batch through executeToolCallsParallel unless a tool declares executionMode sequential. Olit dispatches in call order, so a batch of five reads costs five round-trips. Closing it means splitting `dispatch` into pi's sequential prepare and concurrent execute phases; the gates, the destructive-op modal and the single Pyodide namespace all sit in the prepare half. Tracked separately, not forced for parity.",
           "keep_recent_tokens": "pi-durable's compaction, configured with its own defaults; it also keeps tool results to 2000 characters in what it summarizes."
         },
         "olit": {
           "keep_recent_tokens": 20000,
           "max_steps": 100,
-          "max_tool_result_bytes": 262144,
           "reserve_tokens": 16384,
           "tool_execution": "sequential"
         }
@@ -1003,7 +999,6 @@
           "destructive-declined",
           "galaxy-poll",
           "malformed-object-id",
-          "max-steps",
           "process-refusal",
           "repeated-failure",
           "settled-question",

@@ -13,6 +13,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
 
 from . import tooltests  # noqa: E402
+from .entries import digest  # noqa: E402
 from .plan import parse_latest_plan  # noqa: E402
 from .record import recording  # noqa: E402
 
@@ -38,7 +39,7 @@ class Session:
     """One agent session in its own process, spoken to over JSON lines.
 
     The agent publishes itself as a Node module (`subject.session()`); a request is one line,
-    and a turn streams its events as lines before the line holding its result.
+    and its result is the line that answers it.
     """
 
     def __init__(self, config):
@@ -63,37 +64,28 @@ class Session:
         async for line in self._process.stderr:
             self._stderr = [*self._stderr[-(STDERR_TAIL - 1) :], line.decode(errors="replace").rstrip()]
 
-    async def _request(self, request, on_event=None):
+    async def _request(self, request):
         self._process.stdin.write((json.dumps(request) + "\n").encode())
         await self._process.stdin.drain()
-        while True:
-            line = await self._process.stdout.readline()
-            if not line:
-                tail = "\n".join(self._stderr[-10:])
-                raise RuntimeError(f"the agent exited during {request['op']}:\n{tail}")
-            reply = json.loads(line)
-            if "event" in reply:
-                if on_event:
-                    on_event(reply["event"])
-                continue
-            if "error" in reply:
-                raise RuntimeError(f"the agent refused {request['op']}: {reply['error']}")
-            return reply["result"]
+        line = await self._process.stdout.readline()
+        if not line:
+            tail = "\n".join(self._stderr[-10:])
+            raise RuntimeError(f"the agent exited during {request['op']}:\n{tail}")
+        reply = json.loads(line)
+        if "error" in reply:
+            raise RuntimeError(f"the agent refused {request['op']}: {reply['error']}")
+        return reply["result"]
 
-    async def call(self, name, args):
-        """One tool without a model, through the guards a run applies: for a claim or a drive."""
-        return await self._request({"op": "call", "name": name, "args": args})
-
-    async def turn(self, text, on_event=None):
-        """The user's message, answered: the conversation lives in the session, not here."""
-        result = await self._request({"op": "turn", "text": text}, on_event=on_event)
-        if result.get("error"):
-            raise TurnFailed(result["error"].get("message") or "the turn failed")
+    async def turn(self, text):
+        """The user's message, answered: how it settled, and the entries the run appended."""
+        result = await self._request({"op": "turn", "text": text})
+        if result.get("status") == "unanswered" and result.get("reason") not in ("turn_limit", "aborted"):
+            raise TurnFailed(digest(result.get("entries"))["error"] or result.get("reason") or "the turn failed")
         return result
 
-    async def settle(self, timeout, on_event=None):
-        """Wait for submitted work and the follow-ups it starts, as an open tab would."""
-        return await self._request({"op": "settle", "timeout": timeout}, on_event=on_event)
+    async def settle(self, timeout):
+        """Wait for submitted work and the runs its follow-ups start, as an open tab would."""
+        return await self._request({"op": "settle", "timeout": timeout})
 
     async def restart(self):
         """A tab closed and opened again with nothing stored: a new conversation on the same record."""
@@ -344,35 +336,28 @@ async def _drive(scenario, session, config, staged, waited=None):
     refused = []
     # Graded at the end; the session itself keeps them for the turns that follow.
     artifacts = []
-    seed = [{"role": "system", "content": scenario.get("systemPrompt", "")}]
-    # Every turn the run had, in the chat shape grading reads; `transcript` is the session's
-    # own view of its conversation, which a restart replaces.
-    graded = list(seed)
-    transcript = list(seed)
-    state = {"exhausted": False, "steps": 0, "cap": 0, "result": {}}
+    # Every turn the run had, in the chat shape grading reads, read off the entries it appended.
+    graded = [{"role": "system", "content": scenario.get("systemPrompt", "")}]
+    state = {"exhausted": False, "steps": 0, "last": []}
     restart_after = scenario.get("restartAfter")
     approval = scenario.get("approveWhenPlanned")
 
-    def note(ev):
-        _note(ev, tools_called, events, refused)
-
-    def absorb(text, result):
-        nonlocal transcript
-        graded.append({"role": "user", "content": text})
-        graded.extend(result.get("new_transcript") or [])
-        transcript = seed + (result.get("transcript") or [])
-        logs.extend(result.get("logs") or [])
-        artifacts.extend(result.get("artifacts") or [])
-        state["exhausted"] = state["exhausted"] or bool(result.get("exhausted"))
-        # The most any single turn needed, which is what the cap actually constrains.
-        state["steps"] = max(state["steps"], int(result.get("steps") or 0))
-        state["cap"] = int(result.get("max_steps") or 0) or state["cap"]
-        state["result"] = result
+    def absorb(entries, exhausted=False):
+        run = digest(entries)
+        graded.extend(run["chat"])
+        logs.extend(run["logs"])
+        tools_called.extend(run["tools"])
+        refused.extend(run["refused"])
+        artifacts.extend(run["artifacts"])
+        state["exhausted"] = state["exhausted"] or exhausted
+        # The most any single run needed, which is what the cap actually constrains.
+        state["steps"] = max(state["steps"], run["steps"])
+        state["last"] = run["chat"]
 
     async def turn(text):
         events.append("turn_start")
-        result = await session.turn(text, note)
-        absorb(text, result)
+        result = await session.turn(text)
+        absorb(result.get("entries"), result.get("reason") == "turn_limit")
         # Only after the turn returns: a turn that dies mid-flight must not look complete.
         events.append("turn_end")
 
@@ -382,20 +367,20 @@ async def _drive(scenario, session, config, staged, waited=None):
             events.append("session_restart")
         await turn(text)
         if staged:
-            await _settle(session, events, galaxy_wait_timeout(), waited, note, absorb)
+            await _settle(session, events, galaxy_wait_timeout(), waited, absorb)
         # One approval, only for a run that stopped at the gate; the gate itself is untouched.
-        if approval and _awaiting_approval(state["result"].get("new_transcript")):
+        if approval and _awaiting_approval(state["last"]):
             approval, text = None, scenario["approveWhenPlanned"]
             events.append("approval_sent")
             await turn(text)
             if staged:
-                await _settle(session, events, galaxy_wait_timeout(), waited, note, absorb)
+                await _settle(session, events, galaxy_wait_timeout(), waited, absorb)
     document = await session.export()
     if staged:
         # The record is the session's, named after its id, which the agent chose.
         staged["session_id"] = document["session"]["id"]
     return RunResult(
-        graded if restart_after else transcript,
+        graded,
         logs,
         tools_called,
         events=events,
@@ -403,7 +388,7 @@ async def _drive(scenario, session, config, staged, waited=None):
         exhausted=state["exhausted"],
         staged=staged,
         steps=state["steps"],
-        max_steps=state["cap"],
+        max_steps=int(config.get("max_steps") or subject.describe()["policy"]["loop"]["max_steps"]),
         config=config,
         refused=refused,
         waited=waited[0],
@@ -424,16 +409,6 @@ def _awaiting_approval(new_messages):
     )
     plan = parse_latest_plan(text)
     return bool(plan and plan.steps and len(plan.pending_steps) == len(plan.steps))
-
-
-def _note(event, sink, events=None, refused=None):
-    kind = event.get("type")
-    if events is not None and kind:
-        events.append(kind)
-    if kind == "tool_start" and event.get("name"):
-        sink.append(event["name"])
-    if kind == "tool_end" and event.get("refused") and refused is not None:
-        refused.append(event.get("name"))
 
 
 DEFAULT_TIMEOUT_MS = 150_000
@@ -701,23 +676,25 @@ def _stage_invocation(galaxy, history_id, dataset_id, spec, timeout):
     return invocation["id"], workflow_id
 
 
-async def _settle(session, events, timeout, waited, on_event, absorb):
-    """Wait for the work the session submitted and the follow-ups it delivers, as a tab would.
+async def _settle(session, events, timeout, waited, absorb):
+    """Wait for the work the session submitted and the runs its follow-ups start, as a tab would.
 
-    The session decides what to follow up on and how many times in a row; each follow-up comes
-    back as a turn of its own. Galaxy's clock, not the agent's.
+    The session decides what to follow up on and how many times in a row; the runs it started come
+    back as the entries they appended. Galaxy's clock, not the agent's.
     """
     started = time.monotonic()
     try:
-        result = await session.settle(timeout, on_event)
+        result = await session.settle(timeout)
     finally:
         waited[0] += time.monotonic() - started
     if result.get("settled"):
         events.append("work_settled")
-    for follow_up in result.get("follow_ups") or []:
+    entries = result.get("entries") or []
+    if any(e.get("kind") == "pi.user" for e in entries):
         events.append("auto_follow_up")
         events.append("turn_start")
-        if follow_up.get("error"):
-            raise TurnFailed(follow_up["error"].get("message") or "the follow-up failed")
-        absorb(follow_up["text"], follow_up)
+        run = digest(entries)
+        if run["error"]:
+            raise TurnFailed(run["error"])
+        absorb(entries)
         events.append("turn_end")

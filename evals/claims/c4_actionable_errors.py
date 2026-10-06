@@ -14,6 +14,7 @@ sys.path.insert(0, EV)
 sys.path.insert(0, os.path.dirname(EV))
 
 from lib.harness import Session
+from lib.scripted import scripted, tool_results
 from lib.tooltests import Galaxy
 
 G = Galaxy(os.environ["GALAXY_URL"], os.environ["GALAXY_API_KEY"])
@@ -37,7 +38,7 @@ wait(history, 1)
 SESSION = {
     "galaxy_root": os.environ["GALAXY_URL"].rstrip("/") + "/",
     "galaxy_key": os.environ["GALAXY_API_KEY"],
-    "ai_provider": "galaxy",
+    "ai_model": "scripted",
     "capabilities": ["llm", "local", "read", "write"],
 }
 
@@ -60,34 +61,36 @@ good = {
 
 
 async def main():
-    session = await Session(SESSION).init()
-    try:
-        # --- 1. a rejected parameter comes back with the shape the tool wants --------
-        out = await session.call("run_tool", bad)
-        helped = "Fill this template" in out["content"] and "column_set_0|other_column" in out["content"]
-        print("1. parameter rejection carries the template:", "YES" if helped else f"NO -> {out['content'][:220]}")
+    attempts = 6
+    misrouted = {"history_id": history, "tool_id": "lineage_report", "inputs": {}}
+    script = [[("run_tool", bad)]] * (1 + attempts) + [[("run_tool", misrouted)], [("run_tool", good)]]
+    with scripted(script) as url:
+        session = await Session({**SESSION, "ai_base_url": url}).init()
+        try:
+            results = tool_results((await session.turn("run the sort"))["entries"])
+        finally:
+            await session.close()
 
-        # --- 2. the same hopeless call is cut off rather than retried forever --------
-        refusals, attempts = 0, 6
-        for _ in range(attempts):
-            o = await session.call("run_tool", bad)
-            if o.get("guard") == "repeated-failure":
-                refusals += 1
-        print(
-            f"2. identical failing call refused {refusals} of {attempts} follow-up attempts:",
-            "YES" if refusals else "NO",
-        )
+    # --- 1. a rejected parameter comes back with the shape the tool wants --------
+    out = results[0]
+    helped = "Fill this template" in out["content"] and "column_set_0|other_column" in out["content"]
+    print("1. parameter rejection carries the template:", "YES" if helped else f"NO -> {out['content'][:220]}")
 
-        # --- 3. an Olit process addressed as a Galaxy tool is named -----------------
-        o = await session.call("run_tool", {"history_id": history, "tool_id": "lineage_report", "inputs": {}})
-        ok = "is an Olit tool" in o["content"]
-        print("3. misrouted 'lineage_report' is identified:", "YES" if ok else f"NO -> {o['content'][:160]}")
+    # --- 2. the same hopeless call is cut off rather than retried forever --------
+    refusals = sum(1 for o in results[1 : 1 + attempts] if o.get("guard") == "repeated-failure")
+    print(
+        f"2. identical failing call refused {refusals} of {attempts} follow-up attempts:",
+        "YES" if refusals else "NO",
+    )
 
-        # --- control: a valid call still goes through --------------------------------
-        o = await session.call("run_tool", good)
-        print("4. control, a valid call is not blocked:", "YES" if not o["is_error"] else f"NO -> {o['content'][:160]}")
-    finally:
-        await session.close()
+    # --- 3. an Olit process addressed as a Galaxy tool is named -----------------
+    o = results[1 + attempts]
+    ok = "is an Olit tool" in o["content"]
+    print("3. misrouted 'lineage_report' is identified:", "YES" if ok else f"NO -> {o['content'][:160]}")
+
+    # --- control: a valid call still goes through --------------------------------
+    o = results[2 + attempts]
+    print("4. control, a valid call is not blocked:", "YES" if not o["is_error"] else f"NO -> {o['content'][:160]}")
 
 
 asyncio.run(main())
