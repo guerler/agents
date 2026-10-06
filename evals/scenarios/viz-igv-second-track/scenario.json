@@ -59,7 +59,8 @@
       "settingsContain": {
         "locus": "chr1",
         "source.genome.id": "hg38"
-      }
+      },
+      "count": 1
     },
     "budget": {
       "maxSteps": 30,

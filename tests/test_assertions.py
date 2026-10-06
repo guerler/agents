@@ -151,3 +151,44 @@ def test_a_paused_dataset_is_not_work_the_agent_should_have_waited_for():
     queued = []
     _history({"producedDatasets": 1}, Run(["ok", "queued"]), queued, set())
     assert [f.detail for f in queued] == ["answered while output was still ['out 1']"]
+
+
+def test_a_visualization_check_holds_in_one_visualization_not_across_several():
+    from lib.assertions import _visualization
+
+    def viz(vid, settings, tracks):
+        return {
+            "id": vid,
+            "type": "igv",
+            "latest_revision": {"config": {"dataset_id": "bed", "settings": settings, "tracks": tracks}},
+        }
+
+    class FakeGalaxy:
+        def __init__(self, saved):
+            self.saved = {v["id"]: v for v in saved}
+
+        def call(self, path):
+            if path == "api/visualizations":
+                return [{"id": vid} for vid in self.saved]
+            return self.saved[path.rsplit("/", 1)[1]]
+
+    class Run:
+        def __init__(self, saved):
+            self.staged = {"galaxy": FakeGalaxy(saved), "dataset_ids": {"tracks.bed": "bed", "f.gff3": "gff"}}
+
+    spec = {
+        "referencesDataset": "$staged:tracks.bed",
+        "settingsContain": {"locus": "chr1"},
+        "tracksDataset": ["$staged:f.gff3"],
+    }
+
+    def grade(saved, extra=None):
+        failures = []
+        _visualization({**spec, **(extra or {})}, Run(saved), failures, set())
+        return [f.assertion for f in failures]
+
+    revised = viz("v1", {"locus": "chr1"}, [{"urlDataset": {"id": "gff"}}])
+    assert grade([revised]) == []
+    split = [viz("v1", {"locus": "chr1"}, []), viz("v2", {}, [{"urlDataset": {"id": "gff"}}])]
+    assert grade(split) == ["visualization.oneVisualization"]
+    assert grade([revised, viz("v2", {}, [])], {"count": 1}) == ["visualization.count"]

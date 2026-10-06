@@ -1184,6 +1184,16 @@ def _visualization(spec, run, failures, exercised):
         )
         return
 
+    # A revision in place leaves one visualization; a duplicate would satisfy the rest anyway.
+    if spec.get("count") is not None and len(matching) != spec["count"]:
+        failures.append(
+            Failure(
+                "visualization.count",
+                f"{len(matching)} saved visualizations reference the staged dataset, wanted {spec['count']}",
+                "behavior",
+            )
+        )
+
     allowed = spec.get("type")
     if allowed:
         allowed = [allowed] if isinstance(allowed, str) else list(allowed)
@@ -1266,6 +1276,29 @@ def _visualization(spec, run, failures, exercised):
                     "behavior",
                 )
             )
+
+    # Each wanted setting and track has to hold in one visualization, not across several.
+    def holds_all(v):
+        config = (v.get("latest_revision") or {}).get("config") or {}
+        settings_hold = all(
+            str(wanted) in str(_setting(config, path))
+            for path, wanted in (spec.get("settingsContain") or {}).items()
+        )
+        tracked = {_track_dataset(t) for t in config.get("tracks") or []}
+        tracks_hold = all(_resolve_staged(w, run) in tracked for w in spec.get("tracksDataset") or [])
+        return settings_hold and tracks_hold
+
+    wants = spec.get("settingsContain") or spec.get("tracksDataset")
+    met = not any(f.assertion in ("visualization.settingsContain", "visualization.tracksDataset") for f in failures)
+    if wants and met and not any(holds_all(v) for v in matching):
+        failures.append(
+            Failure(
+                "visualization.oneVisualization",
+                f"the wanted settings and tracks are split across {len(matching)} saved visualizations; "
+                "no single one holds them all",
+                "behavior",
+            )
+        )
 
 
 def _collection(spec, run, failures, exercised):
