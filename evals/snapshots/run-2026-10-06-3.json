@@ -1,0 +1,1363 @@
+{
+ "date": "2026-10-06",
+ "model": "js2-gpt-oss-120b",
+ "commit": "1f433ce1",
+ "build": "olit.022",
+ "note": "olit.022 final (1f433ce1) on pi-durable 1.0.4-olit.1, after the cleanup; errored runs replaced by reruns",
+ "runs": 92,
+ "tiers": {
+  "parity": {
+   "scenarios": 15,
+   "clean": 13,
+   "failing": 2,
+   "environment": 0
+  },
+  "grounded": {
+   "scenarios": 45,
+   "clean": 37,
+   "failing": 8,
+   "environment": 0
+  }
+ },
+ "scenarios": [
+  {
+   "scenario": "analysis-cat-two-datasets",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "get_tool_details",
+     "notebook_resume",
+     "run_tool",
+     "run_tool",
+     "run_tool",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_dataset_details",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 11
+  },
+  {
+   "scenario": "analysis-column-statistics",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "download_dataset",
+     "run_python",
+     "run_python"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "analysis-csv-columns",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "download_dataset",
+     "run_python",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "approval-leads-to-execution",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "create_history"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (21 messages, 6 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "plan.exists: no `## Plan X: <title> [routing]` block in chat"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "async-work-suspends-and-resumes",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "notebook_resume",
+     "update_page",
+     "download_dataset",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "basics-history-contents",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-instance-orientation",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_server_info",
+     "get_tool_panel",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-workflow-inventory",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "chart-unnamed-reaches-the-user",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "vega_dataset",
+     "vega_dataset",
+     "notebook_resume",
+     "update_page",
+     "notebook_resume",
+     "update_page",
+     "update_page",
+     "update_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 11
+  },
+  {
+   "scenario": "collection-from-paired-fasta",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "run_tool",
+     "organize_datasets",
+     "notebook_resume",
+     "get_collection_details",
+     "update_page",
+     "get_history_contents"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 8
+  },
+  {
+   "scenario": "collection-from-paired-reads",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "notebook_resume"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "collection-from-single-fasta",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "organize_datasets",
+     "notebook_resume",
+     "update_history",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "gate-holds-before-approval",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "gate-refuses-destructive",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "update_history"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "gtn-tutorial-completed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_fetch",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_details",
+     "get_tool_details",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "run_tool",
+     "get_tool_input_template",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details",
+     "run_tool",
+     "run_tool",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "get_tool_details",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "run_tool",
+     "search_tools_by_name",
+     "run_tool",
+     "update_page",
+     "run_tool",
+     "run_tool",
+     "get_dataset_details",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 33
+  },
+  {
+   "scenario": "gtn-tutorial-data-fetched",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_fetch",
+     "search_tools_by_name",
+     "get_tool_details",
+     "upload_file_from_url",
+     "notebook_resume",
+     "run_tool",
+     "get_dataset_details",
+     "get_job_details",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_dataset_details",
+     "get_page",
+     "update_page",
+     "search_tools_by_name",
+     "get_tool_details",
+     "run_tool",
+     "get_page",
+     "get_job_details",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_details",
+     "get_tool_details",
+     "run_tool",
+     "run_tool",
+     "get_job_details",
+     "get_job_details",
+     "get_job_details",
+     "update_page",
+     "get_page",
+     "get_page",
+     "update_page",
+     "get_page",
+     "get_dataset_details",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 18
+  },
+  {
+   "scenario": "instance-tool-count",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_tool_panel"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "iwc-question-finds-a-workflow",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details",
+     "get_history_contents",
+     "get_iwc_workflow_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "notices-an-empty-result",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "picks-something-and-runs-it",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_search",
+     "gtn_fetch",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "gtn_search",
+     "get_dataset_details",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (33 messages, 2 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "history.producedDatasets: 0 successful dataset(s) beyond the staged input, wanted 1; the work did not happen on Galaxy",
+    "anyOf: no acceptable outcome: never called invoke_workflow | never called run_tool"
+   ],
+   "verdict": "fail",
+   "max_steps": 16
+  },
+  {
+   "scenario": "plan-collections-tags-datatype",
+   "tier": "grounded",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "record-page-holds-content",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "refuses-to-analyse-failed-data",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "report-page-holds-content",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "create_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "reports-a-failed-invocation",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_invocations"
+    ]
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /(?i)Filter1|filter on a missing column/"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "reports-a-failed-job",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "research-glucose-bmi",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "download_dataset",
+     "run_python",
+     "run_tool",
+     "vega_dataset",
+     "vega_dataset",
+     "vega_dataset",
+     "get_history_contents",
+     "notebook_resume",
+     "update_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 8
+  },
+  {
+   "scenario": "session-resumed-after-close",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "search_tools_by_name",
+     "get_tool_details",
+     "notebook_resume",
+     "run_tool",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_dataset_details",
+     "run_tool",
+     "get_dataset_details",
+     "get_job_details",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_page",
+     "get_page",
+     "search_tools_by_name",
+     "get_dataset_details",
+     "get_tool_details"
+    ]
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /\\bUnited\\s+States\\b/",
+    "chatText.mustMatch: chat never matched /6[\\s,   ]?093/"
+   ],
+   "verdict": "fail",
+   "max_steps": 14
+  },
+  {
+   "scenario": "smoke-answers",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "udt-container-tag-resolves",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ]
+   ],
+   "failures": [
+    "container.resolves: 'quay.io/biocontainers/pandas:2.2.2--pyhd8ed1ab_0' does not exist; the tag reads as real and would fail to pull"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "upload-failure-is-noticed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "upload-lands-a-usable-datatype",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "get_dataset_details",
+     "get_dataset_details",
+     "notebook_resume",
+     "get_job_details"
+    ]
+   ],
+   "failures": [
+    "chatText.mustMatch: chat never matched /(?i)(\\b(5|five)\\b[^.\\n]{0,24}\\bcolumns?\\b|\\bcolumns?\\b[^.\\n]{0,24}\\b(5|five)\\b)/"
+   ],
+   "verdict": "fail",
+   "max_steps": 6
+  },
+  {
+   "scenario": "vega-density-distribution",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "vega_dataset",
+     "notebook_resume"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "vega-layered-spec",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "run_tool",
+     "notebook_resume",
+     "run_tool",
+     "vega_dataset",
+     "vega_dataset",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 9
+  },
+  {
+   "scenario": "vega-native-aggregate",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "notebook_resume",
+     "vega_dataset",
+     "vega_dataset",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "vega-references-dataset",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "run_tool",
+     "vega_dataset",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "viz-igv-genome-entry",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "get_visualization_details",
+     "get_visualization_options",
+     "get_visualization_options",
+     "save_visualization",
+     "save_visualization",
+     "get_visualization_options",
+     "get_visualization_options",
+     "get_visualization_options",
+     "get_dataset_details",
+     "get_visualization_options",
+     "get_visualization_options",
+     "get_visualization_options",
+     "show_visualization",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [
+    "visualization.exists: no saved visualization references the staged dataset; the chart was never written to Galaxy"
+   ],
+   "verdict": "fail",
+   "max_steps": 17
+  },
+  {
+   "scenario": "viz-igv-second-track",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "save_visualization",
+     "notebook_resume",
+     "update_page",
+     "skills_fetch",
+     "get_visualization_details",
+     "get_visualization",
+     "save_visualization",
+     "save_visualization",
+     "get_visualization_options",
+     "save_visualization",
+     "update_page",
+     "get_visualization_options",
+     "save_visualization",
+     "run_python",
+     "get_visualization_options",
+     "get_visualization_options",
+     "save_visualization",
+     "save_visualization",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 9
+  },
+  {
+   "scenario": "viz-plotly-binds-columns",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "save_visualization",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "viz-plotly-tracks-index-columns",
+   "tier": "grounded",
+   "runs": [
+    "fail"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "list_visualizations",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [
+    "run.noModelOutput: no assistant text (19 messages, 6 events, status None) -- check credentials and provider before reading this as a capability failure",
+    "messages.repliesInChat: the turn produced no chat text",
+    "toolCalls.mustInclude: never called save_visualization with {'dataset_id': 'fc587326c65e935c'}",
+    "artifacts.kind: no visualization artifact was produced",
+    "visualization.exists: no saved visualization references the staged dataset; the chart was never written to Galaxy"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "viz-plugins-listed",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_histories",
+     "list_visualizations"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "viz-structure-saved",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_visualization_details",
+     "list_visualizations",
+     "get_visualization_details",
+     "notebook_resume",
+     "save_visualization",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "viz-structure-shown",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "notebook_resume",
+     "show_visualization",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "workflow-runs-end-to-end",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows",
+     "get_workflow_input_template",
+     "invoke_workflow",
+     "get_history_contents",
+     "get_history_contents",
+     "get_job_details",
+     "get_job_details",
+     "notebook_resume",
+     "get_job_details",
+     "get_job_details",
+     "get_job_details",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 13
+  },
+  {
+   "scenario": "workflow-select-uses-a-legal-value",
+   "tier": "grounded",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows",
+     "get_workflow_input_template",
+     "invoke_workflow",
+     "search_tools_by_name",
+     "run_tool",
+     "get_dataset_details",
+     "get_job_details",
+     "invoke_workflow",
+     "notebook_resume",
+     "update_page",
+     "cancel_workflow_invocation",
+     "invoke_workflow",
+     "get_invocations",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 14
+  },
+  {
+   "scenario": "behavior-underspecified-ask",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch",
+     "run_python",
+     "run_python"
+    ],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "execution-after-approval",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_tool_details",
+     "notebook_resume",
+     "run_tool",
+     "update_page",
+     "get_page",
+     "update_page",
+     "get_dataset_details",
+     "get_dataset_details",
+     "get_page",
+     "update_page"
+    ],
+    [
+     "get_tool_details",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "get_job_details",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page",
+     "update_page",
+     "update_page",
+     "get_page",
+     "update_page",
+     "update_page",
+     "get_page"
+    ],
+    [
+     "get_tool_details",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 11
+  },
+  {
+   "scenario": "plan-consults-iwc",
+   "tier": "parity",
+   "runs": [
+    "fail",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details"
+    ],
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details",
+     "get_tool_details"
+    ]
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called recommend_iwc_workflows"
+   ],
+   "verdict": "fail",
+   "max_steps": 4
+  },
+  {
+   "scenario": "plan-creation-metagenomics",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "plan-creation-pharmacogenomics",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_search<|channel|>commentary",
+     "gtn_search",
+     "gtn_search"
+    ],
+    [
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "skills_fetch"
+    ],
+    [
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 13
+  },
+  {
+   "scenario": "plan-creation-rnaseq",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "plan-creation-scrna-celltypes",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    [
+     "gtn_search",
+     "gtn_fetch"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "plan-creation-somatic-variants",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "routing-clear-galaxy",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "routing-clear-local",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "smoke-echo",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "standing-instructions-orbit-md",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "udt-authoring-container",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "fail",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [],
+    [
+     "skills_fetch"
+    ]
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called skills_fetch with {'path': 'udt-authoring'}",
+    "chatText.mustMatch: chat never matched /container:\\s*[\"']?(?:docker://)?(?:quay\\.io/biocontainers/|depot\\.galaxyproject\\.org/singularity/)/"
+   ],
+   "verdict": "fail",
+   "max_steps": 2
+  },
+  {
+   "scenario": "udt-authoring-select-params",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "udt-authoring-threads",
+   "tier": "parity",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch",
+     "gtn_search",
+     "gtn_search",
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch",
+     "gtn_search",
+     "gtn_search",
+     "skills_fetch",
+     "run_python"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  }
+ ]
+}
