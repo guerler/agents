@@ -2,6 +2,7 @@
  "date": "2026-10-06",
  "model": "js2-gpt-oss-120b",
  "commit": "97cfcbe5",
+ "build": "olit.021",
  "note": "olit.021 baseline (97cfcbe5, before the final noteFailure and vega matcher fixes); 9 errored runs replaced by reruns, 3 still environment",
  "runs": 92,
  "tiers": {

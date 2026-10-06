@@ -2,6 +2,7 @@
  "date": "2026-10-05",
  "model": "js2-gpt-oss-120b",
  "commit": "13feb751",
+ "build": "olit.020",
  "note": "Fresh baseline after olit.016-.020 (galaxy-ops ops.0, galaxy-charts 0.1.17); 9 provider-error runs (Jetstream2 'Unknown role: final', one hang) replaced by reruns",
  "runs": 92,
  "tiers": {

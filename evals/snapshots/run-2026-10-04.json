@@ -2,6 +2,7 @@
  "date": "2026-10-04",
  "model": "js2-gpt-oss-120b",
  "commit": "c79e7104",
+ "build": "olit.015",
  "note": "first full run on olit.015, measuring three behavioural fixes from the 2026-10-03 loom sync: run_user_tool jobs now watched, Galaxy results kept when a Stop or the turn cap pauses delivery, and the collection-repair rule in VERIFICATION. Sessions and record pages left on for manual inspection. cryptic-exon-q1 excluded deliberately (4h budget, belongs in a run of its own). The five submission-capture-* failures are structural, not behavioural: they forbid turn_start to prove loom's harness registers a submission without the agent, and this harness always emits it; all five are NOT_PORTABLE from now on, so the next snapshot carries 61 scenarios rather than 65. plan-consults-iwc, udt-authoring-container and udt-authoring-select-params each went both ways across their 3 runs and cannot be read as a single verdict.",
  "runs": 97,
  "tiers": {

@@ -2,6 +2,7 @@
  "date": "2026-10-06",
  "model": "js2-gpt-oss-120b",
  "commit": "59fdce13",
+ "build": "olit.022",
  "note": "olit.022 on pi-durable; errored runs replaced by reruns",
  "runs": 92,
  "tiers": {

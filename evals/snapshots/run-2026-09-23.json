@@ -2,6 +2,7 @@
  "date": "2026-09-23",
  "model": "js2-gpt-oss-120b",
  "commit": "39db97e1",
+ "build": "olite.020",
  "note": "olite.020: provider parity with Orbit's key-based set plus custom endpoints, artifacts owned by the shell and persisted, harmony control tokens kept out of the transcript, gzipped-FASTA collections graded against Galaxy, and a loom prompt sync that replaced 'confirm scope' with 'act within the user's authorized scope'. Three scenarios added since the last snapshot: collection-from-paired-fasta, collection-from-single-fasta, chart-unnamed-reaches-the-user.",
  "runs": 98,
  "tiers": {

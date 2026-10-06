@@ -2,6 +2,7 @@
  "date": "2026-09-21",
  "model": "js2-gpt-oss-120b",
  "commit": "7d89d0ee",
+ "build": "olite.017",
  "note": "olite.017 (#197 merged plus its review fixes); execution-after-approval ran against a local loom change naming the dataset by position, so that one parity scenario is not comparable to earlier runs Re-tiered 2026-09-22: plan-collections-tags-datatype is an Olit scenario that had been sitting untracked in the loom checkout, so it was counted as parity; it is grounded.",
  "runs": 74,
  "tiers": {

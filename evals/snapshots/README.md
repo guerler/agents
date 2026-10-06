@@ -30,3 +30,10 @@ reads as failing rather than being averaged away.
 
 `tools` holds one list per run, in call order. It is what shows the route the agent took, so a
 scenario that starts passing for a different reason is visible rather than just green.
+
+## Overview chart
+
+`overview.svg` plots each tier's clean share across every snapshot, labelled by date and, where
+the snapshot records one, the Olit `build`. Regenerate it after ingesting a run:
+
+    python3 evals/chart.py

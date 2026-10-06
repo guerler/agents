@@ -42,6 +42,7 @@ def main():
     ap.add_argument("result", help="the suite's --json output")
     ap.add_argument("--date", help="override the run date (default: the file's mtime)")
     ap.add_argument("--commit", help="override the olit commit this ran against")
+    ap.add_argument("--build", help="the olit branch this ran against, e.g. olit.022")
     ap.add_argument("--note", default="", help="one line on what was being tested")
     ap.add_argument("--out", default=None, help=f"where the snapshot lands (default: {OUT_DIR})")
     args = ap.parse_args()
@@ -106,6 +107,7 @@ def main():
         "date": date,
         "model": raw[0].get("model"),
         "commit": args.commit or git_commit(),
+        **({"build": args.build} if args.build else {}),
         "note": args.note,
         "runs": len(raw),
         "tiers": tiers,
