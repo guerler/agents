@@ -88,8 +88,5 @@ def test_every_proven_family_is_a_live_break():
 
 def test_every_break_names_scenarios_that_exist():
     scenarios = {path.name for path in (ROOT / "evals" / "scenarios").iterdir()}
-    missing = {
-        brk.family: [name for name in brk.scenarios if name not in scenarios]
-        for brk in _falsify().BREAKS
-    }
+    missing = {brk.family: [name for name in brk.scenarios if name not in scenarios] for brk in _falsify().BREAKS}
     assert {family: names for family, names in missing.items() if names} == {}

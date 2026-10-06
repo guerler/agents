@@ -1281,8 +1281,7 @@ def _visualization(spec, run, failures, exercised):
     def holds_all(v):
         config = (v.get("latest_revision") or {}).get("config") or {}
         settings_hold = all(
-            str(wanted) in str(_setting(config, path))
-            for path, wanted in (spec.get("settingsContain") or {}).items()
+            str(wanted) in str(_setting(config, path)) for path, wanted in (spec.get("settingsContain") or {}).items()
         )
         tracked = {_track_dataset(t) for t in config.get("tracks") or []}
         tracks_hold = all(_resolve_staged(w, run) in tracked for w in spec.get("tracksDataset") or [])
