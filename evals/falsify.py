@@ -201,10 +201,10 @@ BREAKS = [
         family="visualizationSpared",
         why="showing a visualization saves one anyway, the behaviour the show/save split exists " "to end",
         path="src/agent/visualizations.ts",
-        find="  const params = { visualization: name, dataset_id: a.dataset_id, ...EMBED };",
+        find="  return {\n    shown: true,",
         replace='  await galaxy.post("api/visualizations", { type: name, title, config: { dataset_id: '
         "a.dataset_id } }); // FALSIFY: showing saves\n"
-        "  const params = { visualization: name, dataset_id: a.dataset_id, ...EMBED };",
+        "  return {\n    shown: true,",
         scenarios=["viz-structure-shown"],
         expect=["visualization.absent"],
     ),
