@@ -24,6 +24,8 @@ from .record import recording  # noqa: E402
 LINE_LIMIT = 1 << 30
 # What a failed session said last, kept for the error a run reports.
 STDERR_TAIL = 40
+# The entries a run appends; anything settle hands back holding one is a follow-up run.
+FOLLOW_UP_KINDS = {"pi.user", "pi.assistant", "pi.tool-result"}
 
 
 class TurnFailed(Exception):
@@ -690,7 +692,9 @@ async def _settle(session, events, timeout, waited, absorb):
     if result.get("settled"):
         events.append("work_settled")
     entries = result.get("entries") or []
-    if any(e.get("kind") == "pi.user" for e in entries):
+    # A follow-up queued while the turn was still streaming hands its user entry back with that
+    # turn, so its run arrives here without one; it is still a run to grade.
+    if any(e.get("kind") in FOLLOW_UP_KINDS for e in entries):
         events.append("auto_follow_up")
         events.append("turn_start")
         run = digest(entries)
