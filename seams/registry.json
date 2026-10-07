@@ -23,7 +23,7 @@
         "file": "extensions/loom/context.ts",
         "symbol": "buildTesterIdBlock",
         "condition": "emitted when a tester id is configured",
-        "fingerprint": "77a4832807eeee0b"
+        "fingerprint": "ef3bbad7f30a85dc"
       },
       "olit": null,
       "label": "NA",
@@ -84,7 +84,7 @@
         "file": "extensions/loom/context.ts",
         "symbol": "buildPlanConventionBlock",
         "condition": "unconditional; `omitAnchors` varies by model family",
-        "fingerprint": "7cd8e64165fb6a42"
+        "fingerprint": "75624289a6a84c6c"
       },
       "olit": {
         "file": "src/agent/prompt.ts",
@@ -161,7 +161,7 @@
         "file": "extensions/loom/context.ts",
         "symbol": "buildGalaxyContextBlock",
         "condition": "suppressed in local mode; otherwise emits a CONNECTED or a NOT CONNECTED variant",
-        "fingerprint": "93cca7c23db94506"
+        "fingerprint": "72b56815b87aebe4"
       },
       "olit": {
         "file": "src/agent/prompt.ts",
@@ -246,7 +246,7 @@
         "symbol": "buildGalaxyContextBlock",
         "section": "Getting data into a Galaxy history",
         "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
-        "fingerprint": "02c67ea0a2f74b51"
+        "fingerprint": "28a5466dbc1d2ded"
       },
       "olit": {
         "file": "src/agent/prompt.ts",
@@ -263,7 +263,7 @@
         "symbol": "buildGalaxyContextBlock",
         "section": "Invoking a Galaxy workflow",
         "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
-        "fingerprint": "99060782a6586f4c"
+        "fingerprint": "273deab1823c2b5b"
       },
       "olit": {
         "file": "src/agent/prompt.ts",
@@ -280,7 +280,7 @@
         "symbol": "buildGalaxyContextBlock",
         "section": "Finding a community workflow (IWC)",
         "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
-        "fingerprint": "72e65b4f0d1ca93a"
+        "fingerprint": "f349db20e33382fe"
       },
       "olit": {
         "file": "src/agent/prompt.ts",
@@ -314,7 +314,7 @@
         "symbol": "buildGalaxyContextBlock",
         "section": "Drafting a new plan",
         "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
-        "fingerprint": "300a0a18c1129362"
+        "fingerprint": "c36efa9c3e07b8f9"
       },
       "olit": {
         "file": "src/agent/prompt.ts",
@@ -345,7 +345,7 @@
         "symbol": "buildGalaxyContextBlock",
         "section": "Uploading local data",
         "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
-        "fingerprint": "c260958cadcd8b38"
+        "fingerprint": "9a1c57663ab0e966"
       },
       "olit": null,
       "label": "NA",
@@ -359,7 +359,7 @@
         "symbol": "buildGalaxyContextBlock",
         "section": "If a Galaxy tool reports it's not connected",
         "condition": "inherits buildGalaxyContextBlock: live connection, not local mode",
-        "fingerprint": "bd6ab9ece9b33ee7"
+        "fingerprint": "4c0afd4a7b32796b"
       },
       "olit": null,
       "label": "MISSING",
@@ -373,7 +373,7 @@
         "symbol": "buildGalaxyContextBlock",
         "branch": "NOT CONNECTED (shell-disabled branch)",
         "condition": "emitted instead of the Galaxy guidance when credentials are absent",
-        "fingerprint": "93cca7c23db94506"
+        "fingerprint": "72b56815b87aebe4"
       },
       "olit": {
         "file": "src/agent/prompt.ts",
@@ -424,8 +424,8 @@
         "fingerprint": "7bccf8818f81058e"
       },
       "olit": {
-        "file": "src/agent/extension.ts",
-        "symbol": "withRecord"
+        "file": "src/agent/notebook.ts",
+        "symbol": "excerpt"
       },
       "label": "PORTED",
       "note": "olit has one project-data channel (the record); loom has two."
@@ -545,10 +545,10 @@
       "fingerprints": {
         "behavior-underspecified-ask": "464ffdbc1b2a40fa",
         "evidence-gate-in-progress-contradiction": "bd85feee53dbfe9f",
-        "execution-after-approval": "4f91756812c68e7b",
+        "execution-after-approval": "466b10aed9e1d52e",
         "init-gate-galaxy-no-connection": "e2f5bb5abb65d895",
-        "iwc-find-from-question": "95e29b92bd78a4f5",
-        "plan-consults-iwc": "0d403ab215fdba25",
+        "iwc-find-from-question": "a464cf182e960f2e",
+        "plan-consults-iwc": "7813f3d538101152",
         "plan-creation-metagenomics": "a3222cd6848b9a72",
         "plan-creation-pharmacogenomics": "7c1b7c31c877b8fd",
         "plan-creation-rnaseq": "9c7d65e9da1d519e",
@@ -560,10 +560,10 @@
         "standing-instructions-orbit-md": "d51358d5a4be2ba3",
         "standing-instructions-tool-preference": "6ab245106ec2dab8",
         "submission-capture-local-upload": "15eb42f76da6ffa5",
-        "submission-capture-mapped-over-jobs": "cb8e642c1ab6458d",
-        "submission-capture-refuses-to-guess": "68a788b9493fa8d3",
-        "submission-capture-registers-every-tool": "46069b51128e7a18",
-        "submission-capture-udt-provenance": "9b4c329dcfcb875d",
+        "submission-capture-mapped-over-jobs": "01cf0934383b87ae",
+        "submission-capture-refuses-to-guess": "e3da76ebd34f040e",
+        "submission-capture-registers-every-tool": "dc7e70af18b8ba6f",
+        "submission-capture-udt-provenance": "d82391eb8c7d9222",
         "udt-authoring-container": "ed21826b2bf647b4",
         "udt-authoring-select-params": "33252c01161252a5",
         "udt-authoring-threads": "15e165c9ca7dfcaa"
@@ -581,14 +581,14 @@
         "persist": "03031f75a322cf6a",
         "report": "e6c2179eac12d3a6",
         "runner": "35e581629b5b2f09",
-        "types": "d99cb8490f11b620"
+        "types": "ac5fdda9d82a87c5"
       }
     },
     "loom_modules": {
       "source": "loom extensions/loom",
       "note": "inventory, not a parity list: an added or changed module must be classified as relevant, NA, or needing investigation",
       "classified": {
-        "galaxy-submission": "PORTED: reading Galaxy ids out of a submission result, as extractWatched in src/invocations.ts. Auditing it against loom's SUBMISSION_TOOLS found run_user_tool unwatched: a UDT job was submitted and never followed, while the prompt promised the model it would be told when a run finished.",
+        "galaxy-submission": "PORTED: reading Galaxy ids out of a submission result, as watchedFrom in src/agent/watch.ts. 2026-10-07: loom's delta is pi 1.0's built-in MCP replacing pi-mcp-adapter (where the untruncated result and the full-output file live); olit reads galaxy-ops results in process and has neither. Auditing it against loom's SUBMISSION_TOOLS found run_user_tool unwatched: a UDT job was submitted and never followed, while the prompt promised the model it would be told when a run finished.",
         "galaxy-submission-capture": "NA: auto-writes `loom-job`/`loom-invocation` notebook blocks so the poller has something to read. olit keeps no second store -- the Page is the record and the model writes it -- and its watcher holds the submitted ids in memory instead, so there is nothing to register.",
         "harness-block-fields": "NA: the harness-owned fields of those notebook blocks.",
         "galaxy-udt-block": "NA: `loom-udt` notebook blocks pointing at a tool definition.",
@@ -597,8 +597,8 @@
         "context": "PORTED: the system prompt, tracked block by block in `seams`",
         "galaxy-page-markdown-guidance": "PORTED: tracked in `seams`",
         "sra-import-gate": "PORTED: brain/olit/loop/sra_import_gate.py",
-        "confusables": "PORTED: brain/olit/loop/confusables.py",
-        "secret-redaction": "PORTED: brain/olit/loop/secret_redaction.py",
+        "confusables": "PORTED: notFoundHint in src/agent/guards.ts",
+        "secret-redaction": "PORTED: redact in src/agent/guards.ts, over every credential olit holds (the model key and the Galaxy key). 2026-10-07: loom added pi's on-disk credential store (auth.json); olit has no such store in the browser.",
         "skills-discovery": "PORTED: the skills registry",
         "skills": "PORTED: the skills registry",
         "vendor-skills": "PORTED: skills are vendored at build time",
@@ -612,9 +612,9 @@
         "galaxy-api": "PORTED: the scoped catalog",
         "galaxy-poller": "PORTED: the job watcher",
         "galaxy-artifact-link-guidance": "PORTED: prompt.ARTIFACT_LINKS, at the tail of the chat formatting block as upstream interpolates it. Rooted at the session's own Galaxy rather than naming a server, and loom's YAML fences become olit's ```galaxy directives.",
-        "galaxy-poll-guard": "PORTED: brain/olit/loop/galaxy_poll_guard.py, with the guidance in EXECUTING_A_STEP. loom holds the repeated read for two minutes; a browser turn that sleeps shows the user nothing, so the repeat is answered from what is known instead. The shell watcher stays the only judge of what is unfinished.",
+        "galaxy-poll-guard": "PORTED: the galaxy-poll guard in src/agent/guards.ts, with the guidance in EXECUTING_A_STEP. loom holds the repeated read for two minutes; a browser turn that sleeps shows the user nothing, so the repeat is answered from what is known instead. The shell watcher stays the only judge of what is unfinished.",
         "iwc-plan-check": "MISSING by decision: loom sends one follow-up when a turn drafts a plan without having consulted IWC, to compensate for a weaker model drafting from memory. Olit keeps prompting out of the role of an enforceable invariant, and 2026-09-29 evidence for the behaviour it prevents is not yet separated from a tool-choice fault: plan-consults-iwc run 1 did consult the registry, through the substring search rather than the ranked recommend, and got nothing. Revisit when olit's own evals show a plan drafted past an applicable workflow.",
-        "skill-triggers": "PORTED: the same two hints, as confusables.py and invocation_outcome.py. Upstream consolidated them into one table; olit reaches them through its own dispatcher.",
+        "skill-triggers": "PORTED: the same two hints, as notFoundHint (guards.ts) and invocationOutcomeHint (hints.ts). Upstream consolidated them into one table; olit reaches them through its own dispatcher.",
         "dashboard-tools": "NA: no panel surface to arrange. Decided rather than deferred -- the layout is a file beside notebook.md in an analysis directory, and olit has neither. Its one pane is the artifact pane, which the shell owns.",
         "dashboard-store": "NA: the transport is a write to .loom-dashboard.json on disk.",
         "dashboard-commands": "NA: a slash command over the dashboard file.",
@@ -655,16 +655,23 @@
         "galaxy-transport-error": "NA: transport is the browser's fetch",
         "galaxy-upload-tus": "NA: tus resumable upload is a desktop concern",
         "index": "NA: extension entry point",
+        "mcp-servers": "NA: registers loom's MCP servers with pi's built-in MCP support; olit calls galaxy-ops in process and has no MCP surface.",
+        "registry": "NA for now: part of loom's unwired approval and attempt registry (design v3); revisit against olit's approval gate when loom loads it.",
+        "registry-eligibility": "NA for now: part of loom's unwired approval and attempt registry (design v3); revisit against olit's approval gate when loom loads it.",
+        "registry-import": "NA for now: part of loom's unwired approval and attempt registry (design v3); revisit against olit's approval gate when loom loads it.",
+        "registry-lock": "NA for now: part of loom's unwired approval and attempt registry (design v3); revisit against olit's approval gate when loom loads it.",
+        "registry-schema": "NA for now: part of loom's unwired approval and attempt registry (design v3); revisit against olit's approval gate when loom loads it.",
+        "registry-submitter": "NA for now: part of loom's unwired approval and attempt registry (design v3); revisit against olit's approval gate when loom loads it.",
         "types": "NA: type declarations"
       },
       "fingerprints": {
-        "activity-hooks": "49e2e292be3b6a2f",
+        "activity-hooks": "19dcf2ee51d1dc33",
         "activity": "98ea71250babd65c",
         "agent-dir": "056f2e66c245f789",
         "auto-resume": "94d9a52df1edb497",
         "config": "d2e7b24e04ed9d95",
-        "confusables": "aed953bee212722a",
-        "context": "4e6725b214ad1423",
+        "confusables": "58e2658fb486a880",
+        "context": "162c855f9fd83889",
         "dashboard-commands": "cf9dad3f1f544788",
         "dashboard-store": "22bc75ea0d78122e",
         "dashboard-tools": "e3c887f16bd7437f",
@@ -675,9 +682,9 @@
         "feedback": "1a429f7e97cc8a47",
         "galaxy-api": "63421097f8f0180d",
         "galaxy-artifact-link-guidance": "befb44f2382abf28",
-        "galaxy-cred-drift": "0ad773b882e88a17",
+        "galaxy-cred-drift": "57afec25db5155ec",
         "galaxy-job-block": "aa0daf1770d372df",
-        "galaxy-launcher-error": "fa69b108331099aa",
+        "galaxy-launcher-error": "1f02b7f7351f1ddc",
         "galaxy-live-source": "7217776a6775b86f",
         "galaxy-markdown-adapter": "82f48c6acbba52b6",
         "galaxy-page-binding": "bd272b8bb15c8537",
@@ -685,31 +692,38 @@
         "galaxy-page-sync": "c3673a2d247b8a83",
         "galaxy-pages-api": "51e22b2e7fe22ed4",
         "galaxy-pages-sync": "2627adda4796f794",
-        "galaxy-poll-guard": "10abd851fc683122",
+        "galaxy-poll-guard": "ef5e4b957f134c15",
         "galaxy-poller": "780d6d9886c0a4e6",
-        "galaxy-submission-capture": "d47338e0853c09f0",
-        "galaxy-submission": "c8223bb33c3d74f1",
-        "galaxy-transport-error": "87634b3ec78ba5a9",
+        "galaxy-submission-capture": "7352632b614c4ed9",
+        "galaxy-submission": "013bf555fcb19347",
+        "galaxy-transport-error": "08731838063ca625",
         "galaxy-udt-block": "84203d57c570904e",
         "galaxy-upload-tus": "0845761fbd9fb0a9",
-        "galaxy-upload": "91d47197b943c49d",
+        "galaxy-upload": "c239bf7368b253dd",
         "git": "4ed3600ac8f3de65",
         "harness-block-fields": "74937c4687176468",
-        "index": "7a16c583c4a4c4b9",
+        "index": "c22de633f0e64528",
         "init-gate": "b33aaf70e8cb7c3a",
         "instructions-command": "1881b29570781921",
         "invocation-failure-hint": "286e412ac8f11c54",
-        "iwc-plan-check": "54a0da4d646be362",
+        "iwc-plan-check": "2a67302137655f91",
         "local-exec": "dfb5313c0690bbb6",
-        "mcp-output": "7211cbb91eb68a5f",
-        "mcp-recovery": "dfe5a63948e2c0a5",
+        "mcp-output": "1f1904fe33d701bf",
+        "mcp-recovery": "eb92ac649fbde77d",
+        "mcp-servers": "24d7a40586e836e7",
         "notebook-anchors": "5a087224a51140db",
         "notebook-writer": "e059ab9a98464ae4",
-        "profiles": "b3b806886c32cf4e",
-        "progress-updates": "7b42ac7f98100e0f",
-        "secret-redaction": "eeb2ea764aa0a037",
-        "session-lifecycle": "297d3be53dc62108",
-        "skill-triggers": "c257a4f83d40340d",
+        "profiles": "b6a593fcb6fb3e56",
+        "progress-updates": "629fd44e9e63cf5c",
+        "registry-eligibility": "bb73e985dfefd6fb",
+        "registry-import": "d44b5831b884c154",
+        "registry-lock": "1ffd9e6ede1490ff",
+        "registry-schema": "db2687001df3d3d7",
+        "registry-submitter": "a61ea405b3a15a0a",
+        "registry": "f285fd3c6894d05d",
+        "secret-redaction": "87146add270a2af4",
+        "session-lifecycle": "02159e0a048c939a",
+        "skill-triggers": "b53b9b6bb4e5a0c0",
         "skills-command": "4b4275e5ad85d8e8",
         "skills-discovery": "bc3a7b69b20193bf",
         "skills": "6012f04c0b9d55b3",
@@ -719,7 +733,7 @@
         "sync-command": "11e51f9133ccdb35",
         "tester-id-command": "9c0771cd42121de2",
         "tools-sync": "b557ca0c2aaa8942",
-        "tools": "5b3c9187b1bbe349",
+        "tools": "dec77207dbac6964",
         "types": "f244d28259805a33",
         "ui-bridge": "32d67384f9618020",
         "ulid": "16d4fb3e14d002d8",
@@ -1201,7 +1215,7 @@
           "search": "string",
           "visualization": "string!"
         },
-        "prose": "d4ef045c21184be9"
+        "prose": "0dfae52584d95219"
       },
       "get_workflow_details": {
         "params": {
@@ -1327,7 +1341,7 @@
         "params": {
           "packages": "array!"
         },
-        "prose": "9474625b57cb52b9"
+        "prose": "6b0bcab38fea7035"
       },
       "recommend_iwc_workflows": {
         "params": {
@@ -1375,7 +1389,7 @@
           "visualization": "string!",
           "visualization_id": "string"
         },
-        "prose": "c1570da1e6e43e36"
+        "prose": "e9247464006c7de8"
       },
       "search_iwc_workflows": {
         "params": {
@@ -1404,10 +1418,12 @@
       "show_visualization": {
         "params": {
           "dataset_id": "string!",
+          "settings": "object",
           "title": "string",
+          "tracks": "array",
           "visualization": "string!"
         },
-        "prose": "258784451d3926ba"
+        "prose": "edad53275c15cdf2"
       },
       "skills_fetch": {
         "params": {

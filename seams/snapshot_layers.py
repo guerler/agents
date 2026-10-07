@@ -163,7 +163,9 @@ MODULE_CLASSIFICATION = {
     # submission answers; olit's record is a Galaxy Page the model writes (audit row 6), so only
     # the id-reading half has a counterpart.
     "galaxy-submission": "PORTED: reading Galaxy ids out of a submission result, as "
-    "extractWatched in src/invocations.ts. Auditing it against loom's SUBMISSION_TOOLS found "
+    "watchedFrom in src/agent/watch.ts. 2026-10-07: loom's delta is pi 1.0's built-in MCP "
+    "replacing pi-mcp-adapter (where the untruncated result and the full-output file live); olit "
+    "reads galaxy-ops results in process and has neither. Auditing it against loom's SUBMISSION_TOOLS found "
     "run_user_tool unwatched: a UDT job was submitted and never followed, while the prompt "
     "promised the model it would be told when a run finished.",
     "galaxy-submission-capture": "NA: auto-writes `loom-job`/`loom-invocation` notebook blocks so "
@@ -178,8 +180,10 @@ MODULE_CLASSIFICATION = {
     "context": "PORTED: the system prompt, tracked block by block in `seams`",
     "galaxy-page-markdown-guidance": "PORTED: tracked in `seams`",
     "sra-import-gate": "PORTED: brain/olit/loop/sra_import_gate.py",
-    "confusables": "PORTED: brain/olit/loop/confusables.py",
-    "secret-redaction": "PORTED: brain/olit/loop/secret_redaction.py",
+    "confusables": "PORTED: notFoundHint in src/agent/guards.ts",
+    "secret-redaction": "PORTED: redact in src/agent/guards.ts, over every credential olit holds "
+    "(the model key and the Galaxy key). 2026-10-07: loom added pi's on-disk credential store "
+    "(auth.json); olit has no such store in the browser.",
     "skills-discovery": "PORTED: the skills registry",
     "skills": "PORTED: the skills registry",
     "vendor-skills": "PORTED: skills are vendored at build time",
@@ -195,7 +199,7 @@ MODULE_CLASSIFICATION = {
     "galaxy-artifact-link-guidance": "PORTED: prompt.ARTIFACT_LINKS, at the tail of the chat "
     "formatting block as upstream interpolates it. Rooted at the session's own Galaxy rather than "
     "naming a server, and loom's YAML fences become olit's ```galaxy directives.",
-    "galaxy-poll-guard": "PORTED: brain/olit/loop/galaxy_poll_guard.py, with the guidance "
+    "galaxy-poll-guard": "PORTED: the galaxy-poll guard in src/agent/guards.ts, with the guidance "
     "in EXECUTING_A_STEP. loom holds the repeated read for two minutes; a browser turn that sleeps "
     "shows the user nothing, so the repeat is answered from what is known instead. The shell "
     "watcher stays the only judge of what is unfinished.",
@@ -205,7 +209,8 @@ MODULE_CLASSIFICATION = {
     "behaviour it prevents is not yet separated from a tool-choice fault: plan-consults-iwc run 1 "
     "did consult the registry, through the substring search rather than the ranked recommend, and "
     "got nothing. Revisit when olit's own evals show a plan drafted past an applicable workflow.",
-    "skill-triggers": "PORTED: the same two hints, as confusables.py and invocation_outcome.py. "
+    "skill-triggers": "PORTED: the same two hints, as notFoundHint (guards.ts) and "
+    "invocationOutcomeHint (hints.ts). "
     "Upstream consolidated them into one table; olit reaches them through its own dispatcher.",
     "dashboard-tools": "NA: no panel surface to arrange. Decided rather than deferred -- the "
     "layout is a file beside notebook.md in an analysis directory, and olit has neither. Its one "
@@ -265,6 +270,23 @@ MODULE_CLASSIFICATION = {
     "galaxy-transport-error": "NA: transport is the browser's fetch",
     "galaxy-upload-tus": "NA: tus resumable upload is a desktop concern",
     "index": "NA: extension entry point",
+    "mcp-servers": "NA: registers loom's MCP servers with pi's built-in MCP support; olit calls "
+    "galaxy-ops in process and has no MCP surface.",
+    # An approval and attempt registry (loom's design v3), added 2026-10 and not yet loaded by
+    # loom's index.ts. It binds what the user approved to what the harness submitted, which is the
+    # same concern as olit's approval gate; revisit when loom wires it in.
+    **{
+        name: "NA for now: part of loom's unwired approval and attempt registry (design v3); "
+        "revisit against olit's approval gate when loom loads it."
+        for name in (
+            "registry",
+            "registry-eligibility",
+            "registry-import",
+            "registry-lock",
+            "registry-schema",
+            "registry-submitter",
+        )
+    },
     "types": "NA: type declarations",
 }
 

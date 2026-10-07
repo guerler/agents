@@ -224,7 +224,7 @@ EXTRA = [
             "setupContextInjection",
             "every turn that injects notebook or workspace context",
         ),
-        ("src/agent/session.ts", "injectRecord"),
+        ("src/agent/notebook.ts", "excerpt"),
         "PORTED",
         "olit has one project-data channel (the record); loom has two.",
     ),
