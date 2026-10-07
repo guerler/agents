@@ -205,8 +205,10 @@ BREAKS = [
         replace='  await galaxy.post("api/visualizations", { type: a.visualization, title: artifact!.title, '
         "config: { dataset_id: a.dataset_id } }); // FALSIFY: showing saves\n"
         "  return {\n    shown: true,",
+        # Graded inside anyOf, which accepts a save as well, so this shows whenever the model
+        # shows: the show branch then finds a saved visualization and the save branch no save.
         scenarios=["viz-structure-shown"],
-        expect=["visualization.absent"],
+        expect=["anyOf"],
     ),
     Break(
         family="visualizationTracks",
