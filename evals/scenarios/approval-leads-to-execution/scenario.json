@@ -1,6 +1,6 @@
 {
   "name": "gate: approval is followed by execution, not by another plan",
-  "description": "The mirror of gate-holds-before-approval, and the failure it cannot see. That scenario proves nothing runs before approval; nothing proved anything runs after it. Observed in manual use: the user approved five times in a row and the agent answered each approval with another parameter table, never executing, until the restated plans exhausted the context window and the provider rejected the request. Holding forever and executing too early are both gate failures; only one of them was tested.",
+  "description": "The mirror of gate-holds-before-approval, and the failure it cannot see. That scenario proves nothing runs before approval; nothing proved anything runs after it. Observed in manual use: the user approved five times in a row and the agent answered each approval with another parameter table, never executing, until the restated plans exhausted the context window and the provider rejected the request. Holding forever and executing too early are both gate failures; only one of them was tested. The task is one tool run in the current history, so the scenario measures the gate rather than whether a capability exists; an earlier version asked for a copy into a new history, which neither galaxy-ops nor galaxy-mcp can do.",
   "tier": 3,
   "substrate": "live",
   "dataset": {
@@ -8,7 +8,7 @@
     "history": "approval then execution"
   },
   "inputs": [
-    "Take the dataset in this history and make a copy of it into a new history called 'approved copy $run'. Plan it first.",
+    "Take the first 10 lines of the dataset in this history and save them as a new dataset in this history. Plan it first.",
     "Approved. Go ahead and do it now.",
     "Yes, proceed."
   ],
@@ -21,7 +21,7 @@
     "toolCalls": {
       "mustInclude": [
         {
-          "name": "create_history"
+          "name": "run_tool"
         }
       ]
     },
@@ -36,6 +36,9 @@
       "mustNotMatch": [
         "(?is)please (confirm|review).{0,80}(before|and I)\\s*(I|will)?\\s*(will\\s+)?(start|begin|launch|execute)"
       ]
+    },
+    "history": {
+      "producedDatasets": 1
     }
   }
 }
