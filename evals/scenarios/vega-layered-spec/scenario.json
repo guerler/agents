@@ -1,10 +1,10 @@
 {
   "name": "vega: a layered chart keeps one data source",
-  "description": "Vega-Lite accepts `data` inside every layer, which is the escape the tool refuses. A scatter with a fitted line is the natural two-layer request; both layers have to read the one dataset the tool points at, so a run that puts rows in a layer is refused and has to recover.",
+  "description": "Vega-Lite accepts `data` inside every layer, which is the escape vega_dataset refuses. A scatter with a fitted line is the natural two-layer request; both layers have to read the one dataset the tool points at, so a run that puts rows in a layer is refused and has to recover. The request names Vega-Lite because plotly draws the same chart as two tracks, a fair route this scenario does not measure.",
   "tier": 2,
   "dataset": { "file": "health.csv", "history": "vega layers" },
   "inputs": [
-    "Plot Glucose against BMI from the dataset in this history as a scatter plot with a fitted trend line over it."
+    "Plot Glucose against BMI from the dataset in this history as a Vega-Lite scatter plot with a fitted trend line over it."
   ],
   "timeoutMs": 300000,
   "assertions": {
