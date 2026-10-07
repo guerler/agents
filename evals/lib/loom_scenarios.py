@@ -68,22 +68,14 @@ EVENT_NAMES = {
     "turn_end": "turn_end",
 }
 
-# galaxy-mcp's `galaxy_`-prefixed names to this suite's. Unlisted names are identical.
-TOOL_NAMES = {
-    "galaxy_run_tool": "run_tool",
-    "galaxy_run_user_tool": "run_user_tool",
-    "galaxy_create_user_tool": "create_user_tool",
-    "galaxy_delete_user_tool": "delete_user_tool",
-    "galaxy_list_user_tools": "list_user_tools",
-    "galaxy_search_iwc": "search_iwc_workflows",
-    "galaxy_recommend_iwc_workflows": "recommend_iwc_workflows",
-    "galaxy_search_tools_by_name": "search_tools_by_name",
-    "galaxy_get_workflow_input_template": "get_workflow_input_template",
-    "galaxy_invoke_workflow": "invoke_workflow",
-    "galaxy_get_user": "get_user",
-    "galaxy_upload_file_from_url": "upload_file_from_url",
-    "galaxy_pages": "list_pages",
-}
+# loom calls galaxy-mcp's tools by the names pi's MCP support gives them; this suite uses the bare
+# names galaxy-mcp declares.
+MCP_PREFIX = "mcp__galaxy__"
+
+
+def _tool_name(name):
+    return name.removeprefix(MCP_PREFIX) if isinstance(name, str) else name
+
 
 # loom also teaches `local` and `hybrid`; this build has no local execution.
 ROUTING_TAGS = {"galaxy", "remote"}
@@ -111,10 +103,10 @@ def _adapt_tool_calls(spec):
     out = dict(spec)
     wanted = out.get("mustInclude")
     if wanted:
-        out["mustInclude"] = [{**w, "name": TOOL_NAMES.get(w.get("name"), w.get("name"))} for w in wanted]
+        out["mustInclude"] = [{**w, "name": _tool_name(w.get("name"))} for w in wanted]
     banned = out.get("mustNotInclude")
     if banned:
-        out["mustNotInclude"] = [TOOL_NAMES.get(n, n) for n in banned]
+        out["mustNotInclude"] = [_tool_name(n) for n in banned]
     return out
 
 
