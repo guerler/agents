@@ -832,51 +832,52 @@
         "organize_datasets": "ADDED: an Olit process that builds collections from a history's datasets; galaxy-mcp has no equivalent."
       },
       "upstream": {
-        "connect": "caf57caed25afac8",
-        "search_tools_by_name": "fc59f12e6f3891e4",
-        "get_tool_details": "6846e3a1c30c7d95",
-        "get_tool_run_examples": "2ae02c9ab2c78b0d",
-        "get_tool_input_template": "2443c45b5eff3b79",
-        "get_tool_citations": "4a5c3d08e33b8a02",
-        "run_tool": "394e5223c2422ce8",
-        "get_tool_panel": "7288092e005a1a53",
-        "create_history": "67e33303d7485cd2",
-        "update_history": "ad7d520ddb1c4777",
-        "search_tools_by_keywords": "e9fd1f85f243f120",
+        "cancel_workflow_invocation": "3bbf5dbbb582775b",
+        "connect": "e24ea54bb8b5dfe6",
+        "create_history": "cc48e3f31617df4b",
+        "create_page": "58f83d79cb91e1d2",
+        "create_user_tool": "d65d687084d3f6a1",
+        "delete_user_tool": "1ea24d8d0f3b14ce",
+        "download_dataset": "b04447ada6cd01b3",
+        "get_collection_details": "a4c2ff64c9ba092e",
+        "get_dataset_details": "c8ab5a776cf80217",
+        "get_histories": "354b6084c92f6042",
+        "get_history_contents": "43eccc8f67191939",
+        "get_history_details": "7e9042050539d4a6",
+        "get_invocations": "bf207a9c97d829d3",
+        "get_iwc_workflow_details": "21aaa4b590b1f8c4",
+        "get_iwc_workflows": "c93b748f60c1bb94",
+        "get_job_details": "e78da69925547062",
+        "get_page": "32f3493bf9b51cbe",
+        "get_page_revision": "fb38fbf23293c0a1",
         "get_server_info": "6329317aa4fbb00c",
+        "get_tool_citations": "f0b935c666e4beac",
+        "get_tool_details": "c1a2aa33d5b73571",
+        "get_tool_input_template": "2443c45b5eff3b79",
+        "get_tool_panel": "a1d685a35e40addc",
+        "get_tool_run_examples": "0fc9bc2574931217",
         "get_user": "6996f3e5f40d611a",
-        "get_histories": "83cbccdf408a472a",
-        "list_history_ids": "88ad52890f4200e5",
-        "get_history_details": "1e0e223ac411cc55",
-        "get_history_contents": "cfc9e0f158b6b6a5",
-        "get_job_details": "9643df670dd957fe",
-        "get_dataset_details": "cdc7a24c57f17e44",
-        "get_collection_details": "e92c9556ff548fd1",
-        "download_dataset": "3108558eabe2e8ad",
-        "upload_file": "f6b4d869df115d8f",
-        "upload_file_from_url": "e1029599679a6733",
-        "get_invocations": "2e609199e632ecf8",
-        "get_iwc_workflows": "aa45e9c23b187121",
-        "search_iwc_workflows": "4f1478479f2219a2",
-        "get_iwc_workflow_details": "f3c8d8af0a274569",
-        "recommend_iwc_workflows": "e57fda4600d2705a",
-        "import_workflow_from_iwc": "0fae397060b47481",
-        "list_workflows": "33022f014c6d04ad",
-        "get_workflow_details": "8502dbd7be19ecc9",
+        "get_workflow_details": "1d11b17c4fa1ed12",
         "get_workflow_input_template": "97ba7f0211aa0aef",
-        "invoke_workflow": "ecbda6f63f82237f",
-        "cancel_workflow_invocation": "6c60a78373a73316",
-        "create_user_tool": "798af4516fb23066",
-        "list_user_tools": "61a548dcf3c0b837",
-        "delete_user_tool": "b445d0902812a4de",
-        "run_user_tool": "ee2c3a5c7098f316",
-        "list_pages": "2d75ee5b241ebba2",
-        "get_page": "914d18fff350a52b",
-        "create_page": "3b5d201260671e38",
-        "update_page": "efcb01b0d72554bd",
-        "list_page_revisions": "903f5fdb2f40b0e4",
-        "get_page_revision": "1abbfe999c99a88e",
-        "revert_page_revision": "fd5854861cc04e7b"
+        "import_workflow_from_iwc": "e580dcbbb06058ec",
+        "invoke_workflow": "2ec6d0e3d75af8aa",
+        "list_history_ids": "9bc388ce9557876e",
+        "list_page_revisions": "58aac4b8638970e0",
+        "list_pages": "b596e2cc820dec7d",
+        "list_user_tools": "d7e08f40607bcfef",
+        "list_workflows": "65ea31e49c1685b4",
+        "recommend_biocontainer": "e23f8af1ae33f314",
+        "recommend_iwc_workflows": "f47e8497881320cc",
+        "revert_page_revision": "21f6c183f38d4878",
+        "run_tool": "b56ff8c7bc3771fd",
+        "run_user_tool": "41c5f3f4b9f39ac8",
+        "search_iwc_workflows": "eaa225296fb32f05",
+        "search_tools_by_keywords": "4b266cdae9b45d97",
+        "search_tools_by_name": "7ccbf4eb3d6f43d3",
+        "update_history": "ac8b9d7513f92d31",
+        "update_page": "8d5c24d12703f7e3",
+        "upload_file": "de85987b361443a2",
+        "upload_file_from_url": "aff57941439d1428"
       },
       "shaped_returns": {
         "connect": [
@@ -1025,13 +1026,13 @@
         "params": {
           "invocation_id": "string!"
         },
-        "prose": "8f18dd86fed21858"
+        "prose": "c3573af137d9c1be"
       },
       "create_history": {
         "params": {
           "history_name": "string!"
         },
-        "prose": "12bf5a4fe0714df5"
+        "prose": "3b960e926b7077ba"
       },
       "create_page": {
         "params": {
@@ -1041,19 +1042,19 @@
           "slug": "string|null",
           "title": "string|null"
         },
-        "prose": "39440aad971e75ae"
+        "prose": "7f627e430b574f20"
       },
       "create_user_tool": {
         "params": {
           "representation": "object!"
         },
-        "prose": "552932842a7b29b9"
+        "prose": "84b0e927b0e365dd"
       },
       "delete_user_tool": {
         "params": {
           "uuid": "string!"
         },
-        "prose": "bc6f6f9958970388"
+        "prose": "c22dede5b17f451c"
       },
       "download_dataset": {
         "params": {
@@ -1073,7 +1074,7 @@
           "collection_id": "string!",
           "max_elements": "integer=100"
         },
-        "prose": "7cd8eab7e6d8aeb3"
+        "prose": "fdd4d2e3d1f45add"
       },
       "get_dataset_details": {
         "params": {
@@ -1081,7 +1082,7 @@
           "include_preview": "boolean=true",
           "preview_lines": "integer=10"
         },
-        "prose": "6fa971dd03caf9f0"
+        "prose": "b3dcf00910d9c82d"
       },
       "get_histories": {
         "params": {
@@ -1089,7 +1090,7 @@
           "name": "string|null",
           "offset": "integer=0"
         },
-        "prose": "a2d9dfc641b52a11"
+        "prose": "8ca865fd1966ef37"
       },
       "get_history_contents": {
         "params": {
@@ -1100,13 +1101,13 @@
           "order": "string(hid-asc|hid-dsc|create_time-asc|create_time-dsc|update_time-asc|update_time-dsc|name-asc|name-dsc|extension-asc|extension-dsc|size-asc|size-dsc)=hid-asc",
           "visible": "boolean=true"
         },
-        "prose": "3012524eb3619228"
+        "prose": "60b1420799da24c4"
       },
       "get_history_details": {
         "params": {
           "history_id": "string!"
         },
-        "prose": "55249da98dfa6326"
+        "prose": "73d4311cda85789a"
       },
       "get_invocations": {
         "params": {
@@ -1117,41 +1118,41 @@
           "view": "string=collection",
           "workflow_id": "string|null"
         },
-        "prose": "e76275bc9ed69646"
+        "prose": "7139996e4bc11f80"
       },
       "get_iwc_workflow_details": {
         "params": {
           "trs_id": "string!"
         },
-        "prose": "77da8da623486e1f"
+        "prose": "4ebf46e81fa46900"
       },
       "get_iwc_workflows": {
         "params": {
           "limit": "integer=20",
           "offset": "integer=0"
         },
-        "prose": "a1df9f7e0c193a52"
+        "prose": "ca7b5b01043c92bd"
       },
       "get_job_details": {
         "params": {
           "dataset_id": "string!",
           "history_id": "string|null"
         },
-        "prose": "39666bb09eb7b775"
+        "prose": "5abee4ab37b17e8e"
       },
       "get_page": {
         "params": {
           "include_rendered": "boolean=false",
           "page_id": "string!"
         },
-        "prose": "311b6ff393c7b2f4"
+        "prose": "c5b40aeae8205007"
       },
       "get_page_revision": {
         "params": {
           "page_id": "string!",
           "revision_id": "string!"
         },
-        "prose": "f3a975359be8fd21"
+        "prose": "adc628d905d0491e"
       },
       "get_server_info": {
         "params": {},
@@ -1161,14 +1162,14 @@
         "params": {
           "tool_id": "string!"
         },
-        "prose": "f454383d48d8e65a"
+        "prose": "93556a70b5f3696f"
       },
       "get_tool_details": {
         "params": {
           "io_details": "boolean=false",
           "tool_id": "string!"
         },
-        "prose": "130835c7a51f448f"
+        "prose": "84941afd11f5655a"
       },
       "get_tool_input_template": {
         "params": {
@@ -1182,14 +1183,14 @@
           "offset": "integer=0",
           "section_id": "string|null"
         },
-        "prose": "ee541a09ed72e551"
+        "prose": "ef9a5225d1f1bfa2"
       },
       "get_tool_run_examples": {
         "params": {
           "tool_id": "string!",
           "tool_version": "string|null"
         },
-        "prose": "8f53779ed047250e"
+        "prose": "ad0a520a20006a10"
       },
       "get_user": {
         "params": {},
@@ -1222,7 +1223,7 @@
           "version": "integer|null",
           "workflow_id": "string!"
         },
-        "prose": "d5c660ccca3817fd"
+        "prose": "d5f5758e9ca79111"
       },
       "get_workflow_input_template": {
         "params": {
@@ -1249,7 +1250,7 @@
         "params": {
           "trs_id": "string!"
         },
-        "prose": "1fe8cdbe0f062d29"
+        "prose": "6baea02421d3f6e9"
       },
       "invoke_workflow": {
         "params": {
@@ -1261,7 +1262,7 @@
           "params": "object|string|null",
           "workflow_id": "string!"
         },
-        "prose": "dbf429b7f1aad537"
+        "prose": "67b4843b4e5256ed"
       },
       "lineage_report": {
         "params": {
@@ -1278,14 +1279,14 @@
           "limit": "integer=100",
           "offset": "integer=0"
         },
-        "prose": "7f11c2fa9e376df6"
+        "prose": "f6bf53d46bc80ae0"
       },
       "list_page_revisions": {
         "params": {
           "page_id": "string!",
           "sort_desc": "boolean=false"
         },
-        "prose": "171babc2e128d1a7"
+        "prose": "6b94cf819bab4d1e"
       },
       "list_pages": {
         "params": {
@@ -1296,7 +1297,7 @@
           "show_published": "boolean=false",
           "show_shared": "boolean=false"
         },
-        "prose": "4c2eb26e16c53739"
+        "prose": "fab6cd9a188adb87"
       },
       "list_user_tools": {
         "params": {
@@ -1304,7 +1305,7 @@
           "limit": "integer=25",
           "offset": "integer=0"
         },
-        "prose": "a9f0d850f7b34a22"
+        "prose": "2f823f4c8633263b"
       },
       "list_visualizations": {
         "params": {
@@ -1319,7 +1320,7 @@
           "offset": "integer=0",
           "published": "boolean=false"
         },
-        "prose": "2592bab50e1fd570"
+        "prose": "fc0c0cb2e85ba519"
       },
       "notebook_resume": {
         "params": {},
@@ -1348,14 +1349,14 @@
           "intent": "string!",
           "limit": "integer=5"
         },
-        "prose": "2c7a4b1faa806148"
+        "prose": "bf9862698f860274"
       },
       "revert_page_revision": {
         "params": {
           "page_id": "string!",
           "revision_id": "string!"
         },
-        "prose": "f2da639861db2e83"
+        "prose": "4232827c7d07c4db"
       },
       "run_python": {
         "params": {
@@ -1370,7 +1371,7 @@
           "tool_id": "string!",
           "tool_version": "string|null"
         },
-        "prose": "a52b92981ad399cc"
+        "prose": "98bc9cf67d982cb1"
       },
       "run_user_tool": {
         "params": {
@@ -1378,7 +1379,7 @@
           "inputs": "object!",
           "tool_uuid": "string!"
         },
-        "prose": "9c1cceacc61e1b46"
+        "prose": "d898668d23230d71"
       },
       "save_visualization": {
         "params": {
@@ -1397,7 +1398,7 @@
           "offset": "integer=0",
           "query": "string!"
         },
-        "prose": "b5da562f1ed192c3"
+        "prose": "9a4177273140dfee"
       },
       "search_tools_by_keywords": {
         "params": {
@@ -1405,7 +1406,7 @@
           "limit": "integer=50",
           "offset": "integer=0"
         },
-        "prose": "a25a662cef9ce572"
+        "prose": "cc3863e50d37ae9f"
       },
       "search_tools_by_name": {
         "params": {
@@ -1413,7 +1414,7 @@
           "offset": "integer=0",
           "query": "string!"
         },
-        "prose": "fc6bdc7c1ef958e0"
+        "prose": "109fcd18558363f3"
       },
       "show_visualization": {
         "params": {
@@ -1441,7 +1442,7 @@
           "published": "boolean|null",
           "tags": "array|null"
         },
-        "prose": "a2f0869be04ae455"
+        "prose": "33e7cfbb0bbff410"
       },
       "update_page": {
         "params": {
@@ -1452,7 +1453,7 @@
           "section_heading": "string|null",
           "title": "string|null"
         },
-        "prose": "6cb17a766d607b09"
+        "prose": "6dd70839dc5ac137"
       },
       "upload_file": {
         "params": {
@@ -1472,7 +1473,7 @@
           "history_id": "string",
           "url": "string!"
         },
-        "prose": "799a5124f13a643c"
+        "prose": "1858196f02186a67"
       },
       "vega_dataset": {
         "params": {

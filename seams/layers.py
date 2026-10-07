@@ -63,15 +63,18 @@ def mcp_version(server_py):
 
 
 def mcp_tool_table(server_py):
-    """name -> fingerprint of (description, parameter names) for each @mcp.tool."""
-    tree = ast.parse(pathlib.Path(server_py).read_text())
+    """name -> fingerprint of (description, parameter names) for each tool, as galaxy-mcp
+    advertises it to an MCP client: its surface manifest, beside the server, records that, where
+    the raw docstring holds sections FastMCP does not send."""
+    manifest = next(
+        p / "tests" / "testdata" / "mcp-surface.json"
+        for p in pathlib.Path(server_py).resolve().parents
+        if (p / "tests" / "testdata" / "mcp-surface.json").is_file()
+    )
     out = {}
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            if any("tool" in ast.unparse(d) for d in node.decorator_list):
-                doc = (ast.get_docstring(node) or "").strip()
-                args = sorted(a.arg for a in node.args.args if a.arg != "self")
-                out[node.name] = _fp(doc + "|" + ",".join(args))
+    for tool in json.loads(manifest.read_text())["tools"]:
+        names = sorted((tool.get("inputSchema") or {}).get("properties") or {})
+        out[tool["name"]] = _fp((tool.get("description") or "").strip() + "|" + ",".join(names))
     return out
 
 
