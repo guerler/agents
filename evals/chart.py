@@ -1,4 +1,4 @@
-"""Render evals/snapshots/overview.svg: clean scenarios per tier across every snapshot.
+"""Render evals.svg at the repository root: passing scenarios per tier across every snapshot.
 
 python3 evals/chart.py
 """
@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.ticker import PercentFormatter  # noqa: E402
 
 SNAPSHOTS = pathlib.Path(__file__).resolve().parent / "snapshots"
+OUT = SNAPSHOTS.parents[1] / "evals.svg"
 TIERS = (("grounded", "black", "D", "-"), ("parity", "gray", ".", ":"))
 
 
@@ -25,10 +26,9 @@ def main():
     paths = sorted(SNAPSHOTS.glob("run-*.json"), key=order)
     snapshots = [json.loads(p.read_text()) for p in paths]
     labels = []
-    for path, snap in zip(paths, snapshots):
+    for path in paths:
         day, nth = order(path)
-        label = day[5:] + (f" ({nth})" if nth > 1 else "")
-        labels.append(label + (f"\n{snap['build']}" if snap.get("build") else ""))
+        labels.append(day[5:] + (f" ({nth})" if nth > 1 else ""))
 
     fig, ax = plt.subplots(figsize=(14.0, 6.0))
     x = range(len(snapshots))
@@ -60,7 +60,7 @@ def main():
                 color=color,
             )
 
-    ax.set_ylabel("Clean scenarios", fontweight="bold")
+    ax.set_ylabel("Passing Scenarios", fontweight="bold")
     ax.set_ylim(50, 101)
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=100, decimals=0))
     ax.set_xticks(list(x), labels, fontsize=8)
@@ -69,10 +69,9 @@ def main():
     for tick_labels in (ax.get_xticklabels(), ax.get_yticklabels()):
         plt.setp(tick_labels, fontweight="bold")
     fig.tight_layout()
-    out = SNAPSHOTS / "overview.svg"
-    fig.savefig(out)
+    fig.savefig(OUT)
     plt.close(fig)
-    print(out)
+    print(OUT)
 
 
 if __name__ == "__main__":

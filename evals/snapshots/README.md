@@ -33,7 +33,7 @@ scenario that starts passing for a different reason is visible rather than just 
 
 ## Overview chart
 
-`overview.svg` plots each tier's clean share across every snapshot, labelled by date and, where
-the snapshot records one, the Olit `build`. Regenerate it after ingesting a run:
+`evals.svg` at the repository root plots each tier's passing scenarios across every snapshot,
+labelled by date. Regenerate it after ingesting a run:
 
     python3 evals/chart.py

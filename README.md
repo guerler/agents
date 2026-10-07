@@ -4,6 +4,16 @@ Evaluation machinery for Galaxy agents. The agent under test lives in its own re
 is treated as a system under test: named by `OLIT_ROOT`, pinned to a commit when results are
 being produced.
 
+![Passing scenarios per baseline](evals.svg)
+
+Each point is a baseline run of the full suite, labelled by date, with passing scenarios out of
+the tier's total beside it. A scenario passes when every run of it passes.
+
+- **Grounded:** Olit's own scenarios, run against a live Galaxy. They ask whether the agent does
+  real Galaxy work correctly.
+- **Parity:** scenarios taken from Orbit's own eval suite. They ask whether Olit behaves like
+  Orbit on Orbit's tests.
+
 ```bash
 export OLIT_ROOT=~/galaxy-visualizations/packages/olit
 export GALAXY_URL=... GALAXY_API_KEY=...
