@@ -295,7 +295,9 @@ def _plan(spec, run, failures, exercised):
     if spec.get("eachStepHasDescription"):
         lines = run.chat_text.splitlines()
         for step in plan.pending_steps:
-            idx = next((i for i, ln in enumerate(lines) if step["text"] in ln), -1)
+            # The steps are the latest plan's, so read the latest line naming each: a revision
+            # repeats a step's title, and the first draft's line describes it differently.
+            idx = max((i for i, ln in enumerate(lines) if step["text"] in ln), default=-1)
             following = lines[idx + 1 : idx + 4] if idx >= 0 else []
             if not step_has_description(step["text"], following):
                 failures.append(Failure("plan.eachStepHasDescription", f"bare step: {step['text'][:60]!r}", "validity"))

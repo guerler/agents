@@ -192,3 +192,28 @@ def test_a_visualization_check_holds_in_one_visualization_not_across_several():
     split = [viz("v1", {"locus": "chr1"}, []), viz("v2", {}, [{"urlDataset": {"id": "gff"}}])]
     assert grade(split) == ["visualization.oneVisualization"]
     assert grade([revised, viz("v2", {}, [])], {"count": 1}) == ["visualization.count"]
+
+
+def test_a_step_is_read_where_the_latest_plan_writes_it():
+    """A revised plan repeats a step's title. The first draft described it after a dash on the
+    line, the revision in bullets below it; each is described, and the latest is the one graded."""
+    from lib.assertions import _plan
+
+    first = (
+        "```plan\n## Plan A: Rename [remote]\n\n### Steps\n\n"
+        "- [ ] 1. **Back up** – copy the folder.\n"
+        "- [ ] 2. **Define the convention** – decide on the pattern (e.g.\n"
+        "  `YYYYMMDD.pdf`), written to a map.\n```"
+    )
+    revised = (
+        "```plan\n## Plan A: Rename [remote]\n\n### Steps\n\n"
+        "- [ ] 1. **Back up**\n  - Routing: local\n"
+        "- [ ] 2. **Define the convention**\n  - Routing: local\n```"
+    )
+
+    class Run:
+        chat_text = first + "\n\nRevised:\n\n" + revised
+
+    failures = []
+    _plan({"eachStepHasDescription": True}, Run(), failures, set())
+    assert [f.detail for f in failures] == []
