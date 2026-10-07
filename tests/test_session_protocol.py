@@ -43,3 +43,63 @@ def test_python_runs_headless_and_stdout_stays_protocol():
     # Only what Node sets up for the IPC channel itself.
     seen = results[1]["content"]
     assert "OLIT_SESSION_SECRET" not in seen and "PATH" not in seen, seen
+
+
+def test_a_restart_offers_the_history_records_and_recovers_only_the_chosen_session():
+    import http.server
+    import threading
+
+    record = {
+        "id": "a1b2c3d4e5f60718",
+        "slug": "olit-sess-7",
+        "title": "Olit Notebook (sess-7)",
+        "create_time": "2026-10-01T09:00:00",
+        "update_time": "2026-10-02T09:00:00",
+    }
+
+    class Galaxy(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802
+            body = [record] if self.path.startswith("/api/pages?history_id=h1") else {}
+            data = json.dumps(body).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Galaxy)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        with scripted([]) as url:
+            config = {
+                "galaxy_root": f"http://127.0.0.1:{server.server_port}/",
+                "ai_base_url": url,
+                "ai_model": "scripted",
+                "history_id": "h1",
+            }
+            requests = [
+                {"op": "create", "config": config},
+                {"op": "restart"},
+                {"op": "recover", "page_id": record["id"]},
+                {"op": "export"},
+                {"op": "close"},
+            ]
+            out = subprocess.run(
+                subject.session(),
+                input="".join(json.dumps(r) + "\n" for r in requests),
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+    finally:
+        server.shutdown()
+    replies = [json.loads(line) for line in out.stdout.splitlines() if line.strip()]
+    offered = replies[1]["result"]["records"]
+    assert [r["pageId"] for r in offered] == [record["id"]], out.stderr[-500:]
+    session = replies[3]["result"]["session"]
+    assert session["id"] == "sess-7" and session["recordPageId"] == record["id"]
+    # The record and identity came back; the lost conversation did not.
+    assert session["turn"] == 0

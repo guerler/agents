@@ -90,8 +90,13 @@ class Session:
         return await self._request({"op": "settle", "timeout": timeout})
 
     async def restart(self):
-        """A tab closed and opened again with nothing stored: a new conversation on the same record."""
-        await self._request({"op": "restart"})
+        """A tab closed and opened again with nothing stored: the records Galaxy keeps attached to
+        the launch history, which the caller chooses among with `recover`, as a user does."""
+        return (await self._request({"op": "restart"}) or {}).get("records") or []
+
+    async def recover(self, page_id=None):
+        """Continue the session whose record is `page_id`, or start a new one."""
+        await self._request({"op": "recover", "page_id": page_id})
 
     async def export(self):
         """The conversation as a saved session, as the page saves it."""
@@ -365,8 +370,15 @@ async def _drive(scenario, session, config, staged, waited=None):
 
     for index, text in enumerate(scenario["inputs"], start=1):
         if restart_after and index == restart_after + 1:
-            await session.restart()
+            own = (await session.export())["session"]["id"]
+            records = await session.restart()
             events.append("session_restart")
+            if records:
+                # The returning user's decision, which the scenario states: continue their own
+                # session from the history's records, or start a new one.
+                mine = [r for r in records if r["sessionId"] == own] if scenario.get("recoverSession") else []
+                await session.recover(mine[0]["pageId"] if mine else None)
+                events.append("session_recovered" if mine else "session_new")
         await turn(text)
         if staged:
             await _settle(session, events, galaxy_wait_timeout(), waited, absorb)
