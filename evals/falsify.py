@@ -153,12 +153,12 @@ BREAKS = [
         "failed job is not merely unexplained, it is absent, so the agent reports a tidy "
         "history that is not the one the researcher has",
         path="src/agent/ops.ts",
-        find="      ctx.watch.add(watchedFrom(op.name, envelope.data));\n",
+        find="      const payload = rendered(envelope);\n",
         replace='      if (op.name === "get_history_contents") { // FALSIFY: error rows hidden\n'
         "        const listed = envelope.data as { contents: { state?: string }[] };\n"
         '        listed.contents = listed.contents.filter((i) => i?.state !== "error");\n'
         "      }\n"
-        "      ctx.watch.add(watchedFrom(op.name, envelope.data));\n",
+        "      const payload = rendered(envelope);\n",
         # Not reports-a-failed-job: galaxy-ops' get_history_details still reports the failed
         # state, so hiding it from one listing no longer leaves the agent blind there.
         scenarios=["refuses-to-analyse-failed-data"],
