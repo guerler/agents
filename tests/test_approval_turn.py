@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from lib.harness import _awaiting_approval  # noqa: E402
 
-PLAN = """## Plan A: count the medals [galaxy]
+PLAN = """## Plan A: count the medals [remote]
 
 - [ ] 1. **Filter** — keep gold rows
 - [ ] 2. **Group** — count by country

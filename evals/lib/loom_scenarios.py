@@ -78,7 +78,7 @@ def _tool_name(name):
 
 
 # loom also teaches `local` and `hybrid`; this build has no local execution.
-ROUTING_TAGS = {"galaxy", "remote"}
+ROUTING_TAGS = {"remote"}
 
 # loom's `--tools` mapped to the nearest capability set.
 TOOL_CAPABILITIES = {

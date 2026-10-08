@@ -89,9 +89,9 @@ pass/fail, because "did it behave like Orbit" is not one question:
   described steps. The gate: a model that cannot emit a parseable plan fails
   everything downstream.
 - **routing** — did it pick the right tag? Scenarios name the *correct* answers, so a
-  wrong route is graded wrong rather than waved through. olit routes `[galaxy]` and
-  `[remote]` only; the parser still accepts `local` and `hybrid` so a wrong route is
-  a routing failure and not a parse failure.
+  wrong route is graded wrong rather than waved through. olit routes `[remote]` only;
+  the parser still accepts any other tag, `[galaxy]`, `local` and `hybrid` included, so a
+  wrong route is a routing failure and not a parse failure.
 - **tools** — did it name a plausible analysis tool? A generous allow-set per assay,
   a coarse heuristic rather than an oracle.
 - **behavior** — contract checks needing no Galaxy: does an underspecified prompt

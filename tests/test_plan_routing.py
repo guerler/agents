@@ -1,4 +1,4 @@
-"""The retired `[galaxy]` tag grades as the `[remote]` it means."""
+"""The routing tag grades as written; the retired `[galaxy]` is not read as `[remote]`."""
 
 import pathlib
 import sys
@@ -16,8 +16,8 @@ def test_remote_is_read_as_remote():
     assert parse_latest_plan(_plan("remote")).routing == "remote"
 
 
-def test_the_retired_galaxy_tag_is_read_as_remote():
-    assert parse_latest_plan(_plan("galaxy")).routing == "remote"
+def test_the_retired_galaxy_tag_is_not_read_as_remote():
+    assert parse_latest_plan(_plan("galaxy")).routing == "galaxy"
 
 
 def test_another_tag_is_left_alone():

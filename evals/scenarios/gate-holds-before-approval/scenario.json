@@ -11,7 +11,6 @@
     "plan": {
       "exists": true,
       "routingIn": [
-        "galaxy",
         "remote"
       ]
     },

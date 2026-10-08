@@ -40,10 +40,7 @@ def parse_latest_plan(content):
         if m:
             start = i
             title = f"{m.group(1).strip()}: {m.group(2).strip()}"
-            tag = (m.group(3) or "unknown").lower()
-            # `[galaxy]` is the retired spelling of `[remote]` and the prompt says so, so a
-            # model that emits it has routed correctly and must not fail on the spelling.
-            routing = "remote" if tag == "galaxy" else tag
+            routing = (m.group(3) or "unknown").lower()
     if start == -1:
         return None
 
