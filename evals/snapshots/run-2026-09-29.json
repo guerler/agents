@@ -3,7 +3,7 @@
  "model": "js2-gpt-oss-120b",
  "commit": "1e5d2cb2",
  "build": "olit.010",
- "note": "first clean full run on olit.010; cryptic-exon-q1 excluded deliberately, because its own budget is 4h and it belongs in a run of its own. The endpoint stopped calling tools later the same day, so a rerun against it is not comparable -- see notes/olit/observed-failures/endpoint-stopped-calling-tools-2026-09-29.md",
+ "note": "first clean full run on olit.010; cryptic-exon-q1 excluded deliberately, because its own budget is 4h and it belongs in a run of its own. The endpoint stopped calling tools later the same day, so a rerun against it is not comparable",
  "runs": 95,
  "tiers": {
   "parity": {

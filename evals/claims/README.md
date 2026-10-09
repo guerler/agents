@@ -10,4 +10,3 @@ Each constructs its condition directly through the Galaxy API rather than prompt
 so it tests whether the assertion detects the condition instead of waiting for a mistake.
 Fixture histories are named `c1 `/`c2 `/`c3 ` and are safe to delete.
 
-The claims themselves are in `~/notes/olit/architectural-claims.md`.
