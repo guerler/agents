@@ -56,6 +56,11 @@
       "model": "openai/gpt-oss-20b:free"
     },
     {
+      "id": "or-gpt-oss-120b",
+      "provider": "openrouter",
+      "model": "openai/gpt-oss-120b"
+    },
+    {
       "id": "js2-gpt-oss-120b",
       "provider": "jetstream2",
       "model": "gpt-oss-120b"
