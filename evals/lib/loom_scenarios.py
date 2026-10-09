@@ -16,8 +16,9 @@ NOT_PORTABLE = {
     ),
     "evidence-gate-in-progress-contradiction": (
         "asserts loom's /override command, its activity.jsonl events and plan anchors, none "
-        "of which olit has; the contradiction itself is covered by record-jobs, which marks "
-        "a step `- [!]` when the watcher sees its job fail"
+        "of which olit has. olit has no evidence gate by design: its watcher records job status "
+        "under the id and never changes a checkbox, so a step marked `- [x]` over a failed or "
+        "unfinished run is not detected"
     ),
     "iwc-find-from-question": (
         "asserts a skill.hint activity event for loom's iwc-candidates trigger; olit has no "

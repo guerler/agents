@@ -229,11 +229,14 @@ MODULE_CLASSIFICATION = {
     "galaxy-upload": "PORTED: upload_file",
     "tools": "PORTED: the tool surface. v0.8.0 changed only galaxy_invocation_record and galaxy_job_record: annotate an existing block rather than overwrite it, refuse an empty label the block parser would choke on, refuse to clobber an unreadable block. No tool was added or removed, so olit's surface is missing nothing from this sync, and the read-before-write concern is already get_page before update_page.",
     "tools-sync": "PORTED: the tool surface is built at load",
-    "evidence-gate": "NA: loom's model owns the checkbox and its poller owns a separate "
-    "status block, so the two can contradict. olit's watcher writes the "
-    "checkbox itself (applyJobOutcome), and no recorded run has the model "
-    "flipping a step that carries an id. Revisit if the flip ever moves to "
-    "the model.",
+    "evidence-gate": "NA by design: as in loom, the model owns the plan checkbox and the watcher owns "
+    "execution status, a `- Status:` line under the work's id that applyJobOutcome "
+    "writes without ever changing a checkbox. loom adds a separate enforcement step: "
+    "its gate checks a flip to `- [x]` against the poller's status and records the "
+    "contradiction (warn, the default) or refuses it (deny). olit deliberately has no "
+    "such check, so its prompt is the only verification guarantee: a step the model "
+    "marks `- [x]` while the status under it reads failed or still awaiting "
+    "completion is neither flagged nor refused, only visible in the record.",
     "auto-resume": "PORTED: bounded automatic Galaxy follow-up in src/auto-resume.ts. Was labelled NA on the reasoning that olit starts no turn, which described the gap rather than a constraint: the browser does not prevent it, and the watcher and submit lifecycle were already there. onSettled used to tell the user to ask; loom's own prompt forbids asking them to ask."
     "posts a message and edits the record; it starts no turn, so there is no "
     "automatic continuation to bound. "
