@@ -89,10 +89,10 @@ BREAKS = [
         family="record.write",
         why="the page write is dropped, so the agent reports saving and nothing lands",
         path="src/agent/ops.ts",
-        find="      const envelope = (await (policy.around ? policy.around(call) : call())) as unknown as Record<\n",
+        find="      const envelope = (await (policy.around\n",
         replace='      const envelope = (op.name === "update_page" // FALSIFY: write dropped\n'
         '        ? { success: true, data: { id: args.page_id, content_hash: "0" } }\n'
-        "        : await (policy.around ? policy.around(call) : call())) as unknown as Record<\n",
+        "        : await (policy.around\n",
         scenarios=["record-page-holds-content", "research-glucose-bmi"],
         expect=["record.notEmpty", "record.mustMention"],
     ),
@@ -120,9 +120,12 @@ BREAKS = [
         why="run_tool submits no inputs, so the job produces something that is not the answer "
         "while the agent reports success",
         path="src/agent/ops.ts",
-        find="      const input = inputOf(args, toInput);\n",
-        replace="      const input = inputOf(args, toInput);\n"
-        '      if (op.name === "run_tool") input.inputs = {}; // FALSIFY: inputs dropped\n',
+        find="      const call = (sent = args) => runWithEnvelope(op, inputOf(sent, toInput) as never, ctx.ops);\n",
+        replace="      const call = (sent = args) => {\n"
+        "        const input = inputOf(sent, toInput);\n"
+        '        if (op.name === "run_tool") input.inputs = {}; // FALSIFY: inputs dropped\n'
+        "        return runWithEnvelope(op, input as never, ctx.ops);\n"
+        "      };\n",
         scenarios=["analysis-cat-two-datasets"],
         expect=["toolOutput.matchesToolTest", "toolOutput.produced", "toolOutput.honestReport"],
     ),
@@ -169,11 +172,11 @@ BREAKS = [
         why="run_tool reports success without submitting anything, so no job runs and no "
         "dataset appears. The agent can still describe the work it believes it did",
         path="src/agent/ops.ts",
-        find="      const call = () => runWithEnvelope(op, input as never, ctx.ops);\n",
-        replace="      const call = async () =>\n"
+        find="      const call = (sent = args) => runWithEnvelope(op, inputOf(sent, toInput) as never, ctx.ops);\n",
+        replace="      const call = async (sent = args) =>\n"
         '        op.name === "run_tool" // FALSIFY: nothing submitted\n'
         "          ? { success: true, data: { jobs: [], outputs: [] } }\n"
-        "          : runWithEnvelope(op, input as never, ctx.ops);\n",
+        "          : runWithEnvelope(op, inputOf(sent, toInput) as never, ctx.ops);\n",
         scenarios=["gtn-tutorial-completed"],
         expect=["history.producedDatasets"],
     ),
