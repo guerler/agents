@@ -46,6 +46,42 @@ NOT_PORTABLE = {
             "submission-capture-udt-provenance",
         )
     },
+    **{
+        name: (
+            "drives a loom slash command with no agent turn (events.mustNotInclude turn_start) and "
+            "asserts loom's activity log; olit has no slash commands and always starts a turn"
+        )
+        for name in (
+            "capture-dead-turn-recovered-on-session-start",
+            "capture-drift-on-reattempt",
+            "capture-enrichment-mapped-over-step",
+            "capture-enrichment-retries-then-completes",
+            "capture-enrichment-unavailable-after-n",
+            "capture-reconcile-finds-unregistered-job",
+            "lesson-hostile-draft-rejected",
+            "lesson-surfaced-on-signature",
+            "observation-redaction-hostile-result",
+            "registry-carrier-imported-on-pull",
+            "registry-evaluates-mapped-over-invocation",
+            "registry-gate-holds-imported-run",
+            "registry-import-restores-approvals",
+            "registry-propose-approve-revoke",
+            "registry-unopenable-read-only",
+        )
+    },
+    "galaxy-mcp-connect-identity": (
+        "asserts loom's MCP wiring: a connect tool and mcp__galaxy__ results naming the server; "
+        "olit reaches Galaxy through the page's session and has no connect step"
+    ),
+    "galaxy-mcp-large-output": (
+        "asserts loom's MCP output recovery (a truncated result plus mcp_read_output); olit's "
+        "tools page large results themselves"
+    ),
+    "galaxy-mcp-upload-hidden": (
+        "uploads a file from loom's project directory with galaxy_upload_local_file; olit runs in "
+        "a browser with no project directory"
+    ),
+    "lesson-changes-plan": ("asserts loom's lessons index and its lessons_search tool, which olit does not have"),
 }
 
 # loom grades against a stub, so a scenario may name data nothing creates. On a live Galaxy
