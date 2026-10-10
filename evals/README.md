@@ -6,7 +6,8 @@ that the **agent behaves like Orbit** — which is the claim the project actuall
 rests on, and the one thing a unit test cannot answer.
 
 ```bash
-python evals/run.py                    # every scenario x every available model
+python evals/run.py                    # every scenario on the default model, galaxy-ai
+python evals/run.py --all-models       # every scenario x every available model
 python evals/run.py plan-creation      # filter scenarios by substring
 python evals/run.py --model gemini     # filter models by substring
 python evals/run.py --json out.json    # write transcripts + chat text + failures, pass or fail

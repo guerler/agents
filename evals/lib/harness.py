@@ -187,10 +187,14 @@ class RunResult:
 
 
 def declared_base(model):
-    """The endpoint a model entry names, with an `${ENV}` reference resolved."""
+    """The endpoint a model entry names, with an `${ENV}` reference resolved; Galaxy's own proxy
+    for the `galaxy` provider, as the plugin reaches it."""
     base = model.get("baseUrl") or ""
     if base.startswith("${") and base.endswith("}"):
         base = os.environ.get(base[2:-1], "")
+    if not base and model.get("provider") == "galaxy":
+        root = os.environ.get("GALAXY_URL", "").strip().rstrip("/")
+        base = f"{root}/api/plugins/olit" if root else ""
     return base
 
 
@@ -239,6 +243,9 @@ def required_env(model):
 
 def _api_key(model):
     """The registry names the env var; envRequires is the fallback for custom entries."""
+    if model.get("provider") == "galaxy":
+        # Galaxy's proxy authenticates the Galaxy user, as every other Galaxy request does.
+        return os.environ.get("GALAXY_API_KEY", "")
     provider = _providers().get(model.get("provider"))
     if provider and provider.get("auth_env"):
         return os.environ.get(provider["auth_env"], "")

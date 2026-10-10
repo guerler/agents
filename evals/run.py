@@ -37,10 +37,13 @@ def is_quota(row):
     return status == QUOTA_STATUS
 
 
-def available_models(matrix, only):
+def available_models(matrix, only, every=False):
     usable, skipped = [], []
+    default = matrix.get("default") or []
     for model in matrix["models"]:
         if only and only not in model["id"]:
+            continue
+        if not only and not every and default and model["id"] not in default:
             continue
         missing = [v for v in required_env(model) if not os.environ.get(v)]
         (skipped if missing else usable).append((model, missing))
@@ -66,7 +69,8 @@ def _resolve_run_tokens(scenario):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("scenario", nargs="?", help="substring filter on scenario directory")
-    ap.add_argument("--model", help="substring filter on model id")
+    ap.add_argument("--model", help="substring filter on model id; without it, the matrix's default models")
+    ap.add_argument("--all-models", action="store_true", help="every available model, not only the defaults")
     ap.add_argument("--json", dest="json_out", help="write raw results here")
     ap.add_argument(
         "--delay",
@@ -136,7 +140,7 @@ def main():
         return 2
     print(f"  galaxy: {os.environ['GALAXY_URL'].strip()}")
 
-    models, skipped = available_models(matrix, args.model)
+    models, skipped = available_models(matrix, args.model, args.all_models)
 
     for model, missing in skipped:
         print(f"  skip {model['id']}: needs {', '.join(missing)}")
