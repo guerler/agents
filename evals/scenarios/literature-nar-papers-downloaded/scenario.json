@@ -1,7 +1,13 @@
 {
   "name": "literature: the Galaxy NAR papers land as PDFs",
-  "description": "Tier 3, live Galaxy with literature tools (usegalaxy.eu); excluded from baselines on a Galaxy without them, like cryptic-exon-q1. The request is a user's own, verbatim. Galaxy has to hold the result: a PDF of each of the six Galaxy update papers in Nucleic Acids Research (2016 to 2026), named by any of its PMCID, PMID, DOI suffix or OpenAlex id, so a Europe PMC download, an OpenAlex download and a direct upload all count. The same papers buried in thousands of free-text hits, or a different paper's citing works, do not. Europe PMC serves all six PDFs; their OpenAlex open-access links point at the publisher, which refuses the download.",
+  "description": "Tier 3, live Galaxy with literature tools (usegalaxy.eu); skipped on a Galaxy without the Europe PMC route it requires. The request is a user's own, verbatim. Galaxy has to hold the result: a PDF of each of the six Galaxy update papers in Nucleic Acids Research (2016 to 2026), named by any of its PMCID, PMID, DOI suffix or OpenAlex id, so a Europe PMC download, an OpenAlex download and a direct upload all count. The same papers buried in thousands of free-text hits, or a different paper's citing works, do not. Europe PMC serves all six PDFs; their OpenAlex open-access links point at the publisher, which refuses the download.",
   "tier": 3,
+  "requires": {
+    "tools": [
+      "aoptk_query_literature",
+      "aoptk_download_publication_data"
+    ]
+  },
   "emptyHistory": "nar papers $run",
   "inputs": [
     "I would like to search for all Galaxy NAR papers. Can you search for a tool that can do that and download me the PDF?",
@@ -21,12 +27,42 @@
       "landedPdfs": {
         "max": 25,
         "papers": {
-          "2016 update": ["PMC4987906", "27137889", "gkw343", "W2346143774"],
-          "2018 update": ["PMC6030816", "29790989", "gky379", "W2917207851"],
-          "2020 update": ["PMC7319590", "32479607", "gkaa434", "W3029928583"],
-          "2022 update": ["PMC9252830", "35446428", "gkac247", "W4226051960"],
-          "2024 update": ["PMC11223835", "38769056", "gkae410", "W4398182689"],
-          "2026 update": ["PMC13355071", "42261686", "gkag469", "W7163996244"]
+          "2016 update": [
+            "PMC4987906",
+            "27137889",
+            "gkw343",
+            "W2346143774"
+          ],
+          "2018 update": [
+            "PMC6030816",
+            "29790989",
+            "gky379",
+            "W2917207851"
+          ],
+          "2020 update": [
+            "PMC7319590",
+            "32479607",
+            "gkaa434",
+            "W3029928583"
+          ],
+          "2022 update": [
+            "PMC9252830",
+            "35446428",
+            "gkac247",
+            "W4226051960"
+          ],
+          "2024 update": [
+            "PMC11223835",
+            "38769056",
+            "gkae410",
+            "W4398182689"
+          ],
+          "2026 update": [
+            "PMC13355071",
+            "42261686",
+            "gkag469",
+            "W7163996244"
+          ]
         }
       }
     },

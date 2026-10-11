@@ -34,6 +34,11 @@ export GALAXY_URL=http://localhost:8080
 export GALAXY_API_KEY=...          # User > Preferences > Manage API Key
 ```
 
+A scenario can say what it needs. `"requires": {"tools": [...]}` names tools by short id; a
+Galaxy without them skips the scenario and the header says which are missing. `"optIn": "<label>"`
+keeps an expensive scenario out of the default run; `--include <label>`, or naming the scenario,
+runs it.
+
 A tool-test scenario grades the output against the tool test's own expectation. Galaxy
 serves a test's **inputs** through `test_data_download` but answers 404 for its expected
 **outputs**, so those live in `fixtures/tool-tests/`, committed, and a run needs nothing

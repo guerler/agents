@@ -487,6 +487,25 @@ def load_scenarios(root, only=None):
     return out
 
 
+def opted_out(scenario, include, named):
+    """Why an opt-in scenario does not run, or None. Naming it or its label opts in."""
+    label = scenario.get("optIn")
+    if not label or named or label in include:
+        return None
+    return f"opt-in {label!r}; run with --include {label}"
+
+
+def missing_tools(scenario, installed):
+    """Why this Galaxy cannot run the scenario, or None.
+
+    A required tool is a short id, matched against an installed id or a Tool Shed guid's
+    tool segment, so the requirement holds whichever repository revision is installed.
+    """
+    wanted = (scenario.get("requires") or {}).get("tools") or []
+    absent = [t for t in wanted if not any(i == t or f"/{t}/" in i for i in installed)]
+    return f"this Galaxy lacks {', '.join(absent)}" if absent else None
+
+
 def stage_tool_test(config, spec, timeout):
     """A history holding a tool test's inputs, plus the expectation used to grade it."""
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))

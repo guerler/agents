@@ -21,11 +21,14 @@ from lib.assertions import DIMENSIONS, evaluate, validate_patterns  # noqa: E402
 from lib.harness import (  # noqa: E402
     label_record_page,
     load_scenarios,
+    missing_tools,
+    opted_out,
     remove_imported_workflows,
     required_env,
     run_scenario,
     save_session,
 )
+from lib.tooltests import Galaxy  # noqa: E402
 
 # HTTP 429 means out of budget, not a behavioural failure; graded separately.
 QUOTA_STATUS = 429
@@ -114,6 +117,13 @@ def main():
         metavar="SUBSTRING",
         help="drop scenarios whose id contains this; repeatable. Excluded ids are named in the header",
     )
+    ap.add_argument(
+        "--include",
+        action="append",
+        default=[],
+        metavar="LABEL",
+        help="run the scenarios whose optIn is this label; repeatable. Naming a scenario also opts it in",
+    )
     args = ap.parse_args()
 
     with open(os.path.join(HERE, "models.json")) as f:
@@ -139,6 +149,19 @@ def main():
         print("  evals need GALAXY_URL and GALAXY_API_KEY: they run against a real Galaxy.")
         return 2
     print(f"  galaxy: {os.environ['GALAXY_URL'].strip()}")
+
+    installed = []
+    if any((s.get("requires") or {}).get("tools") for s in scenarios):
+        galaxy = Galaxy(os.environ["GALAXY_URL"].strip(), os.environ["GALAXY_API_KEY"].strip())
+        installed = [t.get("id") or "" for t in galaxy.call("api/tools?in_panel=false") or []]
+    runnable = []
+    for scenario in scenarios:
+        why = opted_out(scenario, args.include, bool(args.scenario)) or missing_tools(scenario, installed)
+        if why:
+            print(f"  skip {scenario['id']}: {why}")
+        else:
+            runnable.append(scenario)
+    scenarios = runnable
 
     models, skipped = available_models(matrix, args.model, args.all_models)
 
