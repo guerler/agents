@@ -217,3 +217,41 @@ def test_a_step_is_read_where_the_latest_plan_writes_it():
     failures = []
     _plan({"eachStepHasDescription": True}, Run(), failures, set())
     assert [f.detail for f in failures] == []
+
+
+def test_landed_pdfs_want_the_papers_asked_for_and_not_a_pile():
+    """The NAR papers request: the six papers as PDFs pass; the shapes a user actually got fail."""
+    from lib.assertions import _history
+
+    papers = {"2016": ["PMC4987906", "W2346143774"], "2024": ["PMC11223835", "W4398182689"]}
+
+    class FakeGalaxy:
+        def __init__(self, contents):
+            self._contents = contents
+
+        def call(self, path):
+            return self._contents
+
+    class Run:
+        def __init__(self, contents):
+            self.staged = {"galaxy": FakeGalaxy(contents), "history_id": "h1", "dataset_ids": {}}
+
+    def pdf(name, state="ok"):
+        return {"history_content_type": "dataset", "id": name, "name": name, "extension": "pdf", "state": state}
+
+    def grade(contents):
+        failures = []
+        _history({"landedPdfs": {"max": 25, "papers": papers}}, Run(contents), failures, set())
+        return [f.detail for f in failures]
+
+    assert grade([pdf("PMC4987906"), pdf("PMC11223835")]) == []
+    assert grade([pdf("001_W2346143774_The Galaxy platform"), pdf("PMC11223835")]) == []
+
+    pile = [pdf(f"PMC{i}") for i in range(30)] + [pdf("PMC4987906"), pdf("PMC11223835")]
+    assert grade(pile) == ["32 PDFs landed, at most 25 fit the request; the papers asked for are buried"]
+
+    citing = [pdf("001_W2121180999_Quality control and preprocessing of metagenomic datasets")]
+    assert grade(citing) == ["no PDF of ['2016', '2024'] among 1 landed"]
+
+    running = [{"history_content_type": "dataset_collection", "id": "c1", "name": "PDFs", "populated_state": "new"}]
+    assert grade(running) == ["answered while downloads were still ['PDFs']"]

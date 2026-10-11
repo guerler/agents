@@ -642,6 +642,9 @@ def _history(spec, run, failures, exercised):
                     )
                 )
 
+    if spec.get("landedPdfs"):
+        _landed_pdfs(spec["landedPdfs"], staged, failures)
+
     if spec.get("lineageIntact"):
         _lineage_intact(run, failures)
 
@@ -656,6 +659,51 @@ def _history(spec, run, failures, exercised):
         for flag in ("deleted", "purged"):
             if state.get(flag):
                 failures.append(Failure("history.intact", f"the staged history is {flag}", "behavior"))
+
+
+def _landed_pdfs(spec, staged, failures):
+    """The papers asked for, as PDFs in the history, and not a pile they are buried in.
+
+    A collection's elements are hidden datasets of the history, named by their identifier,
+    so one listing sees a downloaded collection and a direct upload alike. A paper counts
+    when a PDF's name carries any of its identifiers: a PMCID names a Europe PMC download,
+    an OpenAlex id names an OpenAlex one.
+    """
+    contents = staged["galaxy"].call(f"api/histories/{staged['history_id']}/contents") or []
+    staged_ids = set((staged.get("dataset_ids") or {}).values())
+    produced = [c for c in contents if c.get("id") not in staged_ids and not c.get("deleted")]
+    pending = [
+        c.get("name")
+        for c in produced
+        if (c.get("history_content_type") == "dataset" and c.get("state") in ADVANCING_STATES)
+        or (c.get("history_content_type") == "dataset_collection" and c.get("populated_state") == "new")
+    ]
+    if pending:
+        failures.append(Failure("history.landedPdfs", f"answered while downloads were still {pending}", "behavior"))
+        return
+    pdfs = [
+        c.get("name") or ""
+        for c in produced
+        if c.get("history_content_type") == "dataset"
+        and (c.get("extension") or "").lower() == "pdf"
+        and c.get("state") == "ok"
+    ]
+    most = spec.get("max")
+    if most is not None and len(pdfs) > most:
+        failures.append(
+            Failure(
+                "history.landedPdfs",
+                f"{len(pdfs)} PDFs landed, at most {most} fit the request; the papers asked for are buried",
+                "behavior",
+            )
+        )
+    missing = [
+        paper
+        for paper, ids in (spec.get("papers") or {}).items()
+        if not any(i.lower() in name.lower() for name in pdfs for i in ids)
+    ]
+    if missing:
+        failures.append(Failure("history.landedPdfs", f"no PDF of {missing} among {len(pdfs)} landed", "behavior"))
 
 
 def _record_ids_resolve(spec, run, failures, galaxy, content):
