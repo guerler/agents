@@ -39,6 +39,10 @@ Galaxy without them skips the scenario and the header says which are missing. `"
 keeps an expensive scenario out of the default run; `--include <label>`, or naming the scenario,
 runs it.
 
+A floor (`floors/`) runs a scenario's known-good route with a scripted model in place of a real
+one, graded by the scenario itself. If the floor passes and a model run fails at a step the floor
+took, the model's decision failed, not Olit.
+
 A tool-test scenario grades the output against the tool test's own expectation. Galaxy
 serves a test's **inputs** through `test_data_download` but answers 404 for its expected
 **outputs**, so those live in `fixtures/tool-tests/`, committed, and a run needs nothing

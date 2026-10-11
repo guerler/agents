@@ -32,13 +32,18 @@ def _sse(reply):
 
 @contextlib.contextmanager
 def scripted(replies):
-    """Serve `replies` in order, then "done"; yields the base URL a session config takes."""
-    queue = list(replies)
+    """Serve `replies` in order, then "done"; yields the base URL a session config takes.
+
+    `replies` may instead be a policy: called with each request body, it answers from the
+    conversation so far, so a run that needs an id from an earlier result can be scripted.
+    """
+    queue = [] if callable(replies) else list(replies)
 
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
-            self.rfile.read(int(self.headers.get("content-length") or 0))
-            body = _sse(queue.pop(0) if queue else "done").encode()
+            request = json.loads(self.rfile.read(int(self.headers.get("content-length") or 0)) or b"{}")
+            reply = replies(request) if callable(replies) else (queue.pop(0) if queue else "done")
+            body = _sse(reply).encode()
             self.send_response(200)
             self.send_header("content-type", "text/event-stream")
             self.send_header("content-length", str(len(body)))
