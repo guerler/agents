@@ -278,3 +278,12 @@ def test_a_value_the_server_states_is_read_from_it_not_written_down():
     failures = []
     _chat_text(spec, Run("26.1", staged=False), failures, set())
     assert failures and "no Galaxy" in failures[0].detail
+
+
+def test_record_ids_are_judged_by_length_without_asking_galaxy():
+    """A job id in the record is no dataset; on a shared server Galaxy answers 403 for it."""
+    from lib.assertions import _record_ids_resolve
+
+    failures = []
+    _record_ids_resolve({}, None, failures, "job `4838ba20a6d86765d07974451a31d1b7`, truncated `4838ba20a6d8`")
+    assert [f.assertion for f in failures] == ["record.idsResolve"]

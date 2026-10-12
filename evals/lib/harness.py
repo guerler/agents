@@ -710,7 +710,7 @@ INVOCATION_TERMINAL = ("scheduled", "completed", "cancelled", "failed")
 
 def _await_invocation(galaxy, invocation_id, timeout):
     """The invocation once Galaxy stops driving it, and the states of its jobs."""
-    for _ in range(max(1, timeout // 2)):
+    for _ in range(max(1, int(timeout // 2))):
         invocation = galaxy.call(f"api/invocations/{invocation_id}")
         if invocation.get("state") in INVOCATION_TERMINAL:
             jobs = galaxy.call(f"api/invocations/{invocation_id}/jobs_summary")

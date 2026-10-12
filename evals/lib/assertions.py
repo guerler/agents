@@ -724,15 +724,12 @@ def _landed_pdfs(spec, staged, failures):
         failures.append(Failure("history.landedPdfs", f"no PDF of {missing} among {len(pdfs)} landed", "behavior"))
 
 
-def _record_ids_resolve(spec, run, failures, galaxy, content):
+def _record_ids_resolve(spec, run, failures, content):
     """A truncated id addresses nothing, so the step cannot be resumed from."""
     import re
 
     for token in set(re.findall(r"`([0-9a-f]{8,32})`", content or "")):
         if len(token) % 16 == 0:
-            got = galaxy.call(f"api/datasets/{token}") or {}
-            if isinstance(got, dict) and got.get("err_msg"):
-                continue
             continue
         failures.append(
             Failure(
@@ -851,9 +848,24 @@ def _described(want):
         parts.append(f"plugin {want['plugin']!r}")
     if want.get("dataset"):
         parts.append(f"dataset {want['dataset']!r}")
-    for path, value in (want.get("settingsContain") or {}).items():
-        parts.append(f"settings.{path} containing {value!r}")
+    alternatives = [
+        " and ".join(f"settings.{path} containing {value!r}" for path, value in alt.items())
+        for alt in _settings_alternatives(want.get("settingsContain"))
+    ]
+    if alternatives:
+        parts.append(" or ".join(f"({a})" for a in alternatives) if len(alternatives) > 1 else alternatives[0])
     return " and ".join(parts) or "that description"
+
+
+def _settings_alternatives(value):
+    """`settingsContain` as alternatives: one mapping, or a list of mappings any one of which may hold."""
+    if not value:
+        return []
+    return list(value) if isinstance(value, list) else [value]
+
+
+def _settings_hold(alternative, read):
+    return all(str(wanted) in str(read(path) or "") for path, wanted in alternative.items())
 
 
 def _inventory(made):
@@ -891,8 +903,11 @@ def _artifacts(spec, run, failures, exercised):
         if want.get("dataset"):
             dataset = _resolve_staged(want["dataset"], run)
             matches = [a for a in matches if a.get("dataset_id") == dataset]
-        for path, value in (want.get("settingsContain") or {}).items():
-            matches = [a for a in matches if str(value) in str(_setting(a, path) or "")]
+        alternatives = _settings_alternatives(want.get("settingsContain"))
+        if alternatives:
+            matches = [
+                a for a in matches if any(_settings_hold(alt, lambda path: _setting(a, path)) for alt in alternatives)
+            ]
         if not matches:
             failures.append(
                 Failure(
@@ -1028,7 +1043,7 @@ def _record(spec, run, failures, exercised):
         if needle.lower() in content.lower():
             failures.append(Failure("record.mustNotMention", f"the record holds {needle!r}", "record"))
     if spec.get("idsResolve"):
-        _record_ids_resolve(spec, run, failures, galaxy, content)
+        _record_ids_resolve(spec, run, failures, content)
 
     if spec.get("notEmpty"):
         planted = {line.strip() for line in subject.describe()["record"]["starter"].splitlines() if line.strip()}
@@ -1273,7 +1288,8 @@ def _visualization(spec, run, failures, exercised):
                 )
             )
 
-    for path, wanted in (spec.get("settingsContain") or {}).items():
+    alternatives = _settings_alternatives(spec.get("settingsContain"))
+    for path, wanted in (alternatives[0] if len(alternatives) == 1 else {}).items():
         seen = set()
         for v in matching:
             node = _setting((v.get("latest_revision") or {}).get("config") or {}, path)
@@ -1345,11 +1361,24 @@ def _visualization(spec, run, failures, exercised):
                 )
             )
 
+    if len(alternatives) > 1 and not any(
+        _settings_hold(alt, lambda path, v=v: _setting((v.get("latest_revision") or {}).get("config") or {}, path))
+        for v in matching
+        for alt in alternatives
+    ):
+        failures.append(
+            Failure(
+                "visualization.settingsContain",
+                f"no saved visualization holds any of the alternatives {alternatives}",
+                "behavior",
+            )
+        )
+
     # Each wanted setting and track has to hold in one visualization, not across several.
     def holds_all(v):
         config = (v.get("latest_revision") or {}).get("config") or {}
-        settings_hold = all(
-            str(wanted) in str(_setting(config, path)) for path, wanted in (spec.get("settingsContain") or {}).items()
+        settings_hold = not alternatives or any(
+            _settings_hold(alt, lambda path: _setting(config, path)) for alt in alternatives
         )
         tracked = {_track_dataset(t) for t in config.get("tracks") or []}
         tracks_hold = all(_resolve_staged(w, run) in tracked for w in spec.get("tracksDataset") or [])

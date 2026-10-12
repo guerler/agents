@@ -120,3 +120,18 @@ def test_a_visualization_on_the_wrong_genome_or_dataset_fails_and_says_what_it_c
 
 def test_a_visualization_of_another_plugin_does_not_match():
     assert grade({"mustInclude": [{"kind": "visualization", "plugin": "ngl"}]}, [SHOWN_IGV]) != []
+
+
+def test_settings_alternatives_accept_either_genome_source_but_each_in_full():
+    """IGV's hg18 is IGV's hosted entry on one server and a built-in on another; both are resolved."""
+    hosted = {"source.origin": "igv", "source.genome.id": "hg18", "source.genome.fastaURL": "hg18.fasta"}
+    builtin = {"source.origin": "builtin", "source.genome.id": "hg18", "source.genome.row": "hg18.fa"}
+    spec = {"mustInclude": [{"kind": "visualization", "plugin": ["igv"], "settingsContain": [hosted, builtin]}]}
+
+    def igv(source):
+        return {"kind": "visualization", "visualization": "igv", "settings": {"source": source}}
+
+    row = ["hg18", "hg18", "Human (Homo sapiens): hg18", "hg18.fa"]
+    assert grade(spec, [igv({"origin": "builtin", "genome": {"id": "hg18", "row": row}})]) == []
+    assert grade(spec, [igv({"origin": "igv", "genome": {"id": "hg18", "fastaURL": "https://x/hg18.fasta"}})]) == []
+    assert grade(spec, [igv({"origin": "builtin", "genome": {"id": "hg18"}})]), "an unresolved id passed"

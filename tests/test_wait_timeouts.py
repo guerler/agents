@@ -161,3 +161,16 @@ def test_the_agent_own_time_is_still_cut_off_at_the_budget():
 
     elapsed = asyncio.run(guarded())
     assert isinstance(elapsed, float) and elapsed < 0.4, "the agent outlived its budget"
+
+
+def test_an_environment_wait_given_as_a_float_still_bounds_the_invocation_poll(monkeypatch):
+    """OLIT_EVAL_GALAXY_WAIT is read as a float, and range() takes only integers."""
+    from lib import harness
+
+    class Galaxy:
+        def call(self, path):
+            return {"state": "scheduled"} if path.endswith("invocations/i1") else {"states": {"ok": 1}}
+
+    monkeypatch.setattr(harness.time, "sleep", lambda seconds: None)
+    settled, states = harness._await_invocation(Galaxy(), "i1", 1800.0)
+    assert settled["state"] == "scheduled" and states == {"ok": 1}
