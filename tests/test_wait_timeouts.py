@@ -129,3 +129,35 @@ def test_the_wait_is_recorded_even_when_staging_stalls(monkeypatch):
     monkeypatch.setattr(harness, "build_config", lambda *a, **k: {})
     run = harness._guarded({"id": "s", "inputs": ["hi"]}, {"id": "m"}, None)
     assert run.waited >= 0.05
+
+
+def test_a_galaxy_wait_does_not_spend_the_agent_budget():
+    """A queued job settling on Galaxy is the environment's clock, so the agent keeps its budget."""
+    from lib.harness import GalaxyClock, _within_agent_budget
+
+    clock = GalaxyClock()
+
+    async def agent():
+        await clock.wait(asyncio.sleep(0.3))
+        return "answered"
+
+    assert asyncio.run(_within_agent_budget(agent(), 0.1, clock)) == "answered"
+    assert clock.total >= 0.3, "the wait was not recorded"
+
+
+def test_the_agent_own_time_is_still_cut_off_at_the_budget():
+    from lib.harness import GalaxyClock, _within_agent_budget
+
+    async def agent():
+        await asyncio.sleep(0.5)
+        return "answered"
+
+    async def guarded():
+        started = time.monotonic()
+        try:
+            return await _within_agent_budget(agent(), 0.1, GalaxyClock())
+        except asyncio.TimeoutError:
+            return time.monotonic() - started
+
+    elapsed = asyncio.run(guarded())
+    assert isinstance(elapsed, float) and elapsed < 0.4, "the agent outlived its budget"

@@ -1,6 +1,7 @@
 """Drive the agent headlessly for one scenario."""
 
 import asyncio
+import contextlib
 import json
 import os
 import pathlib
@@ -307,19 +308,19 @@ async def _run(scenario, model, base_url=None):
         config["instructions"] = scenario["systemPrompt"]
     # Staging is the environment's work, so it is timed by the environment's clock and sits
     # outside the budget that measures the agent.
-    waited = [0.0]
+    waited = GalaxyClock()
     try:
         staged = await _timed(waited, _stage, scenario, config)
     except Exception as e:
-        return RunResult([], [], [], error=f"{type(e).__name__}: {e}", stalled=True, waited=waited[0])
+        return RunResult([], [], [], error=f"{type(e).__name__}: {e}", stalled=True, waited=waited.total)
     # The session is bound to its history from the start, as the page binds it from the URL.
     config["history_id"] = staged["history_id"] if staged else _empty_history(config, scenario)
     session = await Session(config).init()
     budget = scenario_timeout(scenario)
     try:
-        return await asyncio.wait_for(_drive(scenario, session, config, staged, waited), timeout=budget)
+        return await _within_agent_budget(_drive(scenario, session, config, staged, waited), budget, waited)
     except asyncio.TimeoutError:
-        return RunResult([], [], [], error=f"the agent ran past its {budget:.0f}s budget", waited=waited[0])
+        return RunResult([], [], [], error=f"the agent ran past its {budget:.0f}s budget", waited=waited.total)
     finally:
         await session.close()
 
@@ -343,7 +344,7 @@ def _stage(scenario, config):
 
 
 async def _drive(scenario, session, config, staged, waited=None):
-    waited = waited if waited is not None else [0.0]
+    waited = waited if waited is not None else GalaxyClock()
     tools_called = []
     logs = []
     events = []
@@ -412,7 +413,7 @@ async def _drive(scenario, session, config, staged, waited=None):
         max_steps=int(config.get("max_steps") or subject.describe()["policy"]["loop"]["max_steps"]),
         config=config,
         refused=refused,
-        waited=waited[0],
+        waited=waited.total,
         document=document,
     )
 
@@ -442,13 +443,47 @@ def galaxy_wait_timeout():
     return float(stated) if stated else DEFAULT_GALAXY_WAIT_SECONDS
 
 
+class GalaxyClock:
+    """The wall clock spent waiting on Galaxy, a wait still in progress included.
+
+    Each wait is bounded on its own by `galaxy_wait_timeout`; this clock keeps the waits out of
+    the agent's budget and records how long they took.
+    """
+
+    def __init__(self):
+        self.total = 0.0
+        self._since = None
+
+    async def wait(self, awaitable):
+        self._since = time.monotonic()
+        try:
+            return await awaitable
+        finally:
+            self.total += time.monotonic() - self._since
+            self._since = None
+
+    def now(self):
+        return self.total + (time.monotonic() - self._since if self._since is not None else 0.0)
+
+
+async def _within_agent_budget(coro, budget, waited):
+    """Run `coro` until the agent's own time passes `budget`; time `waited` on Galaxy is not counted."""
+    task = asyncio.ensure_future(coro)
+    started, before = time.monotonic(), waited.now()
+    while not task.done():
+        used = time.monotonic() - started - (waited.now() - before)
+        if used >= budget:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+            raise asyncio.TimeoutError
+        await asyncio.wait({task}, timeout=min(budget - used, 1.0))
+    return task.result()
+
+
 async def _timed(waited, func, *args):
-    """Run a Galaxy wait off the event loop, adding its wall clock to `waited`."""
-    started = time.monotonic()
-    try:
-        return await asyncio.to_thread(func, *args)
-    finally:
-        waited[0] += time.monotonic() - started
+    """Run a Galaxy wait off the event loop, on the Galaxy clock."""
+    return await waited.wait(asyncio.to_thread(func, *args))
 
 
 def scenario_timeout(scenario):
@@ -722,11 +757,7 @@ async def _settle(session, events, timeout, waited, absorb):
     The session decides what to follow up on and how many times in a row; the runs it started come
     back as the entries they appended. Galaxy's clock, not the agent's.
     """
-    started = time.monotonic()
-    try:
-        result = await session.settle(timeout)
-    finally:
-        waited[0] += time.monotonic() - started
+    result = await waited.wait(session.settle(timeout))
     if result.get("settled"):
         events.append("work_settled")
     entries = result.get("entries") or []

@@ -255,3 +255,26 @@ def test_landed_pdfs_want_the_papers_asked_for_and_not_a_pile():
 
     running = [{"history_content_type": "dataset_collection", "id": "c1", "name": "PDFs", "populated_state": "new"}]
     assert grade(running) == ["answered while downloads were still ['PDFs']"]
+
+
+def test_a_value_the_server_states_is_read_from_it_not_written_down():
+    """An instance's version differs between servers, so a scenario names where to read it."""
+    from lib.assertions import _chat_text
+
+    class FakeGalaxy:
+        def call(self, path):
+            return {"version_major": "26.1"} if path == "api/version" else {}
+
+    class Run:
+        def __init__(self, text, staged=True):
+            self.chat_text = text
+            self.staged = {"galaxy": FakeGalaxy(), "history_id": "h1"} if staged else None
+
+    spec = {"mustIncludeFromGalaxy": [{"get": "api/version", "field": "version_major"}]}
+    for run, failing in ((Run("This is Galaxy 26.1."), False), (Run("This is Galaxy 26.2."), True)):
+        failures = []
+        _chat_text(spec, run, failures, set())
+        assert bool(failures) is failing, run.chat_text
+    failures = []
+    _chat_text(spec, Run("26.1", staged=False), failures, set())
+    assert failures and "no Galaxy" in failures[0].detail

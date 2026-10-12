@@ -238,6 +238,24 @@ def _chat_text(spec, run, failures, exercised):
         rx = _compile(pattern, "chatText.mustNotMatch", failures)
         if rx and rx.search(text):
             failures.append(Failure("chatText.mustNotMatch", f"chat matched banned /{pattern}/", "behavior"))
+    for fact in spec.get("mustIncludeFromGalaxy") or []:
+        _chat_includes_from_galaxy(fact, run, text, failures)
+
+
+def _chat_includes_from_galaxy(fact, run, text, failures):
+    """A value the server states, such as its version, read from it rather than written down."""
+    staged = getattr(run, "staged", None)
+    where = f"{fact['get']} {fact['field']}"
+    if not staged:
+        failures.append(Failure("chatText.mustIncludeFromGalaxy", f"no Galaxy to read {where} from", "behavior"))
+        return
+    value = str((staged["galaxy"].call(fact["get"]) or {}).get(fact["field"]) or "")
+    if not value:
+        failures.append(Failure("chatText.mustIncludeFromGalaxy", f"Galaxy stated no {where}", "behavior"))
+    elif value not in text:
+        failures.append(
+            Failure("chatText.mustIncludeFromGalaxy", f"chat never contained {value!r} ({where})", "behavior")
+        )
 
 
 def _compile(pattern, assertion, failures):

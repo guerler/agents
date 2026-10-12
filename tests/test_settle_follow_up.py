@@ -12,7 +12,7 @@ import pytest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "evals"))
 
-from lib.harness import TurnFailed, _settle  # noqa: E402
+from lib.harness import GalaxyClock, TurnFailed, _settle  # noqa: E402
 
 
 class Session:
@@ -32,7 +32,7 @@ def assistant(text="", stop="stop", error=None):
 
 def settle(entries):
     events, absorbed = [], []
-    asyncio.run(_settle(Session(entries), events, 1, [0], absorbed.extend))
+    asyncio.run(_settle(Session(entries), events, 1, GalaxyClock(), absorbed.extend))
     return events, absorbed
 
 
