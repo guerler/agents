@@ -15,7 +15,7 @@ the tier's total beside it. A scenario passes when every run of it passes.
   Orbit on Orbit's tests.
 
 ```bash
-export OLIT_ROOT=~/galaxy-visualizations/packages/olit
+export OLIT_ROOT=~/loom/browser
 export GALAXY_URL=... GALAXY_API_KEY=...
 
 python3 evals/run.py                 # behavioural scenarios against a real model and Galaxy
@@ -34,7 +34,7 @@ Nothing here reads the agent's source. An agent publishes a description of its o
 and every check is a projection of that document:
 
 ```bash
-cd $OLIT_ROOT && npm run describe
+cd $OLIT_ROOT && npm run build:session && node dist/session.mjs --describe --root .
 ```
 
 `description.py` loads it, from a checkout or from a saved JSON file. `subject.py` names the

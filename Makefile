@@ -1,5 +1,5 @@
 # OLIT_ROOT names the checkout under test; the eval imports its brain from source.
-OLIT_ROOT ?= $(HOME)/galaxy-visualizations/packages/olit
+OLIT_ROOT ?= $(HOME)/loom/browser
 export OLIT_ROOT
 
 .PHONY: format lint test check upstream

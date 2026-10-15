@@ -23,7 +23,7 @@ import urllib.request
 
 HERE = pathlib.Path(__file__).resolve().parent
 LOOM = pathlib.Path(os.environ.get("LOOM_ROOT", pathlib.Path.home() / "loom"))
-OLIT = pathlib.Path(os.environ.get("OLIT_ROOT", pathlib.Path.home() / "galaxy-visualizations/packages/olit"))
+OLIT = pathlib.Path(os.environ.get("OLIT_ROOT", pathlib.Path.home() / "loom/browser"))
 REGISTRY = HERE / "seams" / "registry.json"
 BRANCH = os.environ.get("LOOM_BRANCH", "main")
 

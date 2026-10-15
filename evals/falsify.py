@@ -43,11 +43,11 @@ class Break:
         self.edits = edits or [(path, find, replace)]
 
     def _paths(self):
-        return sorted({ROOT / path for path, _, _ in self.edits})
+        return sorted({subject.source(path) for path, _, _ in self.edits})
 
     def apply(self):
         for path, find, replace in self.edits:
-            target = ROOT / path
+            target = subject.source(path)
             source = target.read_text()
             found = source.count(find)
             if found != 1:
@@ -296,11 +296,11 @@ def main():
         return 2
 
     dirty = subprocess.run(
-        ["git", "status", "--porcelain", "--", "src/agent"], cwd=ROOT, capture_output=True, text=True
+        ["git", "status", "--porcelain", "--", *subject.SOURCE["olit"]], cwd=ROOT, capture_output=True, text=True
     ).stdout.strip()
     if dirty:
         print(
-            "working tree has local changes under src/agent/; falsification edits\n"
+            "working tree has local changes in the agent's source; falsification edits\n"
             "source and restores with `git checkout`, which would discard them:\n" + dirty
         )
         return 2

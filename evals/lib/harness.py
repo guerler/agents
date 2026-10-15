@@ -697,7 +697,7 @@ def _stage_run(galaxy, history_id, dataset_id, spec, timeout):
     return produced_id
 
 
-# Job states Galaxy will not leave, matching src/agent/watch.ts.
+# Job states Galaxy will not leave, matching core/src/agent/watch.ts.
 RUNNING_STATES = ("new", "queued", "running", "paused", "upload", "setting_metadata")
 # What Galaxy advances on its own; `paused` waits on a failed input or on the user.
 ADVANCING_STATES = ("new", "queued", "running", "upload", "setting_metadata")

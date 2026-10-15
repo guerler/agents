@@ -12,8 +12,8 @@ import description
 
 ENV = "OLIT_ROOT"
 
-# What marks a checkout of the agent: the directory its loop lives in.
-SOURCE = {"olit": "src/agent"}
+# What marks a checkout of the agent: the directories its loop lives in.
+SOURCE = {"olit": ("core/src/agent", "olit/src/agent")}
 
 # The agent as one Node module, speaking JSON lines; built from the checkout, never vendored.
 SESSION = {"olit": "dist/session.mjs"}
@@ -26,9 +26,18 @@ def root(agent="olit"):
     if not value:
         raise SystemExit(f"set {ENV} to a checkout of the agent under test")
     path = pathlib.Path(value).expanduser().resolve()
-    if not (path / SOURCE[agent]).is_dir():
+    if not all((path / source).is_dir() for source in SOURCE[agent]):
         raise SystemExit(f"{path} does not look like an {agent} checkout")
     return path
+
+
+def source(module, agent="olit"):
+    """A module's file, by the `src/agent/...` path the agent's description names it with."""
+    for directory in SOURCE[agent]:
+        path = root(agent) / directory / pathlib.Path(module).relative_to("src/agent")
+        if path.is_file():
+            return path
+    raise SystemExit(f"{module} is not in {root(agent)}")
 
 
 def session(agent="olit"):

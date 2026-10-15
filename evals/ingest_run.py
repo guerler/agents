@@ -133,7 +133,7 @@ def main():
 
 
 def git_commit():
-    olit = pathlib.Path(os.path.expanduser("~/galaxy-visualizations"))
+    olit = pathlib.Path(os.path.expanduser(os.environ.get("OLIT_ROOT", "~/loom/browser")))
     try:
         return subprocess.run(
             ["git", "-C", str(olit), "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True

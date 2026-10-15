@@ -1,7 +1,7 @@
 # olit evals
 
 Scenario-driven behavioural tests, ported from loom's `evals/`. The unit suites in
-olit's `src/**/*.test.ts` check that the machinery is correct; these check
+olit's `src/**/*.test.ts` in loom's `browser/` check that the machinery is correct; these check
 that the **agent behaves like Orbit** — which is the claim the project actually
 rests on, and the one thing a unit test cannot answer.
 
@@ -17,7 +17,7 @@ python evals/run.py --repeat 3         # run each scenario 3 times; n=1 hides va
 
 **Pacing.** Each model resolves through the agent's provider registry, so the run is
 throttled at the endpoint's own rate — Gemini's free tier is 5 requests/minute, and
-that number lives in olit's `src/agent/providers.ts`. `--delay` adds more on top and defaults to none.
+that number lives in olit's `core/src/agent/providers.ts`. `--delay` adds more on top and defaults to none.
 A per-day quota is a different thing and no amount of pacing fixes it. A quota-limited
 run is reported as `quota`,
 counted in its own column, **not graded, and does not fail the suite** — an exhausted
@@ -55,7 +55,7 @@ loom spawns `loom --mode json` and parses its event stream, and Olit is driven t
 way: `lib/harness.py` starts the checkout's `dist/session.mjs` (`npm run build:session`),
 the same `Session` the browser worker runs, and speaks JSON lines to it. A turn streams its
 events before its result, and the result carries the whole transcript. The checkout has to
-be rebuilt after a change to `src/agent/`, or a run grades the previous build.
+be rebuilt after a change to its source, or a run grades the previous build.
 
 **Galaxy and the LLM are both real.** A scenario stages its own history on the Galaxy named
 by `GALAXY_URL`, so a tool call reaches the server it would reach in the browser.
