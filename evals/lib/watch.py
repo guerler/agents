@@ -85,31 +85,32 @@ def stop_server():
     _server = None
 
 
-def condense(source):
-    """A copy of a run's video with the frames that change nothing dropped, so the waits on the
-    model and on Galaxy's jobs leave it and what is left plays at its own pace."""
-    target = source.with_name(f"{source.stem}.condensed.webm")
+def condense(source, target):
+    """The run's video with the frames that change nothing dropped, so the waits on the model and
+    on Galaxy's jobs leave it and what is left plays at its own pace."""
     command = ["ffmpeg", "-v", "error", "-y", "-i", str(source), "-vf", CONDENSE, *ENCODE, str(target)]
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
     except FileNotFoundError:
-        return "skipped, ffmpeg is not installed"
+        return "ffmpeg is not installed"
     except subprocess.CalledProcessError as e:
         lines = (e.stderr or "").strip().splitlines()
-        return f"failed: {lines[-1] if lines else e}"
-    return str(target)
+        return lines[-1] if lines else str(e)
+    return None
 
 
 def keep_video(recorded, folder, name):
-    """Move the page's recording into the videos folder under the run's own name, beside its
-    condensed copy; Playwright names it after the page and leaves it in a folder of its own."""
+    """Keep the page's recording, condensed, in the videos folder under the run's own name.
+    Without ffmpeg the recording is kept as it is."""
     if not recorded:
         return
     video = pathlib.Path(folder) / f"{name}.webm"
-    pathlib.Path(recorded).replace(video)
+    problem = condense(recorded, video)
+    if problem:
+        pathlib.Path(recorded).replace(video)
     shutil.rmtree(pathlib.Path(recorded).parent, ignore_errors=True)
-    print(f"          video:    {video}", flush=True)
-    print(f"          condensed: {condense(video)}", flush=True)
+    note = f" (not condensed: {problem})" if problem else ""
+    print(f"          video:    {video}{note}", flush=True)
 
 
 def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
