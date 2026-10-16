@@ -58,7 +58,7 @@ def _anchors():
             name = f"{brk.family}:{pathlib.Path(path).stem}:{index}.{position}"
             decayed = pytest.mark.xfail(strict=True, reason="anchor decayed; needs a validated re-anchor")
             marks = [decayed] if name in DECAYED else []
-            out.append(pytest.param(brk.family, path, find, module.ROOT / path, marks=marks, id=name))
+            out.append(pytest.param(brk.family, path, find, module.subject.source(path), marks=marks, id=name))
     return out
 
 
