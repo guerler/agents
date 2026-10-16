@@ -51,7 +51,7 @@ def start_server(model):
     global _server
     if _server:
         return
-    records = HERE.parents[1] / ".records"
+    records = HERE.parents[1] / "records"
     records.mkdir(exist_ok=True)
     log = open(records / "watch-server.log", "w")
     _server = subprocess.Popen(

@@ -96,7 +96,7 @@ def main():
     ap.add_argument("--only-local", action="store_true", help="skip the scenarios shared with loom")
     ap.add_argument(
         "--records",
-        default=os.path.join(os.path.dirname(HERE), ".records"),
+        default=os.path.join(os.path.dirname(HERE), "records"),
         help="where each run's completions are recorded; local disk only, never committed",
     )
     ap.add_argument("--no-records", action="store_true", help="run without recording completions")
