@@ -69,6 +69,31 @@ async function agentJobs() {
   return jobs.filter((j) => !args.skipJobs.includes(j.id));
 }
 
+/** Each job's output datasets, read once: an upload is watched as the dataset it creates. */
+const outputsOf = new Map();
+
+/**
+ * Whether the page has accounted for a finished job: it names the job, or announces one of the
+ * datasets the job made settled, which is how Olit reports an upload.
+ */
+async function accountedFor(job, shown) {
+  if (shown.includes(job.id)) return true;
+  if (!outputsOf.has(job.id)) {
+    const detail = await page.evaluate(
+      async ({ root, id }) => {
+        const response = await fetch(`${root}api/jobs/${id}`);
+        return response.ok ? response.json() : null;
+      },
+      { root: args.root, id: job.id },
+    );
+    if (!detail) return false;
+    outputsOf.set(job.id, Object.values(detail.outputs || {}).map((o) => o.id));
+  }
+  return outputsOf
+    .get(job.id)
+    .some((id) => new RegExp(`Galaxy dataset ${id} (finished|was|is )`).test(shown));
+}
+
 /**
  * Quiet: the page idle, every job the agent started terminal and announced as settled, which is
  * what starts a follow-up run, and still idle `settleMs` later. A job the page never announces
@@ -89,7 +114,11 @@ async function quiet(deadline) {
       const jobs = await agentJobs();
       const shown = await text();
       const active = jobs.filter((j) => !TERMINAL.has(j.state));
-      const unannounced = jobs.filter((j) => TERMINAL.has(j.state) && !shown.includes(j.id));
+      const unannounced = [];
+      for (const j of jobs) {
+        const pending = TERMINAL.has(j.state) && !settled.has(j.id);
+        if (pending && !(await accountedFor(j, shown))) unannounced.push(j);
+      }
       terminalSince = active.length || !unannounced.length ? 0 : terminalSince || Date.now();
       const announced =
         !active.length && (!unannounced.length || Date.now() - terminalSince > 150_000);

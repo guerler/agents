@@ -1,6 +1,6 @@
 {
   "name": "demo: from a differential expression table to a written-up volcano plot",
-  "description": "The scenario shown to the community, replaced as Olit grows. Tier 3, live Galaxy, default model. One researcher's session on the GTN volcano plot tutorial's own data (limma-voom, mouse mammary gland luminal cells, pregnant vs lactating): find the tutorial, follow its method with Galaxy's Volcano Plot tool, draw an interactive chart, and write the record page. Ground truth from the table itself: 1610 genes pass adj.P.Val < 0.01 and |logFC| > 0.58 (669 positive, 941 negative logFC; unchanged with inclusive bounds), and Csn1s2b has the smallest P value.",
+  "description": "The scenario shown to the community, replaced as Olit grows. Tier 3, live Galaxy, default model. One researcher's session on the GTN volcano plot tutorial's own data (limma-voom, mouse mammary gland luminal cells, pregnant vs lactating): bring the table in from Zenodo, find the tutorial, follow its method with Galaxy's Volcano Plot tool, draw an interactive chart, and write the record page. Ground truth from the table itself: 1610 genes pass adj.P.Val < 0.01 and |logFC| > 0.58 (669 positive, 941 negative logFC; unchanged with inclusive bounds), and Csn1s2b has the smallest P value.",
   "tier": 3,
   "optIn": "demo",
   "requires": {
@@ -8,14 +8,10 @@
       "volcanoplot"
     ]
   },
-  "dataset": {
-    "url": "https://zenodo.org/records/2529117/files/limma-voom_luminalpregnant-luminallactate",
-    "name": "limma-voom_luminalpregnant-luminallactate",
-    "datatype": "tabular",
-    "history": "olit demo $run"
-  },
+  "emptyHistory": "olit demo $run",
   "inputs": [
-    "This table holds limma-voom differential expression results for mouse mammary gland luminal cells, pregnant versus lactating. Is there a Galaxy Training Network tutorial on making a volcano plot from results like these? Tell me briefly how it goes about it.",
+    "My differential expression results are at https://zenodo.org/records/2529117/files/limma-voom_luminalpregnant-luminallactate. Bring that table into this history as a tabular dataset.",
+    "The table holds limma-voom differential expression results for mouse mammary gland luminal cells, pregnant versus lactating. Is there a Galaxy Training Network tutorial on making a volcano plot from results like these? Tell me briefly how it goes about it.",
     "Let's do that on Galaxy with my data. Use the Volcano Plot tool with an adjusted P value below 0.01 and an absolute log fold change above 0.58, and label the 10 most significant genes. Also tell me how many genes pass those thresholds, how many have a positive and a negative log fold change, and which ten genes are the most significant.",
     "Is it done? Show me the result, and draw an interactive volcano plot here as well that I can hover over to see each gene, coloured by whether a gene is significant and with the ten most significant genes labelled.",
     "Write this up on the record page: where the data comes from, the method with tool citations, the numbers, the top genes and the chart."
@@ -28,6 +24,12 @@
     "toolCalls": {
       "mustInclude": [
         {
+          "name": "upload_file_from_url",
+          "argsContains": {
+            "url": "zenodo.org/records/2529117"
+          }
+        },
+        {
           "name": "gtn_fetch",
           "argsContains": {
             "url": "rna-seq-viz-with-volcanoplot"
@@ -39,7 +41,7 @@
       ]
     },
     "history": {
-      "producedDatasets": 1,
+      "producedDatasets": 2,
       "lineageIntact": true
     },
     "behavior": {

@@ -66,8 +66,8 @@ the same Galaxy, and `lib/watch_drive.mjs` types each input into the real page w
 off the conversation the page saves to Galaxy, so the verdict means the same as a headless one.
 `--video` records it as `records/videos/<timestamp>-<scenario>.webm` (or in a `DIR` given after it), condensed with
 ffmpeg: the frames where nothing changes are dropped, so waits on the model and on jobs leave the video.
-`--slow-mo MS` slows it, `--hold N` keeps the window open. It needs a scenario that stages a dataset and does not restart
-or approve.
+`--slow-mo MS` slows it, `--hold N` keeps the window open. It needs a scenario that does not restart or approve, and on
+the dev server one that stages a dataset.
 
 A scenario's `page` assertion grades the page itself, and only a watched run checks it: `"page": {"chart": ["renders",
 "hover", "export"]}` asks that the chart in the pane drew marks without an error, that hovering a mark shows a tooltip,
@@ -80,7 +80,8 @@ python evals/run.py demo-volcano-from-gtn --watch --video
 `--watch galaxy` opens Olit as `GALAXY_URL` serves it instead, inside Galaxy's own UI with its history panel, so the
 video shows the whole Galaxy page. No dev server starts: the plugin Galaxy has installed is the one under test. The
 browser signs in through Galaxy's login form as `GALAXY_USER` with `GALAXY_PASSWORD`, the account `GALAXY_API_KEY`
-belongs to, makes the run's history current, and drives Olit in the frame Galaxy mounts it in. A plugin build reaches
+belongs to, makes the run's history current, and drives Olit in the frame Galaxy mounts it in. A scenario with an
+`emptyHistory` opens Olit on that history with no dataset, so the run can bring its own data in. A plugin build reaches
 no model but Galaxy's own, so this runs only on Galaxy AI.
 
 **Some scenarios grade the data path.** `analysis-csv-columns` and its siblings fetch real

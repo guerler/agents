@@ -127,8 +127,10 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
     unsupported = [k for k in ("restartAfter", "approveWhenPlanned") if scenario.get(k)]
     if unsupported:
         return harness.RunResult([], [], [], error=f"watch mode does not drive {', '.join(unsupported)}")
-    if not scenario.get("dataset"):
-        return harness.RunResult([], [], [], error="watch mode launches on a staged dataset; this scenario has none")
+    if target == "dev" and not scenario.get("dataset"):
+        return harness.RunResult([], [], [], error="the dev server launches on a staged dataset, and this has none")
+    if not (scenario.get("dataset") or scenario.get("emptyHistory")):
+        return harness.RunResult([], [], [], error="watch mode launches on a staged history; this scenario has none")
 
     config = harness.build_config(model, scenario.get("capabilities"))
     waited = time.time()
@@ -139,12 +141,15 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
     waited = time.time() - waited
     config["history_id"] = staged["history_id"]
     galaxy = staged["galaxy"]
-    dataset_id = next(iter(staged["dataset_ids"].values()))
+    dataset_id = next(iter(staged["dataset_ids"].values()), None)
     staging_jobs = [j["id"] for j in galaxy.call(f"api/jobs?history_id={staged['history_id']}&limit=500") or []]
 
     if target == "galaxy":
         root = os.environ["GALAXY_URL"].strip().rstrip("/") + "/"
-        url = f"{root}visualizations/display?visualization=olit&dataset_id={dataset_id}"
+        # Without a dataset, Olit opens on Galaxy's current history, which signing in makes this one.
+        url = f"{root}visualizations/display?visualization=olit"
+        if dataset_id:
+            url += f"&dataset_id={dataset_id}"
         login = {"user": os.environ["GALAXY_USER"], "password": os.environ["GALAXY_PASSWORD"]}
     else:
         start_server(model)
