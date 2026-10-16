@@ -17,7 +17,7 @@
   "inputs": [
     "This table holds limma-voom differential expression results for mouse mammary gland luminal cells, pregnant versus lactating. Is there a Galaxy Training Network tutorial on making a volcano plot from results like these? Tell me briefly how it goes about it.",
     "Let's do that on Galaxy with my data. Use the Volcano Plot tool with an adjusted P value below 0.01 and an absolute log fold change above 0.58, and label the 10 most significant genes. Also tell me how many genes pass those thresholds, how many have a positive and a negative log fold change, and which ten genes are the most significant.",
-    "Is it done? Show me the result, and draw an interactive volcano plot here as well that I can zoom into and hover over to see each gene, coloured by whether a gene is significant and with the ten most significant genes labelled.",
+    "Is it done? Show me the result, and draw an interactive volcano plot here as well that I can hover over to see each gene, coloured by whether a gene is significant and with the ten most significant genes labelled.",
     "Write this up on the record page: where the data comes from, the method with tool citations, the numbers, the top genes and the chart."
   ],
   "timeoutMs": 1800000,
