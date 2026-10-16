@@ -60,6 +60,17 @@ be rebuilt after a change to its source, or a run grades the previous build.
 **Galaxy and the LLM are both real.** A scenario stages its own history on the Galaxy named
 by `GALAXY_URL`, so a tool call reaches the server it would reach in the browser.
 
+**`--watch` runs it in a browser you can watch.** `lib/watch.py` starts Olit's dev server against
+the same Galaxy, and `lib/watch_drive.mjs` types each input into the real page with Playwright
+(Chrome if installed), waiting out Galaxy jobs and the follow-ups they start. The run is graded
+off the conversation the page saves to Galaxy, so the verdict means the same as a headless one.
+`--video DIR` records it, `--slow-mo MS` slows it, `--hold N` keeps the window open. It needs a
+scenario that stages a dataset and does not restart or approve.
+
+```bash
+python evals/run.py demo-volcano-from-gtn --watch --video /tmp/olit-demo
+```
+
 **Some scenarios grade the data path.** `analysis-csv-columns` and its siblings fetch real
 dataset bytes through `download_dataset` and compute over the file with `run_python`. Grading
 only *which tool calls are emitted* left a blind spot: inline dataset content breaking tool-call

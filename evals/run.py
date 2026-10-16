@@ -16,7 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
-from lib import loom_scenarios  # noqa: E402
+from lib import loom_scenarios, watch  # noqa: E402
 from lib.assertions import DIMENSIONS, evaluate, validate_patterns  # noqa: E402
 from lib.harness import (  # noqa: E402
     label_record_page,
@@ -124,6 +124,16 @@ def main():
         metavar="LABEL",
         help="run the scenarios whose optIn is this label; repeatable. Naming a scenario also opts it in",
     )
+    ap.add_argument(
+        "--watch",
+        action="store_true",
+        help="type each scenario into Olit's real page in a visible browser; graded off the conversation it saves",
+    )
+    ap.add_argument("--video", metavar="DIR", help="with --watch, record each run's browser as a video in DIR")
+    ap.add_argument("--slow-mo", type=int, default=0, metavar="MS", help="with --watch, slow each browser action")
+    ap.add_argument(
+        "--hold", type=int, default=0, metavar="SECONDS", help="with --watch, keep the browser open after a run"
+    )
     args = ap.parse_args()
 
     with open(os.path.join(HERE, "models.json")) as f:
@@ -182,7 +192,8 @@ def main():
         return 1
 
     started = time.strftime("%Y-%m-%dT%H-%M-%S")
-    records = None if args.no_records else os.path.join(args.records, started)
+    # A watched run's completions go through the browser, past the recorder.
+    records = None if args.no_records or args.watch else os.path.join(args.records, started)
     if records:
         os.makedirs(records, exist_ok=True)
         print(f"  records: {records}")
@@ -204,7 +215,10 @@ def main():
                 if args.delay and results:
                     time.sleep(args.delay)
                 scenario = _resolve_run_tokens(scenario)
-                run = run_scenario(scenario, model, capture=capture(scenario, model, run_index))
+                if args.watch:
+                    run = watch.run_watched(scenario, model, args.video, args.slow_mo, args.hold)
+                else:
+                    run = run_scenario(scenario, model, capture=capture(scenario, model, run_index))
                 if run.error:
                     failures, exercised = [], set()
                     verdict = "quota" if is_quota(run) else ("STALL" if run.stalled else "ERROR")
@@ -233,7 +247,11 @@ def main():
                     page = label_record_page(run, scenario["id"], model["id"])
                     if page:
                         print(f"          notebook: {page}", flush=True)
-                if not args.no_sessions and run.config and run.messages:
+                if args.watch:
+                    session = watch.retitle(run, scenario["id"], model["id"]) if run.config else None
+                    if session:
+                        print(f"          session:  {session}", flush=True)
+                elif not args.no_sessions and run.config and run.messages:
                     session = save_session(run.config, scenario["id"], model["id"], run)
                     if session:
                         print(f"          session:  {session}", flush=True)
