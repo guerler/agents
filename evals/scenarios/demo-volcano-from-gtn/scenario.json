@@ -58,6 +58,13 @@
         }
       ]
     },
+    "page": {
+      "chart": [
+        "renders",
+        "hover",
+        "export"
+      ]
+    },
     "record": {
       "notEmpty": true,
       "mustMention": [

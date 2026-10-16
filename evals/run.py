@@ -96,7 +96,7 @@ def main():
     ap.add_argument("--only-local", action="store_true", help="skip the scenarios shared with loom")
     ap.add_argument(
         "--records",
-        default=os.path.join(os.path.dirname(HERE), "records"),
+        default=os.path.join(os.path.dirname(HERE), "records", "content"),
         help="where each run's completions are recorded; local disk only, never committed",
     )
     ap.add_argument("--no-records", action="store_true", help="run without recording completions")
@@ -134,7 +134,7 @@ def main():
         nargs="?",
         const="",
         metavar="DIR",
-        help="with --watch, record each run's browser as a video, in DIR or under the records directory",
+        help="with --watch, record each run's browser as a video, in DIR or in records/videos",
     )
     ap.add_argument("--slow-mo", type=int, default=0, metavar="MS", help="with --watch, slow each browser action")
     ap.add_argument(
@@ -201,7 +201,7 @@ def main():
     # A watched run's completions go through the browser, past the recorder.
     records = None if args.no_records or args.watch else os.path.join(args.records, started)
     if args.video == "":
-        args.video = os.path.join(args.records, "videos", started)
+        args.video = os.path.join(os.path.dirname(HERE), "records", "videos")
     if records:
         os.makedirs(records, exist_ok=True)
         print(f"  records: {records}")

@@ -64,8 +64,14 @@ by `GALAXY_URL`, so a tool call reaches the server it would reach in the browser
 the same Galaxy, and `lib/watch_drive.mjs` types each input into the real page with Playwright
 (Chrome if installed), waiting out Galaxy jobs and the follow-ups they start. The run is graded
 off the conversation the page saves to Galaxy, so the verdict means the same as a headless one.
-`--video` records it (into `records/videos/<timestamp>/`, or a `DIR` given after it), `--slow-mo MS` slows it, `--hold N` keeps the window open. It needs a
-scenario that stages a dataset and does not restart or approve.
+`--video` records it as `records/videos/<timestamp>-<scenario>.webm` (or in a `DIR` given after it) and, with ffmpeg
+installed, writes a `.condensed.webm` next to it without the frames where nothing changes, so waits on the model and on jobs drop out.
+`--slow-mo MS` slows it, `--hold N` keeps the window open. It needs a scenario that stages a dataset and does not restart
+or approve.
+
+A scenario's `page` assertion grades the page itself, and only a watched run checks it: `"page": {"chart": ["renders",
+"hover", "export"]}` asks that the chart in the pane drew marks without an error, that hovering a mark shows a tooltip,
+and that the chart's menu saves a PNG.
 
 ```bash
 python evals/run.py demo-volcano-from-gtn --watch --video

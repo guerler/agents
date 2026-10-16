@@ -10,7 +10,9 @@ import json
 import os
 import pathlib
 import re
+import shutil
 import subprocess
+import tempfile
 import time
 
 from . import harness, tooltests
@@ -20,6 +22,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 PORT = int(os.environ.get("OLIT_WATCH_PORT", "5180"))
 # A follow-up starts within a second or two of the page announcing settled work.
 SETTLE_MS = 10_000
+# Drop each frame too close to the one before it, then play what is left at 15 frames a second.
+CONDENSE = "mpdecimate=hi=64*12:lo=64*5:frac=0.33,setpts=N/(15*TB)"
+ENCODE = ["-r", "15", "-an", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "40"]
 
 _server = None
 
@@ -51,8 +56,8 @@ def start_server(model):
     global _server
     if _server:
         return
-    records = HERE.parents[1] / "records"
-    records.mkdir(exist_ok=True)
+    records = HERE.parents[1] / "records" / "content"
+    records.mkdir(parents=True, exist_ok=True)
     log = open(records / "watch-server.log", "w")
     _server = subprocess.Popen(
         ["npm", "run", "dev", "--", "--port", str(PORT), "--strictPort"],
@@ -80,8 +85,36 @@ def stop_server():
     _server = None
 
 
+def condense(source):
+    """A copy of a run's video with the frames that change nothing dropped, so the waits on the
+    model and on Galaxy's jobs leave it and what is left plays at its own pace."""
+    target = source.with_name(f"{source.stem}.condensed.webm")
+    command = ["ffmpeg", "-v", "error", "-y", "-i", str(source), "-vf", CONDENSE, *ENCODE, str(target)]
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True)
+    except FileNotFoundError:
+        return "skipped, ffmpeg is not installed"
+    except subprocess.CalledProcessError as e:
+        lines = (e.stderr or "").strip().splitlines()
+        return f"failed: {lines[-1] if lines else e}"
+    return str(target)
+
+
+def keep_video(recorded, folder, name):
+    """Move the page's recording into the videos folder under the run's own name, beside its
+    condensed copy; Playwright names it after the page and leaves it in a folder of its own."""
+    if not recorded:
+        return
+    video = pathlib.Path(folder) / f"{name}.webm"
+    pathlib.Path(recorded).replace(video)
+    shutil.rmtree(pathlib.Path(recorded).parent, ignore_errors=True)
+    print(f"          video:    {video}", flush=True)
+    print(f"          condensed: {condense(video)}", flush=True)
+
+
 def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
     """One scenario, typed into the page in a visible browser, graded off what the page saved."""
+    name = f"{time.strftime('%Y-%m-%dT%H-%M-%S')}-{scenario['id']}"
     unsupported = [k for k in ("restartAfter", "approveWhenPlanned") if scenario.get(k)]
     if unsupported:
         return harness.RunResult([], [], [], error=f"watch mode does not drive {', '.join(unsupported)}")
@@ -101,6 +134,8 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
     staging_jobs = [j["id"] for j in galaxy.call(f"api/jobs?history_id={staged['history_id']}&limit=500") or []]
 
     start_server(model)
+    if video:
+        pathlib.Path(video).mkdir(parents=True, exist_ok=True)
     request = {
         "url": f"http://localhost:{PORT}/?dataset_id={dataset_id}",
         "inputs": scenario["inputs"],
@@ -108,11 +143,12 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
         "skipJobs": staging_jobs,
         "timeoutMs": harness.scenario_timeout(scenario) * 1000,
         "settleMs": SETTLE_MS,
-        "video": video,
+        "chart": ((scenario.get("assertions") or {}).get("page") or {}).get("chart") or [],
+        "video": tempfile.mkdtemp(prefix=f".{name}-", dir=video) if video else None,
         "slowMo": slow_mo,
         "holdMs": hold * 1000,
     }
-    events, error, visualization_id = [], None, None
+    events, error, visualization_id, checked = [], None, None, None
     driver = subprocess.Popen(
         ["node", str(HERE / "watch_drive.mjs"), json.dumps(request)],
         env={**os.environ, "OLIT_ROOT": str(_olit_root())},
@@ -128,8 +164,12 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
             error = message["error"]
         elif message.get("done"):
             visualization_id = message.get("visualizationId")
+        elif message.get("event") == "page":
+            checked = message
+            for check, seen in (message.get("chart") or {}).items():
+                print(f"          chart {check}: {'ok' if seen['ok'] else 'FAILED'}, {seen['detail']}", flush=True)
         elif message.get("event") == "video":
-            print(f"          video:    {message.get('path')}", flush=True)
+            keep_video(message.get("path"), video, name)
         elif message.get("event") == "auto_follow_up":
             # A follow-up is a run of its own, bracketed as the headless harness does.
             events.extend(["turn_end", "auto_follow_up", "turn_start"])
@@ -153,7 +193,7 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
     run["steps"] = max(digest(entries[a:b])["steps"] for a, b in zip(starts, starts[1:] + [len(entries)]))
     chat = [{"role": "system", "content": scenario.get("systemPrompt", "")}] + run["chat"]
     max_steps = int(config.get("max_steps") or harness.subject.describe()["policy"]["loop"]["max_steps"])
-    return harness.RunResult(
+    result = harness.RunResult(
         chat,
         run["logs"],
         run["tools"],
@@ -168,6 +208,8 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
         waited=waited,
         document=document,
     )
+    result.page = checked
+    return result
 
 
 def retitle(run, scenario_id, model_id):

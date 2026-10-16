@@ -1,8 +1,9 @@
 // Drive Olit's real page through one scenario in a visible browser, for watch mode.
 //
-// Reads {url, inputs, historyId, skipJobs, timeoutMs, settleMs, video, slowMo} as JSON
+// Reads {url, inputs, historyId, skipJobs, timeoutMs, settleMs, chart, video, slowMo} as JSON
 // on argv[2] and prints one JSON line per event; the last is {"done": ...} or {"error": ...}.
 import { createRequire } from "node:module";
+import { statSync } from "node:fs";
 import path from "node:path";
 
 const args = JSON.parse(process.argv[2]);
@@ -97,6 +98,66 @@ async function quiet(deadline) {
   throw new Error("the run did not go quiet before its budget");
 }
 
+/** A check's outcome: whether it held, and what was seen either way. */
+const outcome = (ok, detail) => ({ ok, detail });
+
+/**
+ * What a person checks by eye on the chart the pane shows: it drew marks rather than an error,
+ * hovering a mark brings up its tooltip, and the export menu saves a PNG.
+ */
+async function chartChecks(wanted) {
+  const result = {};
+  const pane = page.locator("#artifact-content");
+  const marks = pane.locator('svg [role="graphics-symbol"]');
+  if (await page.evaluate(() => document.body.classList.contains("artifact-collapsed"))) {
+    await page.click("#artifact-btn");
+  }
+  try {
+    await until(
+      async () => (await marks.count()) > 0 || /Could not render chart/.test(await pane.innerText()),
+      30_000,
+      "the chart",
+    );
+  } catch {}
+  const drawn = await marks.count();
+  const failed = (await pane.innerText()).match(/Could not render chart[^\n]*/)?.[0];
+  result.renders = outcome(drawn > 0 && !failed, failed || `${drawn} marks drawn`);
+  if (!drawn) return result;
+
+  if (wanted.includes("hover")) {
+    const tooltip = page.locator("#vg-tooltip-element.visible");
+    let shown = "";
+    for (let i = 0; i < Math.min(drawn, 20) && !shown; i++) {
+      const mark = marks.nth(i);
+      if (!(await mark.isVisible())) continue;
+      await mark.hover({ force: true });
+      shown = await tooltip
+        .waitFor({ timeout: 1500 })
+        .then(() => tooltip.innerText())
+        .catch(() => "");
+    }
+    result.hover = outcome(!!shown.trim(), shown.trim().replace(/\s+/g, " ").slice(0, 200) || "no tooltip on any mark");
+    await page.mouse.move(0, 0);
+  }
+
+  if (wanted.includes("export")) {
+    try {
+      await pane.locator(".vega-embed details summary").click();
+      const save = pane.locator(".vega-actions a", { hasText: /png/i });
+      const download = page.waitForEvent("download", { timeout: 15_000 });
+      await save.click();
+      const file = await download;
+      const bytes = statSync(await file.path()).size;
+      const name = file.suggestedFilename();
+      result.export = outcome(/\.png$/i.test(name) && bytes > 0, `${name}, ${bytes} bytes`);
+    } catch (e) {
+      result.export = outcome(false, String(e?.message ?? e).split("\n")[0]);
+    }
+    await page.keyboard.press("Escape");
+  }
+  return result;
+}
+
 try {
   const deadline = Date.now() + args.timeoutMs;
   await page.goto(args.url);
@@ -114,6 +175,7 @@ try {
     await quiet(deadline);
     emit({ event: "turn_end" });
   }
+  if (args.chart?.length) emit({ event: "page", chart: await chartChecks(args.chart) });
 
   const saved = page.waitForResponse(
     (r) =>

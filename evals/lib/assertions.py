@@ -71,6 +71,7 @@ def evaluate(scenario, run):
     _record(a.get("record"), run, failures, exercised)
     _budget(a.get("budget"), run, failures, exercised)
     _history(a.get("history"), run, failures, exercised)
+    _page(a.get("page"), run, failures, exercised)
     _any_of(a.get("anyOf"), run, failures, exercised)
     return failures, exercised
 
@@ -875,6 +876,19 @@ def _inventory(made):
         return {"kind": a.get("kind"), "mark": _mark_of(a), "title": a.get("title")}
 
     return [entry(a) for a in made] or "nothing"
+
+
+def _page(spec, run, failures, exercised):
+    """What the page showed: only a watched run drives a page, so a headless one is not graded here."""
+    checked = getattr(run, "page", None)
+    if not spec or checked is None:
+        return
+    exercised.add("page")
+    for check in spec.get("chart") or []:
+        seen = (checked.get("chart") or {}).get(check)
+        if not seen or not seen.get("ok"):
+            detail = seen.get("detail") if seen else "not reached: the chart drew nothing"
+            failures.append(Failure(f"page.chart.{check}", detail, "page"))
 
 
 def _artifacts(spec, run, failures, exercised):
