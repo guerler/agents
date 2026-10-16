@@ -126,8 +126,11 @@ def main():
     )
     ap.add_argument(
         "--watch",
-        action="store_true",
-        help="type each scenario into Olit's real page in a visible browser; graded off the conversation it saves",
+        nargs="?",
+        const="dev",
+        choices=["dev", "galaxy"],
+        help="type each scenario into Olit's real page in a visible browser, graded off the conversation it saves: "
+        "Olit's dev server (dev, the default), or Olit as GALAXY_URL serves it, signed in as GALAXY_USER (galaxy)",
     )
     ap.add_argument(
         "--video",
@@ -224,7 +227,7 @@ def main():
                     time.sleep(args.delay)
                 scenario = _resolve_run_tokens(scenario)
                 if args.watch:
-                    run = watch.run_watched(scenario, model, args.video, args.slow_mo, args.hold)
+                    run = watch.run_watched(scenario, model, args.video, args.slow_mo, args.hold, args.watch)
                 else:
                     run = run_scenario(scenario, model, capture=capture(scenario, model, run_index))
                 if run.error:

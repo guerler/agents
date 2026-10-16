@@ -77,6 +77,12 @@ and that the chart's menu saves a PNG.
 python evals/run.py demo-volcano-from-gtn --watch --video
 ```
 
+`--watch galaxy` opens Olit as `GALAXY_URL` serves it instead, inside Galaxy's own UI with its history panel, so the
+video shows the whole Galaxy page. No dev server starts: the plugin Galaxy has installed is the one under test. The
+browser signs in through Galaxy's login form as `GALAXY_USER` with `GALAXY_PASSWORD`, the account `GALAXY_API_KEY`
+belongs to, makes the run's history current, and drives Olit in the frame Galaxy mounts it in. A plugin build reaches
+no model but Galaxy's own, so this runs only on Galaxy AI.
+
 **Some scenarios grade the data path.** `analysis-csv-columns` and its siblings fetch real
 dataset bytes through `download_dataset` and compute over the file with `run_python`. Grading
 only *which tool calls are emitted* left a blind spot: inline dataset content breaking tool-call

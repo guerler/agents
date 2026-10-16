@@ -1,7 +1,9 @@
 // Drive Olit's real page through one scenario in a visible browser, for watch mode.
 //
-// Reads {url, inputs, historyId, skipJobs, timeoutMs, settleMs, chart, video, slowMo} as JSON
-// on argv[2] and prints one JSON line per event; the last is {"done": ...} or {"error": ...}.
+// Reads {url, root, login, inputs, historyId, skipJobs, timeoutMs, settleMs, chart, video, slowMo}
+// as JSON on argv[2] and prints one JSON line per event; the last is {"done": ...} or {"error": ...}.
+// With `login`, the page is Galaxy's own: it signs in through Galaxy's login form, makes the run's
+// history current, and finds Olit in the frame Galaxy mounts it in.
 import { createRequire } from "node:module";
 import { statSync } from "node:fs";
 import path from "node:path";
@@ -39,10 +41,12 @@ const context = await browser.newContext({
   ...(args.video ? { recordVideo: { dir: args.video, size: { width: 1440, height: 900 } } } : {}),
 });
 const page = await context.newPage();
+/** Where Olit runs: the page itself, or the frame Galaxy mounts the plugin in. */
+let app = page;
 
 const busy = () =>
-  page.evaluate(() => document.querySelector("#send-btn")?.classList.contains("hidden") ?? true);
-const text = () => page.evaluate(() => document.body.innerText);
+  app.evaluate(() => document.querySelector("#send-btn")?.classList.contains("hidden") ?? true);
+const text = () => app.evaluate(() => document.body.innerText);
 
 async function until(predicate, ms, what) {
   const deadline = Date.now() + ms;
@@ -53,12 +57,15 @@ async function until(predicate, ms, what) {
   throw new Error(`timed out waiting for ${what}`);
 }
 
-/** The jobs the agent started in the history, read through the dev proxy the page uses. */
+/** The jobs the agent started in the history, read with the page's own access to Galaxy. */
 async function agentJobs() {
-  const jobs = await page.evaluate(async (historyId) => {
-    const response = await fetch(`/api/jobs?history_id=${historyId}&view=collection&limit=500`);
-    return response.ok ? response.json() : [];
-  }, args.historyId);
+  const jobs = await page.evaluate(
+    async ({ root, historyId }) => {
+      const response = await fetch(`${root}api/jobs?history_id=${historyId}&view=collection&limit=500`);
+      return response.ok ? response.json() : [];
+    },
+    { root: args.root, historyId: args.historyId },
+  );
   return jobs.filter((j) => !args.skipJobs.includes(j.id));
 }
 
@@ -107,10 +114,10 @@ const outcome = (ok, detail) => ({ ok, detail });
  */
 async function chartChecks(wanted) {
   const result = {};
-  const pane = page.locator("#artifact-content");
+  const pane = app.locator("#artifact-content");
   const marks = pane.locator('svg [role="graphics-symbol"]');
-  if (await page.evaluate(() => document.body.classList.contains("artifact-collapsed"))) {
-    await page.click("#artifact-btn");
+  if (await app.evaluate(() => document.body.classList.contains("artifact-collapsed"))) {
+    await app.click("#artifact-btn");
   }
   try {
     await until(
@@ -125,7 +132,7 @@ async function chartChecks(wanted) {
   if (!drawn) return result;
 
   if (wanted.includes("hover")) {
-    const tooltip = page.locator("#vg-tooltip-element.visible");
+    const tooltip = app.locator("#vg-tooltip-element.visible");
     let shown = "";
     for (let i = 0; i < Math.min(drawn, 20) && !shown; i++) {
       const mark = marks.nth(i);
@@ -158,9 +165,30 @@ async function chartChecks(wanted) {
   return result;
 }
 
+/** Sign in as a person does, then make the run's history the one Galaxy's panel shows. */
+async function signIn({ user, password }) {
+  await page.goto(`${args.root}login/start`);
+  await page.fill('#login input[name="login"]', user);
+  await page.fill('#login input[name="password"]', password);
+  await page.click('#login button[type="submit"]');
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 60_000 });
+  const current = await page.request.get(`${args.root}history/set_as_current?id=${args.historyId}`);
+  if (!current.ok()) throw new Error(`could not make the run's history current: ${current.status()}`);
+}
+
+/** The frame holding Olit's input, once Galaxy has mounted the plugin. */
+async function olitFrame() {
+  for (const frame of page.frames()) {
+    if (await frame.locator("#input").count().catch(() => 0)) return frame;
+  }
+  return null;
+}
+
 try {
   const deadline = Date.now() + args.timeoutMs;
+  if (args.login) await signIn(args.login);
   await page.goto(args.url);
+  await until(async () => (app = await olitFrame()), 120_000, "Olit's page");
   await until(async () => / ready\b/i.test(await text()), 240_000, "the agent to be ready");
   emit({ event: "ready" });
 
@@ -169,8 +197,8 @@ try {
     (m) => m.type() === "error" && emit({ event: "console", text: m.text().slice(0, 300) }),
   );
   for (const input of args.inputs) {
-    await page.fill("#input", input);
-    await page.click("#send-btn");
+    await app.fill("#input", input);
+    await app.click("#send-btn");
     emit({ event: "turn_start", input: input.slice(0, 80) });
     await quiet(deadline);
     emit({ event: "turn_end" });
@@ -182,7 +210,7 @@ try {
       r.url().includes("/api/visualizations") && ["POST", "PUT"].includes(r.request().method()),
     { timeout: 60_000 },
   );
-  await page.click("#save-btn");
+  await app.click("#save-btn");
   const response = await saved;
   const body = await response.json().catch(() => ({}));
   const id = body.id || response.url().split("/api/visualizations/")[1]?.split("?")[0];

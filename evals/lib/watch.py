@@ -113,8 +113,16 @@ def keep_video(recorded, folder, name):
     print(f"          video:    {video}{note}", flush=True)
 
 
-def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
-    """One scenario, typed into the page in a visible browser, graded off what the page saved."""
+def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
+    """One scenario, typed into the page in a visible browser, graded off what the page saved.
+
+    `target` is the page: Olit's dev server, or Olit as Galaxy serves it, inside Galaxy's own UI.
+    A plugin build reaches no model but Galaxy's, so that one runs only on Galaxy AI.
+    """
+    if target == "galaxy" and model.get("provider") != "galaxy":
+        return harness.RunResult([], [], [], error="watching inside Galaxy runs only on Galaxy AI")
+    if target == "galaxy" and not (os.environ.get("GALAXY_USER") and os.environ.get("GALAXY_PASSWORD")):
+        return harness.RunResult([], [], [], error="watching inside Galaxy needs GALAXY_USER and GALAXY_PASSWORD")
     name = f"{time.strftime('%Y-%m-%dT%H-%M-%S')}-{scenario['id']}"
     unsupported = [k for k in ("restartAfter", "approveWhenPlanned") if scenario.get(k)]
     if unsupported:
@@ -134,11 +142,19 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0):
     dataset_id = next(iter(staged["dataset_ids"].values()))
     staging_jobs = [j["id"] for j in galaxy.call(f"api/jobs?history_id={staged['history_id']}&limit=500") or []]
 
-    start_server(model)
+    if target == "galaxy":
+        root = os.environ["GALAXY_URL"].strip().rstrip("/") + "/"
+        url = f"{root}visualizations/display?visualization=olit&dataset_id={dataset_id}"
+        login = {"user": os.environ["GALAXY_USER"], "password": os.environ["GALAXY_PASSWORD"]}
+    else:
+        start_server(model)
+        root, url, login = "/", f"http://localhost:{PORT}/?dataset_id={dataset_id}", None
     if video:
         pathlib.Path(video).mkdir(parents=True, exist_ok=True)
     request = {
-        "url": f"http://localhost:{PORT}/?dataset_id={dataset_id}",
+        "url": url,
+        "root": root,
+        "login": login,
         "inputs": scenario["inputs"],
         "historyId": staged["history_id"],
         "skipJobs": staging_jobs,
