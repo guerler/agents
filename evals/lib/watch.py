@@ -24,7 +24,9 @@ PORT = int(os.environ.get("OLIT_WATCH_PORT", "5180"))
 SETTLE_MS = 10_000
 # Drop each frame too close to the one before it, then play what is left at 15 frames a second.
 CONDENSE = "mpdecimate=hi=64*12:lo=64*5:frac=0.33,setpts=N/(15*TB)"
-ENCODE = ["-r", "15", "-an", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "40"]
+# H.264 MP4 plays in GitHub, Drive, Slack and QuickTime; CRF 23 keeps the page's text sharp.
+ENCODE = ["-r", "15", "-an", "-c:v", "libx264", "-crf", "23", "-preset", "slow", "-pix_fmt", "yuv420p"]
+ENCODE += ["-movflags", "+faststart"]
 
 _server = None
 
@@ -101,12 +103,13 @@ def condense(source, target):
 
 def keep_video(recorded, folder, name):
     """Keep the page's recording, condensed, in the videos folder under the run's own name.
-    Without ffmpeg the recording is kept as it is."""
+    Without ffmpeg the recording is kept as Playwright wrote it."""
     if not recorded:
         return
-    video = pathlib.Path(folder) / f"{name}.webm"
+    video = pathlib.Path(folder) / f"{name}.mp4"
     problem = condense(recorded, video)
     if problem:
+        video = video.with_suffix(".webm")
         pathlib.Path(recorded).replace(video)
     shutil.rmtree(pathlib.Path(recorded).parent, ignore_errors=True)
     note = f" (not condensed: {problem})" if problem else ""
