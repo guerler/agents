@@ -1,21 +1,22 @@
 {
   "name": "demo: from a differential expression table to a written-up volcano plot",
-  "description": "The scenario shown to the community, replaced as Olit grows. Tier 3, live Galaxy, default model. One researcher's session on the GTN volcano plot tutorial's own data (limma-voom, mouse mammary gland luminal cells, pregnant vs lactating): find the tutorial, follow its method with Galaxy's Volcano Plot tool through the plan gate, draw an interactive chart, and write the record page. Ground truth from the table itself: 1610 genes pass adj.P.Val < 0.01 and |logFC| > 0.58 (669 positive, 941 negative logFC; unchanged with inclusive bounds), and Csn1s2b has the smallest P value.",
+  "description": "The scenario shown to the community, replaced as Olit grows. Tier 3, live Galaxy, default model. One researcher's session on the GTN volcano plot tutorial's own data (limma-voom, mouse mammary gland luminal cells, pregnant vs lactating): find the tutorial, follow its method with Galaxy's Volcano Plot tool, draw an interactive chart, and write the record page. Ground truth from the table itself: 1610 genes pass adj.P.Val < 0.01 and |logFC| > 0.58 (669 positive, 941 negative logFC; unchanged with inclusive bounds), and Csn1s2b has the smallest P value.",
   "tier": 3,
   "optIn": "demo",
   "requires": {
-    "tools": ["volcanoplot"]
+    "tools": [
+      "volcanoplot"
+    ]
   },
   "dataset": {
-    "url": "https://zenodo.org/record/2529117/files/limma-voom_luminalpregnant-luminallactate",
+    "url": "https://zenodo.org/records/2529117/files/limma-voom_luminalpregnant-luminallactate",
     "name": "limma-voom_luminalpregnant-luminallactate",
     "datatype": "tabular",
     "history": "olit demo $run"
   },
   "inputs": [
-    "This table holds limma-voom differential expression results for mouse mammary gland luminal cells, pregnant versus lactating. Is there a Galaxy Training Network tutorial on visualising results like these? Tell me briefly how it goes about it.",
-    "Let's do that on Galaxy with my data. Use the Volcano Plot tool with an adjusted P value below 0.01 and an absolute log fold change above 0.58, and label the 10 most significant genes. Also tell me how many genes pass those thresholds, and how many have a positive and a negative log fold change.",
-    "Approved. Go ahead and run it.",
+    "This table holds limma-voom differential expression results for mouse mammary gland luminal cells, pregnant versus lactating. Is there a Galaxy Training Network tutorial on making a volcano plot from results like these? Tell me briefly how it goes about it.",
+    "Let's do that on Galaxy with my data. Use the Volcano Plot tool with an adjusted P value below 0.01 and an absolute log fold change above 0.58, and label the 10 most significant genes. Also tell me how many genes pass those thresholds, how many have a positive and a negative log fold change, and which ten genes are the most significant.",
     "Is it done? Show me the result, and draw an interactive volcano plot here as well, coloured by whether a gene is significant.",
     "Write this up on the record page: where the data comes from, the method with tool citations, the numbers, the top genes and the chart."
   ],
@@ -26,8 +27,15 @@
     },
     "toolCalls": {
       "mustInclude": [
-        {"name": "gtn_search"},
-        {"name": "run_tool"}
+        {
+          "name": "gtn_fetch",
+          "argsContains": {
+            "url": "rna-seq-viz-with-volcanoplot"
+          }
+        },
+        {
+          "name": "run_tool"
+        }
       ]
     },
     "history": {
@@ -38,17 +46,27 @@
       "galaxyDidWork": true
     },
     "chatText": {
-      "mustMatch": ["\\b1,?610\\b", "\\bCsn1s2b\\b"]
+      "mustMatch": [
+        "\\b1[,\\s\\u00a0\\u202f]?610\\b",
+        "\\bCsn1s2b\\b"
+      ]
     },
     "artifacts": {
       "mustInclude": [
-        {"kind": "vega-lite"}
+        {
+          "kind": "vega-lite"
+        }
       ]
     },
     "record": {
       "notEmpty": true,
-      "mustMention": ["Csn1s2b", "```vega"],
-      "mustNotMention": ["{{artifact}}"]
+      "mustMention": [
+        "Csn1s2b",
+        "```vega"
+      ],
+      "mustNotMention": [
+        "{{artifact}}"
+      ]
     },
     "budget": {
       "maxSteps": 60,
