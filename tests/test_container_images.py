@@ -7,7 +7,7 @@ import types
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "evals"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-import lib.assertions as A  # noqa: E402
+import lib.grading.container as A  # noqa: E402
 
 YAML = """class: GalaxyUserTool
 id: clean

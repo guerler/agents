@@ -17,7 +17,7 @@ EV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, EV)
 sys.path.insert(0, os.path.dirname(EV))
 
-from lib.assertions import evaluate  # noqa: E402
+from lib.grading import evaluate  # noqa: E402
 from lib.harness import load_scenarios, run_scenario  # noqa: E402
 from lib.scripted import scripted  # noqa: E402
 from lib.tooltests import Galaxy  # noqa: E402

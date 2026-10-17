@@ -11,7 +11,7 @@ EV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, EV)
 sys.path.insert(0, os.path.dirname(EV))
 
-from lib.assertions import _descends_from, _lineage_intact
+from lib.grading.galaxy import _descends_from, _lineage_intact
 from lib.tooltests import Galaxy
 
 G = Galaxy(os.environ["GALAXY_URL"], os.environ["GALAXY_API_KEY"])

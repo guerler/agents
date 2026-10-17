@@ -14,7 +14,7 @@ EV = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, EV)
 sys.path.insert(0, os.path.dirname(EV))
 
-from lib.assertions import _lineage_intact
+from lib.grading.galaxy import _lineage_intact
 from lib.harness import Session
 from lib.scripted import scripted, tool_results
 from lib.tooltests import Galaxy

@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "evals"))
 
-from lib.assertions import _tool_calls  # noqa: E402
+from lib.grading.transcript import _tool_calls  # noqa: E402
 
 
 class Run:

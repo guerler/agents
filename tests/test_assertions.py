@@ -10,7 +10,7 @@ import subject  # noqa: E402
 
 def test_not_empty_fails_a_page_that_is_actually_empty():
     """The original check only looked for the starter text, so `""` passed it."""
-    from lib.assertions import _record
+    from lib.grading.record import _record
 
     class FakeGalaxy:
         def __init__(self, content):
@@ -41,7 +41,7 @@ def test_not_empty_fails_a_page_that_is_actually_empty():
 
 def test_not_empty_accepts_content_appended_below_the_starter():
     """The agent had written; it just left the placeholder above its entry."""
-    from lib.assertions import _record
+    from lib.grading.record import _record
 
     STARTER = subject.describe()["record"]["starter"]
 
@@ -104,7 +104,7 @@ def test_chat_text_ignores_other_tool_results():
 
 def test_a_paused_dataset_is_not_work_the_agent_should_have_waited_for():
     """Galaxy pauses a dependent job when its input fails, and that state never advances."""
-    from lib.assertions import _history
+    from lib.grading.galaxy import _history
 
     class FakeGalaxy:
         def __init__(self, states):
@@ -136,7 +136,7 @@ def test_a_paused_dataset_is_not_work_the_agent_should_have_waited_for():
 
 
 def test_a_visualization_check_holds_in_one_visualization_not_across_several():
-    from lib.assertions import _visualization
+    from lib.grading.visualization import _visualization
 
     def viz(vid, settings, tracks):
         return {
@@ -179,7 +179,7 @@ def test_a_visualization_check_holds_in_one_visualization_not_across_several():
 def test_a_step_is_read_where_the_latest_plan_writes_it():
     """A revised plan repeats a step's title. The first draft described it after a dash on the
     line, the revision in bullets below it; each is described, and the latest is the one graded."""
-    from lib.assertions import _plan
+    from lib.grading.transcript import _plan
 
     first = (
         "```plan\n## Plan A: Rename [remote]\n\n### Steps\n\n"
@@ -203,7 +203,7 @@ def test_a_step_is_read_where_the_latest_plan_writes_it():
 
 def test_landed_pdfs_want_the_papers_asked_for_and_not_a_pile():
     """The NAR papers request: the six papers as PDFs pass; the shapes a user actually got fail."""
-    from lib.assertions import _history
+    from lib.grading.galaxy import _history
 
     papers = {"2016": ["PMC4987906", "W2346143774"], "2024": ["PMC11223835", "W4398182689"]}
 
@@ -241,7 +241,7 @@ def test_landed_pdfs_want_the_papers_asked_for_and_not_a_pile():
 
 def test_a_value_the_server_states_is_read_from_it_not_written_down():
     """An instance's version differs between servers, so a scenario names where to read it."""
-    from lib.assertions import _chat_text
+    from lib.grading.transcript import _chat_text
 
     class FakeGalaxy:
         def call(self, path):
@@ -264,7 +264,7 @@ def test_a_value_the_server_states_is_read_from_it_not_written_down():
 
 def test_record_ids_are_judged_by_length_without_asking_galaxy():
     """A job id in the record is no dataset; on a shared server Galaxy answers 403 for it."""
-    from lib.assertions import _record_ids_resolve
+    from lib.grading.record import _record_ids_resolve
 
     failures = []
     _record_ids_resolve({}, None, failures, "job `4838ba20a6d86765d07974451a31d1b7`, truncated `4838ba20a6d8`")
@@ -272,7 +272,7 @@ def test_record_ids_are_judged_by_length_without_asking_galaxy():
 
 
 def test_a_failed_dataset_is_named_by_its_name_or_number():
-    from lib.assertions import _names_dataset
+    from lib.grading.galaxy import _names_dataset
 
     failed = {"name": "Filter on data 1", "hid": 2}
     for text, named in (

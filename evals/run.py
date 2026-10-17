@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 from lib import loom_scenarios, watch  # noqa: E402
-from lib.assertions import DIMENSIONS, evaluate, validate_scenarios  # noqa: E402
+from lib.grading import DIMENSIONS, evaluate, validate_scenarios  # noqa: E402
 from lib.harness import (  # noqa: E402
     label_record_page,
     load_scenarios,

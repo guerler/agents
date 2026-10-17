@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "evals"))
 
-from lib.assertions import unsupported, validate_scenarios  # noqa: E402
+from lib.grading import unsupported, validate_scenarios  # noqa: E402
 from lib.harness import load_scenarios  # noqa: E402
 
 HERE = pathlib.Path(__file__).resolve().parents[1] / "evals" / "scenarios"

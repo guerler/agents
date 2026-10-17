@@ -7,7 +7,7 @@ import types
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "evals"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from lib.assertions import _artifacts  # noqa: E402
+from lib.grading.artifacts import _artifacts  # noqa: E402
 
 SCATTER = {"kind": "vega-lite", "title": "Glucose vs BMI", "spec": {"mark": "point"}}
 REGRESSION = {"kind": "vega-lite", "title": "Linear Regression", "spec": {"mark": "line"}}
