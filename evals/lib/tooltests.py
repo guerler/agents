@@ -31,12 +31,9 @@ class Galaxy:
         self.key = key
 
     def call(self, path, method="GET", body=None, raw=False, timeout=120):
-        sep = "&" if "?" in path else "?"
-        url = f"{self.base}/{path}{sep}key={self.key}"
         data = json.dumps(body).encode() if body is not None else None
-        req = urllib.request.Request(
-            url, data=data, method=method, headers={"Content-Type": "application/json"} if data else {}
-        )
+        headers = {"x-api-key": self.key, **({"Content-Type": "application/json"} if data else {})}
+        req = urllib.request.Request(f"{self.base}/{path}", data=data, method=method, headers=headers)
         with urllib.request.urlopen(req, timeout=timeout) as r:
             payload = r.read()
         return payload if raw else json.loads(payload or b"null")
@@ -71,10 +68,10 @@ class Galaxy:
         parts.append(f"--{boundary}--\r\n".encode())
         body = b"".join(parts)
         req = urllib.request.Request(
-            f"{self.base}/api/tools/fetch?key={self.key}",
+            f"{self.base}/api/tools/fetch",
             data=body,
             method="POST",
-            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+            headers={"x-api-key": self.key, "Content-Type": f"multipart/form-data; boundary={boundary}"},
         )
         with urllib.request.urlopen(req, timeout=180) as r:
             return json.loads(r.read())["outputs"][0]["id"]
@@ -95,15 +92,32 @@ class Galaxy:
         return got["outputs"][0]["id"]
 
     def await_dataset(self, dataset_id, timeout):
-        for _ in range(max(1, int(timeout // POLL_SECONDS))):
-            d = self.call(f"api/datasets/{dataset_id}")
-            if d.get("state") in ("ok", "error", "paused", "deleted"):
-                return d
-            time.sleep(POLL_SECONDS)
-        return self.call(f"api/datasets/{dataset_id}")
+        return poll(
+            lambda: self.call(f"api/datasets/{dataset_id}"),
+            lambda d: d.get("state") in ("ok", "error", "paused", "deleted"),
+            timeout,
+        )
+
+    def await_contents(self, history_id, want, timeout):
+        """The history's live datasets once at least `want` of them have finished, ok or not."""
+
+        def live():
+            return [x for x in (self.call(f"api/histories/{history_id}/contents") or []) if not x.get("deleted")]
+
+        return poll(live, lambda c: len(c) >= want and all(x.get("state") in ("ok", "error") for x in c), timeout)
 
     def contents(self, history_id):
         return self.call(f"api/histories/{history_id}/contents?v=dev&deleted=false&visible=true")
+
+
+def poll(fetch, done, timeout, every=POLL_SECONDS):
+    """`fetch()` until `done` holds of it or `timeout` seconds pass; the last value either way."""
+    deadline = time.monotonic() + timeout
+    while True:
+        value = fetch()
+        if done(value) or time.monotonic() >= deadline:
+            return value
+        time.sleep(every)
 
 
 # Galaxy serves a test's inputs but not its expected outputs, so those are vendored.

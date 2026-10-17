@@ -233,17 +233,22 @@ INVOCATION_TERMINAL = ("scheduled", "completed", "cancelled", "failed")
 
 def _await_invocation(galaxy, invocation_id, timeout):
     """The invocation once Galaxy stops driving it, and the states of its jobs."""
-    for _ in range(max(1, int(timeout // 2))):
+
+    def read():
         invocation = galaxy.call(f"api/invocations/{invocation_id}")
-        if invocation.get("state") in INVOCATION_TERMINAL:
-            jobs = galaxy.call(f"api/invocations/{invocation_id}/jobs_summary")
-            states = (jobs or {}).get("states") or {}
-            # An invocation reads `scheduled` before its jobs exist, so an empty summary
-            # is "not started yet", not "nothing left running".
-            if states and not any(states.get(s) for s in RUNNING_STATES):
-                return invocation, states
-        time.sleep(2)
-    return galaxy.call(f"api/invocations/{invocation_id}"), {}
+        if invocation.get("state") not in INVOCATION_TERMINAL:
+            return invocation, {}
+        jobs = galaxy.call(f"api/invocations/{invocation_id}/jobs_summary")
+        return invocation, (jobs or {}).get("states") or {}
+
+    def settled(got):
+        # An invocation reads `scheduled` before its jobs exist, so an empty summary
+        # is "not started yet", not "nothing left running".
+        states = got[1]
+        return bool(states) and not any(states.get(s) for s in RUNNING_STATES)
+
+    invocation, states = tooltests.poll(read, settled, timeout, every=2)
+    return (invocation, states) if settled((invocation, states)) else (invocation, {})
 
 
 def _stage_invocation(galaxy, history_id, dataset_id, spec, timeout):

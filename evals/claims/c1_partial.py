@@ -24,32 +24,22 @@ class Run:
         self.staged, self.tools_called = staged, tools
 
 
-def wait(h, want, timeout=300):
-    end = time.time() + timeout
-    while time.time() < end:
-        c = [x for x in (G.call(f"api/histories/{h}/contents") or []) if not x.get("deleted")]
-        if len(c) >= want and all(x.get("state") in ("ok", "error") for x in c):
-            return c
-        time.sleep(3)
-    return G.call(f"api/histories/{h}/contents") or []
-
-
 # A history where Galaxy genuinely did work.
 worked = G.new_history(f"c1 galaxy worked {TAG}")
 ds = G.upload(worked, "rows.tabular", b"a\t1\nb\t2\nc\t3\n")
-wait(worked, 1)
+G.await_contents(worked, 1, 300)
 G.call(
     "api/tools",
     "POST",
     {"history_id": worked, "tool_id": "addValue", "inputs": {"input": {"src": "hda", "id": ds}, "exp": "7"}},
 )
-wait(worked, 2)
+G.await_contents(worked, 2, 300)
 worked_staged = {"galaxy": G, "history_id": worked, "dataset_ids": {"rows.tabular": ds}}
 
 # A history where Galaxy did nothing.
 idle = G.new_history(f"c1 galaxy idle {TAG}")
 ds2 = G.upload(idle, "rows.tabular", b"a\t1\nb\t2\nc\t3\n")
-wait(idle, 1)
+G.await_contents(idle, 1, 300)
 idle_staged = {"galaxy": G, "history_id": idle, "dataset_ids": {"rows.tabular": ds2}}
 
 cases = [

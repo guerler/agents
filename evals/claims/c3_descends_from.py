@@ -23,16 +23,6 @@ class Run:
         self.staged = staged
 
 
-def wait(h, want, timeout=300):
-    end = time.time() + timeout
-    while time.time() < end:
-        c = [x for x in (G.call(f"api/histories/{h}/contents") or []) if not x.get("deleted")]
-        if len(c) >= want and all(x.get("state") in ("ok", "error") for x in c):
-            return c
-        time.sleep(3)
-    return G.call(f"api/histories/{h}/contents") or []
-
-
 def run_on(h, ds):
     G.call(
         "api/tools",
@@ -60,16 +50,16 @@ rows_g, rows_s = b"USA\t39\nCHN\t38\n", b"USA\t41\nCHN\t32\n"
 
 h1 = G.new_history(f"c3 correct {TAG}")
 g1, s1 = G.upload(h1, GOLD, rows_g), G.upload(h1, SILVER, rows_s)
-wait(h1, 2)
+G.await_contents(h1, 2, 300)
 run_on(h1, g1)
-wait(h1, 3)
+G.await_contents(h1, 3, 300)
 check("job on the intended input", h1, {GOLD: g1, SILVER: s1}, GOLD, "silent")
 
 h2 = G.new_history(f"c3 distractor {TAG}")
 g2, s2 = G.upload(h2, GOLD, rows_g), G.upload(h2, SILVER, rows_s)
-wait(h2, 2)
+G.await_contents(h2, 2, 300)
 run_on(h2, s2)
-wait(h2, 3)
+G.await_contents(h2, 3, 300)
 check("job on the distractor", h2, {GOLD: g2, SILVER: s2}, GOLD, "fires")
 
 for h in (h1, h2):

@@ -23,20 +23,10 @@ class Run:
         self.staged = staged
 
 
-def wait(h, want, timeout=300):
-    end = time.time() + timeout
-    while time.time() < end:
-        c = [x for x in (G.call(f"api/histories/{h}/contents") or []) if not x.get("deleted")]
-        if len(c) >= want and all(x.get("state") in ("ok", "error") for x in c):
-            return c
-        time.sleep(3)
-    return G.call(f"api/histories/{h}/contents") or []
-
-
 h = G.new_history(f"c3 intent {TAG}")
 intended = G.upload(h, "gold_medals.tabular", b"USA\t39\nCHN\t38\nJPN\t27\n")
 distractor = G.upload(h, "silver_medals.tabular", b"USA\t41\nCHN\t32\nJPN\t14\n")
-wait(h, 2)
+G.await_contents(h, 2, 300)
 print(f"history {h}\n  intended   gold_medals   {intended}\n  distractor silver_medals {distractor}\n")
 
 staged = {
@@ -51,7 +41,7 @@ G.call(
     "POST",
     {"history_id": h, "tool_id": "addValue", "inputs": {"input": {"src": "hda", "id": distractor}, "exp": "7"}},
 )
-wait(h, 3)
+G.await_contents(h, 3, 300)
 
 found = []
 _lineage_intact(Run(staged), found)

@@ -21,19 +21,9 @@ G = Galaxy(os.environ["GALAXY_URL"], os.environ["GALAXY_API_KEY"])
 TAG = os.environ.get("TAG", str(int(time.time()))[-6:])
 
 
-def wait(h, want, timeout=180):
-    end = time.time() + timeout
-    while time.time() < end:
-        c = [x for x in (G.call(f"api/histories/{h}/contents") or []) if not x.get("deleted")]
-        if len(c) >= want and all(x.get("state") in ("ok", "error") for x in c):
-            return c
-        time.sleep(3)
-    return []
-
-
 history = G.new_history(f"c4 errors {TAG}")
 ds = G.upload(history, "rows.tabular", b"a\t3\nb\t1\nc\t2\n")
-wait(history, 1)
+G.await_contents(history, 1, 180)
 
 SESSION = {
     "galaxy_root": os.environ["GALAXY_URL"].rstrip("/") + "/",

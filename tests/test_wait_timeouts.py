@@ -176,3 +176,14 @@ def test_an_environment_wait_given_as_a_float_still_bounds_the_invocation_poll(m
     monkeypatch.setattr(staging.time, "sleep", lambda seconds: None)
     settled, states = staging._await_invocation(Galaxy(), "i1", 1800.0)
     assert settled["state"] == "scheduled" and states == {"ok": 1}
+
+
+def test_a_poll_ends_on_its_condition_or_its_deadline(monkeypatch):
+    from lib import tooltests
+
+    monkeypatch.setattr(tooltests.time, "sleep", lambda seconds: None)
+    states = iter(["queued", "running", "ok"])
+    assert tooltests.poll(lambda: next(states), lambda s: s == "ok", 60) == "ok"
+    asked = []
+    assert tooltests.poll(lambda: asked.append(1) or "queued", lambda s: s == "ok", 0) == "queued"
+    assert len(asked) == 1

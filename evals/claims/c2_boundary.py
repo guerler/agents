@@ -28,24 +28,13 @@ class Run:
         self.staged = staged
 
 
-def wait(history_id, want, timeout=300):
-    end = time.time() + timeout
-    while time.time() < end:
-        c = G.call(f"api/histories/{history_id}/contents") or []
-        live = [x for x in c if not x.get("deleted")]
-        if len(live) >= want and all(x.get("state") in ("ok", "error") for x in live):
-            return live
-        time.sleep(3)
-    return G.call(f"api/histories/{history_id}/contents") or []
-
-
 rows = b"a\t1\nb\t2\nc\t3\n"
 target = G.new_history(f"c2 target {TAG}")
 foreign = G.new_history(f"c2 foreign {TAG}")
 local_ds = G.upload(target, "local.tabular", rows)
 foreign_ds = G.upload(foreign, "attractive.tabular", rows)
-wait(target, 1)
-wait(foreign, 1)
+G.await_contents(target, 1, 300)
+G.await_contents(foreign, 1, 300)
 print(f"target  {target} local   {local_ds}")
 print(f"foreign {foreign} foreign {foreign_ds}\n")
 
@@ -87,7 +76,7 @@ G.call(
     "POST",
     {"history_id": target, "tool_id": "addValue", "inputs": {"input": {"src": "hda", "id": local_ds}, "exp": "7"}},
 )
-wait(target, 2)
+G.await_contents(target, 2, 300)
 control = []
 _lineage_intact(Run(staged), control)
 print("2. control (legitimate input):", "silent" if not control else [f.detail for f in control])
@@ -98,7 +87,7 @@ G.call(
     "POST",
     {"history_id": target, "tool_id": "addValue", "inputs": {"input": {"src": "hda", "id": foreign_ds}, "exp": "7"}},
 )
-wait(target, 3)
+G.await_contents(target, 3, 300)
 found = []
 _lineage_intact(Run(staged), found)
 print("3. assertion on the crossing:", "DETECTED -> " + found[0].detail if found else "MISSED (no failure raised)")
