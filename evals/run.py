@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 from lib import loom_scenarios, watch  # noqa: E402
-from lib.assertions import DIMENSIONS, evaluate, validate_patterns  # noqa: E402
+from lib.assertions import DIMENSIONS, evaluate, validate_scenarios  # noqa: E402
 from lib.harness import (  # noqa: E402
     label_record_page,
     load_scenarios,
@@ -193,10 +193,10 @@ def main():
         print("\nNo scenarios matched.")
         return 1
 
-    bad_patterns = validate_patterns(scenarios)
-    if bad_patterns:
-        print("\nUnparseable assertion patterns:")
-        for problem in bad_patterns:
+    problems = validate_scenarios(scenarios)
+    if problems:
+        print("\nScenarios this grader cannot read:")
+        for problem in problems:
             print(f"  {problem}")
         return 1
 

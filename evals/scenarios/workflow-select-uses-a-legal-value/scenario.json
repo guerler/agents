@@ -28,7 +28,6 @@
       ]
     },
     "invocation": {
-      "exists": true,
       "succeeded": true,
       "parameterValues": {
         "comparison": "c2<10"

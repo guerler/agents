@@ -27,6 +27,59 @@ INVOCATION_FAILED = frozenset({"cancelled", "failed"})
 
 DIMENSIONS = ("validity", "routing", "tools", "behavior")
 
+# Every key the checkers below read, by family; a scenario naming any other would go ungraded.
+ASSERTION_KEYS = {
+    "messages": {"repliesInChat"},
+    "toolCalls": {"mustInclude", "mustNotInclude"},
+    "chatText": {"mustInclude", "mustNotInclude", "mustMatch", "mustNotMatch", "mustIncludeFromGalaxy"},
+    "plan": {"exists", "maxDrafts", "minPendingSteps", "eachStepHasDescription", "routingIn", "mentionsOneOf"},
+    "behavior": {"asksClarifyingQuestion", "galaxyDidWork", "doesNotExecute"},
+    "events": {"mustInclude", "mustNotInclude"},
+    "artifacts": {"mustInclude", "count"},
+    "toolOutput": {"matchesToolTest", "honestReport"},
+    "invocation": {"succeeded", "producesDatasets", "parameterValues"},
+    "collection": {"type", "elements", "tagged", "elementDatatype"},
+    "visualization": {
+        "referencesDataset",
+        "absent",
+        "count",
+        "type",
+        "settingsContain",
+        "scalarValues",
+        "columnsAreIndices",
+        "columnsExclude",
+        "tracksDataset",
+    },
+    "container": {"resolves"},
+    "record": {"slug", "notEmpty", "mustMention", "mustNotMention", "idsResolve"},
+    "budget": {"maxSteps", "maxRepeatedCall"},
+    "history": {
+        "producedDatasets",
+        "noErrors",
+        "landedDataset",
+        "lineageIntact",
+        "intact",
+        "landedPdfs",
+        "descendsFrom",
+    },
+    "page": {"chart"},
+}
+ITEM_KEYS = {
+    ("toolCalls", "mustInclude"): {"name", "argsContains"},
+    ("artifacts", "mustInclude"): {
+        "kind",
+        "mark",
+        "titleContains",
+        "plugin",
+        "dataset",
+        "datasetId",
+        "settingsContain",
+        "referencesDataset",
+        "embedsRows",
+        "encodes",
+    },
+}
+
 
 class Failure:
     def __init__(self, assertion, detail, dimension):
@@ -784,10 +837,37 @@ def _longest_repeat(issued):
     return worst, count
 
 
-def validate_patterns(scenarios):
-    """Compile every committed regex so authoring bugs fail at load time."""
+def unsupported(assertions):
+    """The families and keys in `assertions` no checker reads, as `family.key` names."""
+    out = []
+    for family, spec in (assertions or {}).items():
+        if family == "anyOf":
+            for branch in spec:
+                out += [f"anyOf.{key}" for key in branch if key not in _BRANCH_DIMENSIONS]
+                out += unsupported({key: value for key, value in branch.items() if key in _BRANCH_DIMENSIONS})
+            continue
+        keys = ASSERTION_KEYS.get(family)
+        if keys is None:
+            out.append(family)
+            continue
+        for key, value in spec.items():
+            if key not in keys:
+                out.append(f"{family}.{key}")
+            elif (family, key) in ITEM_KEYS:
+                allowed = ITEM_KEYS[family, key]
+                out += [
+                    f"{family}.{key}.{k}" for item in value if isinstance(item, dict) for k in item if k not in allowed
+                ]
+    return sorted(set(out))
+
+
+def validate_scenarios(scenarios):
+    """Every key a checker reads and every regex compiles, so authoring bugs fail at load time."""
     problems = []
     for scenario in scenarios:
+        problems += [
+            f"{scenario.get('id')}: no checker reads {name}" for name in unsupported(scenario.get("assertions"))
+        ]
         spec = ((scenario.get("assertions") or {}).get("chatText")) or {}
         for assertion in ("mustMatch", "mustNotMatch"):
             for pattern in spec.get(assertion) or []:
