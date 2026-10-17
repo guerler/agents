@@ -220,12 +220,12 @@ def main():
     print(f"\n{len(scenarios)} scenario(s) x {len(models)} model(s){times}\n")
     results = []
     for model in models:
-        for scenario in scenarios:
-            runs = repeat or max(1, int(scenario.get("runs") or 1))
+        for template in scenarios:
+            runs = repeat or max(1, int(template.get("runs") or 1))
             for run_index in range(runs):
                 if args.delay and results:
                     time.sleep(args.delay)
-                scenario = _resolve_run_tokens(scenario)
+                scenario = _resolve_run_tokens(template)
                 if args.watch:
                     run = watch.run_watched(scenario, model, args.video, args.slow_mo, args.hold, args.watch)
                 else:
@@ -246,7 +246,7 @@ def main():
                         run.error = run.error or note
                 # After grading, which reads what the run staged.
                 remove_imported_workflows(getattr(run, "staged", None))
-                # Flushed per result: a full matrix runs for many minutes, and Python
+                # Flushed per result: a full matrix runs for many minutes, and Python buffers a pipe.
                 tag = f" #{run_index + 1}" if runs > 1 else ""
                 budget = f" {run.steps}/{run.max_steps} steps" if run.max_steps else ""
                 if run.waited >= 1:
