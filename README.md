@@ -40,5 +40,6 @@ the harness drives. Falsification is the exception: it edits the agent's source 
 ```
 description.py   an agent's published surface
 subject.py       which checkout is under test, and how its code is reached
+settings.py      the knobs: run budgets, Galaxy waits, watched runs and their videos
 evals/           scenarios, harness, grading, falsification, fixtures, snapshots, watched runs
 ```

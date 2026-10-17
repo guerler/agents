@@ -1,6 +1,6 @@
 """A reply that lands after its scenario is over has nowhere to go, and must not raise.
 
-Handlers are daemon threads and `forward` waits on the provider for up to FORWARD_TIMEOUT, so
+Handlers are daemon threads and `forward` waits on the provider for up to settings.MODEL_FORWARD_TIMEOUT_SECONDS, so
 a scenario that times out leaves one in flight. It used to write into the closed gzip sink and
 raise `ValueError: I/O operation on closed file` out of socketserver, printing a traceback per
 timed-out scenario in the middle of a run.

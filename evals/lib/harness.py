@@ -4,19 +4,17 @@ import asyncio
 import contextlib
 import json
 import os
-import pathlib
-import sys
 import time
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
-import subject  # noqa: E402
+import settings
+import subject
 
-from .config import build_config, upstream  # noqa: E402
-from .entries import digest  # noqa: E402
-from .plan import parse_latest_plan  # noqa: E402
-from .record import recording  # noqa: E402
-from .session import Session, TurnFailed  # noqa: E402
-from .staging import GalaxyClock, _empty_history, _stage, _timed, galaxy_wait_timeout  # noqa: E402
+from .config import build_config, upstream
+from .entries import digest
+from .plan import parse_latest_plan
+from .record import recording
+from .session import Session, TurnFailed
+from .staging import GalaxyClock, _empty_history, _stage, _timed, galaxy_wait_timeout
 
 # The entries a run appends; anything settle hands back holding one is a follow-up run.
 FOLLOW_UP_KINDS = {"pi.user", "pi.assistant", "pi.tool-result"}
@@ -205,12 +203,9 @@ def _awaiting_approval(new_messages):
     return bool(plan and plan.steps and len(plan.pending_steps) == len(plan.steps))
 
 
-DEFAULT_TIMEOUT_MS = 150_000
-
-
 def scenario_timeout(scenario):
     """The wall clock one run gets; every wait inside the run is bounded by this same number."""
-    return (scenario.get("timeoutMs") or DEFAULT_TIMEOUT_MS) / 1000
+    return (scenario.get("timeoutMs") or settings.SCENARIO_TIMEOUT_MS) / 1000
 
 
 async def _within_agent_budget(coro, budget, waited):

@@ -1,11 +1,7 @@
 """Shared by every checker: a failure, the dimensions, and the agent's tool sets."""
 
-import pathlib
-import sys
-
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[3]))
-import description  # noqa: E402
-import subject  # noqa: E402
+import description
+import subject
 
 
 class Failure:

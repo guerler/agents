@@ -1,13 +1,10 @@
 """Checks on the record page the run wrote."""
 
-import pathlib
 import re
-import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[3]))
-import subject  # noqa: E402
+import subject
 
-from .base import Failure  # noqa: E402
+from .base import Failure
 
 
 def _record_ids_resolve(failures, content):

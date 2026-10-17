@@ -7,13 +7,10 @@ needs no change in this file.
 
 import json
 import os
-import pathlib
-import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
-import subject  # noqa: E402
+import subject
 
-from .grading import SCENARIO_KEYS, unsupported  # noqa: E402
+from .grading import SCENARIO_KEYS, unsupported
 
 # loom grades against a stub, so a scenario may name data nothing creates. On a live Galaxy
 # `execution-after-approval`'s dataset id and history do not resolve, the agent is right to

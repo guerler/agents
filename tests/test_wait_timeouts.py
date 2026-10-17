@@ -83,9 +83,11 @@ def test_no_wait_carries_a_cap_of_its_own():
 def test_the_environment_clock_is_set_per_run_not_per_scenario():
     import os
 
-    from lib.staging import DEFAULT_GALAXY_WAIT_SECONDS, galaxy_wait_timeout
+    from lib.staging import galaxy_wait_timeout
 
-    assert galaxy_wait_timeout() == DEFAULT_GALAXY_WAIT_SECONDS
+    import settings
+
+    assert galaxy_wait_timeout() == settings.GALAXY_WAIT_SECONDS
     os.environ["OLIT_EVAL_GALAXY_WAIT"] = "14400"
     try:
         assert galaxy_wait_timeout() == 14400.0

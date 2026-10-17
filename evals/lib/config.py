@@ -1,11 +1,8 @@
 """What a session runs under: the model, its provider and key, the tool families, Galaxy."""
 
 import os
-import pathlib
-import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
-import subject  # noqa: E402
+import subject
 
 
 def _providers():

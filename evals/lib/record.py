@@ -16,8 +16,7 @@ import urllib.request
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-# A provider that refuses fast would otherwise hold the run open until its own timeout.
-FORWARD_TIMEOUT = 300
+import settings
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -62,7 +61,7 @@ class _Recorder(ThreadingHTTPServer):
             },
         )
         try:
-            with urllib.request.urlopen(request, timeout=FORWARD_TIMEOUT) as response:
+            with urllib.request.urlopen(request, timeout=settings.MODEL_FORWARD_TIMEOUT_SECONDS) as response:
                 return response.status, response.read()
         except urllib.error.HTTPError as err:
             # The refusal is the interesting part of the record, so it is passed through.

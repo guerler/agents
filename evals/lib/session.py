@@ -2,14 +2,11 @@
 
 import asyncio
 import json
-import pathlib
 import re
-import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
-import subject  # noqa: E402
+import subject
 
-from .entries import digest  # noqa: E402
+from .entries import digest
 
 # A turn result carries the whole transcript, far past asyncio's 64 KiB line default.
 LINE_LIMIT = 1 << 30

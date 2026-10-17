@@ -7,15 +7,15 @@ import pathlib
 import runpy
 import time
 
-from . import tooltests
+import settings
 
-DEFAULT_GALAXY_WAIT_SECONDS = 600
+from . import tooltests
 
 
 def galaxy_wait_timeout():
     """How long a Galaxy wait may take. The environment's clock, set per run, never per scenario."""
     stated = os.environ.get("OLIT_EVAL_GALAXY_WAIT", "").strip()
-    return float(stated) if stated else DEFAULT_GALAXY_WAIT_SECONDS
+    return float(stated) if stated else settings.GALAXY_WAIT_SECONDS
 
 
 class GalaxyClock:

@@ -15,19 +15,19 @@ import subprocess
 import tempfile
 import time
 
+import settings
+
 from . import config as configuration
 from . import harness, staging, tooltests
 from .entries import digest
 
 HERE = pathlib.Path(__file__).resolve().parent
-PORT = int(os.environ.get("OLIT_WATCH_PORT", "5180"))
-# A follow-up starts within a second or two of the page announcing settled work.
-SETTLE_MS = 10_000
-# Drop each frame too close to the one before it, then play what is left at 15 frames a second.
-CONDENSE = "mpdecimate=hi=64*12:lo=64*5:frac=0.33,setpts=N/(15*TB)"
-# H.264 MP4 plays in GitHub, Drive, Slack and QuickTime; CRF 23 keeps the page's text sharp.
-ENCODE = ["-r", "15", "-an", "-c:v", "libx264", "-crf", "23", "-preset", "slow", "-pix_fmt", "yuv420p"]
-ENCODE += ["-movflags", "+faststart"]
+PORT = int(os.environ.get("OLIT_WATCH_PORT", settings.WATCH_PORT))
+# Drop each frame too close to the one before it, then play what is left at the video's rate.
+CONDENSE = f"mpdecimate={settings.VIDEO_DECIMATE},setpts=N/({settings.VIDEO_FPS}*TB)"
+# H.264 MP4 plays in GitHub, Drive, Slack and QuickTime.
+ENCODE = ["-r", str(settings.VIDEO_FPS), "-an", "-c:v", "libx264", "-crf", str(settings.VIDEO_CRF)]
+ENCODE += ["-preset", "slow", "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
 
 _server = None
 
@@ -165,7 +165,7 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
         "skipJobs": staging_jobs,
         "timeoutMs": harness.scenario_timeout(scenario) * 1000,
         "galaxyWaitMs": staging.galaxy_wait_timeout() * 1000,
-        "settleMs": SETTLE_MS,
+        "settleMs": settings.WATCH_SETTLE_MS,
         "chart": ((scenario.get("assertions") or {}).get("page") or {}).get("chart") or [],
         "video": tempfile.mkdtemp(prefix=f".{name}-", dir=video) if video else None,
         "slowMo": slow_mo,

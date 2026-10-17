@@ -17,9 +17,10 @@ import urllib.parse
 import urllib.request
 import uuid
 
+import settings
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TEST_DATA_REPO = "https://github.com/galaxyproject/galaxy-test-data.git"
-POLL_SECONDS = 3
 
 
 class ToolTestError(Exception):
@@ -121,7 +122,7 @@ class Galaxy:
         return self.call(f"api/histories/{history_id}/contents?v=dev&deleted=false&visible=true")
 
 
-def poll(fetch, done, timeout, every=POLL_SECONDS):
+def poll(fetch, done, timeout, every=settings.GALAXY_POLL_SECONDS):
     """`fetch()` until `done` holds of it or `timeout` seconds pass; the last value either way."""
     deadline = time.monotonic() + timeout
     while True:
