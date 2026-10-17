@@ -292,9 +292,9 @@ def opted_out(scenario, include, named):
 def missing_tools(scenario, installed):
     """Why this Galaxy cannot run the scenario, or None.
 
-    A required tool is a short id, matched against an installed id or a Tool Shed guid's
-    tool segment, so the requirement holds whichever repository revision is installed.
+    A required tool is a short id, which Galaxy resolves to whichever revision is installed;
+    `installed(tool_id)` asks it.
     """
     wanted = (scenario.get("requires") or {}).get("tools") or []
-    absent = [t for t in wanted if not any(i == t or f"/{t}/" in i for i in installed)]
+    absent = [t for t in wanted if not installed(t)]
     return f"this Galaxy lacks {', '.join(absent)}" if absent else None

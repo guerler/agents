@@ -3,6 +3,7 @@
 
 import argparse
 import copy
+import functools
 import json
 import logging
 import os
@@ -168,10 +169,8 @@ def select(args):
         return 2
     print(f"  galaxy: {os.environ['GALAXY_URL'].strip()}")
 
-    installed = []
-    if any((s.get("requires") or {}).get("tools") for s in scenarios):
-        galaxy = Galaxy(os.environ["GALAXY_URL"].strip(), os.environ["GALAXY_API_KEY"].strip())
-        installed = [t.get("id") or "" for t in galaxy.call("api/tools?in_panel=false") or []]
+    galaxy = Galaxy(os.environ["GALAXY_URL"].strip(), os.environ["GALAXY_API_KEY"].strip())
+    installed = functools.cache(galaxy.has_tool)
     runnable = []
     for scenario in scenarios:
         why = opted_out(scenario, args.include, bool(args.scenario)) or missing_tools(scenario, installed)

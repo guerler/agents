@@ -16,13 +16,13 @@ def test_an_opt_in_scenario_runs_only_when_its_label_or_name_is_given():
     assert opted_out({"id": "smoke-answers"}, [], False) is None
 
 
-def test_a_required_tool_matches_a_tool_shed_guid_at_any_revision():
+def test_a_scenario_names_the_required_tools_galaxy_lacks():
     scenario = {"requires": {"tools": ["aoptk_query_literature", "aoptk_download_publication_data"]}}
-    guid = "toolshed.g2.bx.psu.edu/repos/recetox/aoptk/{}/0.5.0+galaxy7"
-    installed = [guid.format("aoptk_query_literature"), guid.format("aoptk_download_publication_data")]
-    assert missing_tools(scenario, installed) is None
-    assert missing_tools(scenario, installed[:1]) == "this Galaxy lacks aoptk_download_publication_data"
-    assert missing_tools(scenario, ["upload1", "cat1"]) == (
+    assert missing_tools(scenario, lambda t: True) is None
+    assert missing_tools(scenario, lambda t: t == "aoptk_query_literature") == (
+        "this Galaxy lacks aoptk_download_publication_data"
+    )
+    assert missing_tools(scenario, lambda t: False) == (
         "this Galaxy lacks aoptk_query_literature, aoptk_download_publication_data"
     )
-    assert missing_tools({"id": "smoke-answers"}, []) is None
+    assert missing_tools({"id": "smoke-answers"}, lambda t: False) is None

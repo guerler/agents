@@ -12,6 +12,7 @@ import json
 import os
 import pathlib
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
@@ -105,6 +106,16 @@ class Galaxy:
             return [x for x in (self.call(f"api/histories/{history_id}/contents") or []) if not x.get("deleted")]
 
         return poll(live, lambda c: len(c) >= want and all(x.get("state") in ("ok", "error") for x in c), timeout)
+
+    def has_tool(self, tool_id):
+        """Whether Galaxy has this tool; a short id resolves to whichever revision is installed."""
+        try:
+            self.call(f"api/tools/{urllib.parse.quote(tool_id)}")
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return False
+            raise
+        return True
 
     def contents(self, history_id):
         return self.call(f"api/histories/{history_id}/contents?v=dev&deleted=false&visible=true")
