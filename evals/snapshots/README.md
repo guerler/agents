@@ -33,7 +33,7 @@ scenario that starts passing for a different reason is visible rather than just 
 `evals.svg` at the repository root plots the passing scenarios across every snapshot,
 labelled by date. Regenerate it after ingesting a run:
 
-    python3 evals/chart.py
+    python3 evals/chart.py           # needs matplotlib
 
 ## Archive
 
