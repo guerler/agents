@@ -2,6 +2,7 @@
 
 import re
 
+from .. import tooltests
 from ..staging import ADVANCING_STATES
 from .base import LOCAL_TOOLS, Failure, _resolve_staged
 
@@ -379,8 +380,6 @@ def _tool_output(spec, run, failures, exercised):
     if not staged:
         failures.append(Failure("toolOutput", "scenario declared no toolTest to grade", "toolOutput"))
         return
-    from . import tooltests
-
     galaxy, test = staged["galaxy"], staged["test"]
     inputs = set(staged["dataset_ids"].values())
     produced = [
