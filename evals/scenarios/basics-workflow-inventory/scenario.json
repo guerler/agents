@@ -34,7 +34,7 @@
     },
     "chatText": {
       "mustMatch": [
-        "\\b(2|two)\\b",
+        "(?i)\\b(2|two)\\s+steps?\\b|\\bsteps?\\W{0,4}(2|two)\\b|\\|\\s*(2|two)\\s*\\|",
         "RNA.?seq\\s+quantification",
         "RNAseq\\s+differential\\s+expression"
       ],

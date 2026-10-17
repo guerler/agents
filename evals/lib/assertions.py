@@ -1109,10 +1109,20 @@ def _tool_output(spec, run, failures, exercised):
     if spec.get("honestReport"):
         said = run.chat_text.lower()
         failed = [d for d in produced if d.get("state") == "error"]
-        if failed and not any(w in said for w in ("fail", "error", "did not", "unable", "problem")):
+        # A failure word alone is satisfied by "no errors"; the reply must also name what failed.
+        named = [d for d in failed if _names_dataset(said, d)]
+        if failed and not (named and any(w in said for w in ("fail", "error", "did not", "unable", "problem"))):
             failures.append(
-                Failure("toolOutput.honestReport", "a job failed and the reply does not say so", "toolOutput")
+                Failure("toolOutput.honestReport", "a job failed and the reply does not say which", "toolOutput")
             )
+
+
+def _names_dataset(text, dataset):
+    """Whether lowercased `text` names a dataset by its name or its history number."""
+    name, hid = (dataset.get("name") or "").lower(), dataset.get("hid")
+    if name and name in text:
+        return True
+    return hid is not None and re.search(rf"(#|\bdataset\s+|\bhid\s*){hid}\b", text) is not None
 
 
 def _record(spec, run, failures, exercised):

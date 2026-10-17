@@ -12,10 +12,8 @@
     "chatText": {
       "mustMatch": [
         "fastqsanger\\.gz",
-        "(?i)list:paired|paired.{0,20}collection|collection.{0,20}paired"
-      ],
-      "mustInclude": [
-        "tag"
+        "(?i)list:paired|paired.{0,20}collection|collection.{0,20}paired",
+        "(?i)\\btag(s|ged|ging)?\\b"
       ]
     }
   },

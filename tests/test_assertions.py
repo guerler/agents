@@ -287,3 +287,18 @@ def test_record_ids_are_judged_by_length_without_asking_galaxy():
     failures = []
     _record_ids_resolve({}, None, failures, "job `4838ba20a6d86765d07974451a31d1b7`, truncated `4838ba20a6d8`")
     assert [f.assertion for f in failures] == ["record.idsResolve"]
+
+
+def test_a_failed_dataset_is_named_by_its_name_or_number():
+    from lib.assertions import _names_dataset
+
+    failed = {"name": "Filter on data 1", "hid": 2}
+    for text, named in (
+        ("the filter on data 1 job failed", True),
+        ("dataset 2 is in error", True),
+        ("#2 failed", True),
+        ("no errors, 12 rows", False),
+        ("dataset 21 is ok", False),
+    ):
+        assert _names_dataset(text, failed) is named, text
+    assert not _names_dataset("anything", {"name": "", "hid": None})
