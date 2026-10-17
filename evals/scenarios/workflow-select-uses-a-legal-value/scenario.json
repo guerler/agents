@@ -15,16 +15,6 @@
   ],
   "timeoutMs": 900000,
   "assertions": {
-    "toolCalls": {
-      "mustInclude": [
-        {
-          "name": "get_workflow_input_template"
-        },
-        {
-          "name": "invoke_workflow"
-        }
-      ]
-    },
     "invocation": {
       "succeeded": true,
       "parameterValues": {

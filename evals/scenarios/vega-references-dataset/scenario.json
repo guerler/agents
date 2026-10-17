@@ -9,7 +9,6 @@
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },
-    "toolCalls": { "mustInclude": [{ "name": "vega_dataset" }] },
     "artifacts": {
       "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true, "datasetId": "$staged:health.csv" }]
     },

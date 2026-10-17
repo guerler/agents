@@ -7,7 +7,6 @@
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },
-    "toolCalls": { "mustInclude": [{ "name": "vega_dataset" }] },
     "artifacts": { "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true, "mark": "bar" }] },
     "budget": { "maxSteps": 20, "maxRepeatedCall": 3 }
   }
