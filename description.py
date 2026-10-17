@@ -32,34 +32,6 @@ def load(source=None, agent="olit"):
     return json.loads(out.stdout)
 
 
-def defines(description, module, symbol):
-    """Whether the agent still defines this symbol in this module, keyed as it publishes it."""
-    return symbol in (description["symbols"].get(module) or [])
-
-
-def tool_table(description):
-    """name -> fingerprint of (description, parameter names), for comparison upstream."""
-    return {name: tool["signature"] for name, tool in description["tools"].items()}
-
-
-def delegated_tools(description):
-    """Tools the agent does not run itself, so no static read of its code sees the result."""
-    return {name for name, tool in description["tools"].items() if tool.get("runner") != "olit"}
-
-
 def write_tools(description):
     """Tools a read-back cannot verify: checking the result would mean performing the change."""
     return {name for name, tool in description["tools"].items() if tool.get("capability") == "write"}
-
-
-def declared_results(description):
-    """Tools whose result shape galaxy-ops declares, which it reads back off a result in its tests."""
-    return {name for name, tool in description["tools"].items() if tool.get("result")}
-
-
-def tool_contracts(description):
-    return {name: {"params": tool["params"], "prose": tool["prose"]} for name, tool in description["tools"].items()}
-
-
-def policy(description, name):
-    return description["policy"]["guards" if name == "guards" else name]

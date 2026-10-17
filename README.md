@@ -20,7 +20,6 @@ export GALAXY_URL=... GALAXY_API_KEY=...
 
 python3 evals/run.py                 # behavioural scenarios against a real model and Galaxy
 python3 evals/falsify.py             # break the agent on purpose; an eval that still passes is not measuring
-LOOM_ROOT=~/loom python3 seams/check.py    # provenance: what olit carries from Orbit, and what it invented
 bash comparison/run-loom.sh          # the same task, run through Orbit, for comparison
 ```
 
@@ -47,6 +46,5 @@ adding its registry; it does not mean changing the machinery.
 description.py   an agent's published surface, and the views the checks read it through
 subject.py       which checkout is under test, and how its code is reached
 evals/           scenarios, the in-process harness, assertions, falsification, fixtures
-seams/           the Orbit provenance registry and its checks
 comparison/      the same task driven through Orbit, for a paired result
 ```

@@ -17,7 +17,6 @@ select = ["E", "F", "I"]
 # the prose describing how a layer diverges. Reflowing them changes the text, not the layout.
 [tool.ruff.lint.per-file-ignores]
 "evals/falsify.py" = ["E501"]
-"seams/snapshot_layers.py" = ["E501"]
 # Standalone probes that put the agent under test on sys.path before importing it, so the
 # imports cannot come first.
 "evals/claims/*.py" = ["E402"]
