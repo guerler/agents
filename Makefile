@@ -2,7 +2,7 @@
 OLIT_ROOT ?= $(HOME)/loom/browser
 export OLIT_ROOT
 
-.PHONY: format lint test check upstream
+.PHONY: format lint test check
 
 format:
 	python3 -m black .
@@ -16,7 +16,3 @@ test:
 	python3 -m pytest tests -q
 
 check: lint test
-
-# Read-only: fetches refs, reports drift, adopts nothing.
-upstream:
-	python3 upstream_check.py

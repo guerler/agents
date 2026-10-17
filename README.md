@@ -41,32 +41,11 @@ cd $OLIT_ROOT && npm run build:session && node dist/session.mjs --describe --roo
 checkout. Adding a second agent means teaching those two modules how it describes itself, and
 adding its registry; it does not mean changing the machinery.
 
-## Checking the upstreams
-
-```bash
-make upstream          # or: python3 upstream_check.py
-```
-
-Fetches loom's refs and runs `seams/check.py` against a throwaway worktree of `origin/main`,
-so a checkout that has not been pulled still reports against current loom. Then olit's own
-`check_stale.js` and `check_vendored.py`, where the pinned dependencies live.
-
-It adopts nothing: no pull, no merge, no capture, no snapshot, no certification. Drift is
-reported through the same mechanisms you review by hand, and the report names the upstream file
-behind each drifted seam, because a moved fingerprint says a symbol changed and not how.
-
-Tracked on purpose: **loom** (source), **pi** (the loop the driver is a port of), **galaxy-skills**
-(the vendored corpus pin), **galaxy-mcp** (the captured tool descriptions), **galaxy-ops** (pinned
-to a fork, reported against upstream npm so the fork delta can be seen to shrink), and
-**galaxy-charts** (the input contract). Deliberately not: Pyodide, ordinary dependency freshness,
-and Galaxy itself, a live server rather than a pin.
-
 ## Layout
 
 ```
 description.py   an agent's published surface, and the views the checks read it through
 subject.py       which checkout is under test, and how its code is reached
-upstream_check.py  every upstream olit tracks, read without adopting any of it
 evals/           scenarios, the in-process harness, assertions, falsification, fixtures
 seams/           the Orbit provenance registry and its checks
 comparison/      the same task driven through Orbit, for a paired result
