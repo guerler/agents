@@ -20,6 +20,8 @@ RECORD_TOOLS = frozenset(
     {subject.describe()["record"]["resume_tool"], "create_page", "update_page", "revert_page_revision"}
 )
 EXECUTION_TOOLS = frozenset(description.write_tools(subject.describe())) - RECORD_TOOLS
+# What computes in the browser instead of in Galaxy.
+LOCAL_TOOLS = frozenset(name for name, tool in subject.describe()["tools"].items() if tool.get("capability") == "local")
 
 # Galaxy has renamed these across releases.
 INVOCATION_DONE = frozenset({"scheduled", "completed"})
@@ -425,9 +427,7 @@ def _galaxy_did_work(run, failures):
     evidence that an answer derives from a Galaxy output.
     """
     called = run.tools_called or []
-    # Both routes compute in the browser: run_python in Pyodide, vintent_dataset over a
-    # dataset it reads directly.
-    local = [t for t in ("run_python", "vintent_dataset") if t in called]
+    local = sorted(LOCAL_TOOLS.intersection(called))
     if not local:
         return
     staged = getattr(run, "staged", None)
