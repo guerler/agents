@@ -1,9 +1,10 @@
 // Drive Olit's real page through one scenario in a visible browser, for watch mode.
 //
-// Reads {url, root, login, inputs, historyId, skipJobs, timeoutMs, settleMs, chart, video, slowMo}
-// as JSON on argv[2] and prints one JSON line per event; the last is {"done": ...} or {"error": ...}.
-// With `login`, the page is Galaxy's own: it signs in through Galaxy's login form, makes the run's
-// history current, and finds Olit in the frame Galaxy mounts it in.
+// Reads {url, root, login, inputs, historyId, skipJobs, timeoutMs, galaxyWaitMs, settleMs, chart,
+// video, slowMo, holdMs} as JSON on argv[2] and prints one JSON line per event; the last is
+// {"done": ...} or {"error": ...}. With `login`, the page is Galaxy's own: it signs in through
+// Galaxy's login form, makes the run's history current, closes the tool panel, and finds Olit in
+// the frame Galaxy mounts it in.
 import { createRequire } from "node:module";
 import { statSync } from "node:fs";
 import path from "node:path";
@@ -99,11 +100,19 @@ async function accountedFor(job, shown) {
  * what starts a follow-up run, and still idle `settleMs` later. A job the page never announces
  * holds this for at most the watcher's longest poll.
  */
-async function quiet(deadline) {
+async function quiet(clock) {
   let idleSince = 0;
   let terminalSince = 0;
   let wasBusy = true;
-  while (Date.now() < deadline) {
+  let waitingOnGalaxy = false;
+  for (let last = Date.now(); ; ) {
+    const elapsed = Date.now() - last;
+    last += elapsed;
+    if (waitingOnGalaxy) clock.galaxy -= elapsed;
+    else clock.agent -= elapsed;
+    if (clock.agent <= 0) throw new Error("the run did not go quiet before its budget");
+    if (clock.galaxy <= 0) throw new Error("Galaxy did not finish the run's jobs within its wait");
+    waitingOnGalaxy = false;
     const now = await busy();
     if (now) {
       // Busy again after going idle: the page started a follow-up run on settled work.
@@ -114,6 +123,8 @@ async function quiet(deadline) {
       const jobs = await agentJobs();
       const shown = await text();
       const active = jobs.filter((j) => !TERMINAL.has(j.state));
+      // Idle on submitted work is the environment's clock, as in a headless run.
+      waitingOnGalaxy = active.length > 0;
       const unannounced = [];
       for (const j of jobs) {
         const pending = TERMINAL.has(j.state) && !settled.has(j.id);
@@ -131,7 +142,6 @@ async function quiet(deadline) {
     wasBusy = now;
     await new Promise((r) => setTimeout(r, 2000));
   }
-  throw new Error("the run did not go quiet before its budget");
 }
 
 /** A check's outcome: whether it held, and what was seen either way. */
@@ -229,13 +239,22 @@ async function olitFrame() {
 }
 
 try {
-  const deadline = Date.now() + args.timeoutMs;
   if (args.login) await signIn(args.login);
   await page.goto(args.url);
   if (args.login) await closeToolPanel();
   await until(async () => (app = await olitFrame()), 120_000, "Olit's page");
-  await until(async () => / ready\b/i.test(await text()), 240_000, "the agent to be ready");
+  // The status line says ready and the input takes text: neither alone, since the textarea is
+  // enabled before Olit boots and a restored conversation can say "ready" in its chat.
+  await until(
+    async () =>
+      / ready\b/i.test(await text()) &&
+      (await app.evaluate(() => document.querySelector("#input")?.disabled === false)),
+    240_000,
+    "the agent to be ready",
+  );
   emit({ event: "ready" });
+  // The agent's budget starts once it can be asked; waits on Galaxy jobs have their own.
+  const clock = { agent: args.timeoutMs, galaxy: args.galaxyWaitMs };
 
   page.on(
     "console",
@@ -245,7 +264,7 @@ try {
     await app.fill("#input", input);
     await app.click("#send-btn");
     emit({ event: "turn_start", input: input.slice(0, 80) });
-    await quiet(deadline);
+    await quiet(clock);
     emit({ event: "turn_end" });
   }
   if (args.chart?.length) emit({ event: "page", chart: await chartChecks(args.chart) });

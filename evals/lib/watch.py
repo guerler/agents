@@ -164,6 +164,7 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
         "historyId": staged["history_id"],
         "skipJobs": staging_jobs,
         "timeoutMs": harness.scenario_timeout(scenario) * 1000,
+        "galaxyWaitMs": staging.galaxy_wait_timeout() * 1000,
         "settleMs": SETTLE_MS,
         "chart": ((scenario.get("assertions") or {}).get("page") or {}).get("chart") or [],
         "video": tempfile.mkdtemp(prefix=f".{name}-", dir=video) if video else None,
@@ -171,10 +172,12 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
         "holdMs": hold * 1000,
     }
     events, error, visualization_id, checked = [], None, None, None
+    stderr = tempfile.TemporaryFile(mode="w+")
     driver = subprocess.Popen(
         ["node", str(HERE / "watch_drive.mjs"), json.dumps(request)],
         env={**os.environ, "OLIT_ROOT": str(harness.subject.root())},
         stdout=subprocess.PIPE,
+        stderr=stderr,
         text=True,
     )
     for line in driver.stdout:
@@ -197,9 +200,14 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
             events.extend(["turn_end", "auto_follow_up", "turn_start"])
         elif message.get("event") in ("turn_start", "turn_end", "work_settled"):
             events.append(message["event"])
+        elif message.get("event") == "console":
+            print(f"          console: {message.get('text', '')}", flush=True)
         if message.get("event") in ("ready", "turn_start", "auto_follow_up", "work_settled"):
             print(f"          {message['event']}: {message.get('input', '')}", flush=True)
-    driver.wait()
+    if driver.wait() and not error:
+        stderr.seek(0)
+        error = f"the driver exited with {driver.returncode}: {stderr.read()[-1000:].strip()}"
+    stderr.close()
     if error or not visualization_id:
         return harness.RunResult(
             [], [], [], error=error or "the page saved no conversation", events=events, waited=waited
