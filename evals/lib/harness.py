@@ -177,12 +177,17 @@ async def _drive(scenario, session, config, staged, waited=None):
         exhausted=state["exhausted"],
         staged=staged,
         steps=state["steps"],
-        max_steps=int(config.get("max_steps") or subject.describe()["policy"]["loop"]["max_steps"]),
+        max_steps=max_steps(config),
         config=config,
         refused=refused,
         waited=waited.total,
         document=document,
     )
+
+
+def max_steps(config):
+    """The step cap a run was under: the one configured, else the agent's own."""
+    return int(config.get("max_steps") or subject.describe()["policy"]["loop"]["max_steps"])
 
 
 def _awaiting_approval(new_messages):

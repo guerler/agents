@@ -218,7 +218,6 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
     starts = [i for i, e in enumerate(entries) if e.get("kind") == "pi.user"] or [0]
     run["steps"] = max(digest(entries[a:b])["steps"] for a, b in zip(starts, starts[1:] + [len(entries)]))
     chat = [{"role": "system", "content": scenario.get("systemPrompt", "")}] + run["chat"]
-    max_steps = int(config.get("max_steps") or harness.subject.describe()["policy"]["loop"]["max_steps"])
     result = harness.RunResult(
         chat,
         run["logs"],
@@ -228,7 +227,7 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
         artifacts=run["artifacts"],
         staged=staged,
         steps=run["steps"],
-        max_steps=max_steps,
+        max_steps=harness.max_steps(config),
         config=config,
         refused=run["refused"],
         waited=waited,
