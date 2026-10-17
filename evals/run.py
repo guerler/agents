@@ -24,6 +24,8 @@ from lib.publish import label_record_page, save_session  # noqa: E402
 from lib.staging import remove_imported_workflows  # noqa: E402
 from lib.tooltests import Galaxy  # noqa: E402
 
+import subject  # noqa: E402
+
 # HTTP 429 means out of budget, not a behavioural failure; graded separately.
 QUOTA_STATUS = 429
 
@@ -84,7 +86,7 @@ def parse_args():
     )
     ap.add_argument(
         "--loom",
-        default=os.environ.get("LOOM_SCENARIOS", os.path.expanduser("~/loom/evals/scenarios")),
+        default=str(subject.loom_scenarios()),
         help="loom's scenario directory, read as loom writes it",
     )
     ap.add_argument("--only-local", action="store_true", help="skip loom's scenarios")

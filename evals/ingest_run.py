@@ -12,12 +12,14 @@ import argparse
 import collections
 import datetime as dt
 import json
-import os
 import pathlib
 import subprocess
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+import subject  # noqa: E402
+
 OUT_DIR = HERE / "snapshots"
 
 
@@ -117,12 +119,14 @@ def main():
 
 
 def git_commit():
-    olit = pathlib.Path(os.path.expanduser(os.environ.get("OLIT_ROOT", "~/loom/browser")))
     try:
         return subprocess.run(
-            ["git", "-C", str(olit), "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
+            ["git", "-C", str(subject.root()), "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout.strip()
-    except Exception:
+    except (subprocess.CalledProcessError, SystemExit):
         return None
 
 

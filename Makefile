@@ -1,4 +1,4 @@
-# OLIT_ROOT names the checkout under test; the eval imports its brain from source.
+# OLIT_ROOT names the checkout under test.
 OLIT_ROOT ?= $(HOME)/loom/browser
 export OLIT_ROOT
 

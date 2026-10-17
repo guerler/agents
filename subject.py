@@ -11,6 +11,8 @@ import pathlib
 import description
 
 ENV = "OLIT_ROOT"
+# Where loom keeps the scenarios this repo also runs.
+LOOM_SCENARIOS = "~/loom/evals/scenarios"
 
 # What marks a checkout of the agent: the directories its loop lives in.
 SOURCE = {"olit": ("core/src/agent", "olit/src/agent")}
@@ -29,6 +31,11 @@ def root(agent="olit"):
     if not all((path / source).is_dir() for source in SOURCE[agent]):
         raise SystemExit(f"{path} does not look like an {agent} checkout")
     return path
+
+
+def loom_scenarios():
+    """loom's scenario directory, which `LOOM_SCENARIOS` overrides."""
+    return pathlib.Path(os.environ.get("LOOM_SCENARIOS", LOOM_SCENARIOS)).expanduser()
 
 
 def source(module, agent="olit"):

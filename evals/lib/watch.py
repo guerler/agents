@@ -32,10 +32,6 @@ ENCODE += ["-movflags", "+faststart"]
 _server = None
 
 
-def _olit_root():
-    return pathlib.Path(os.path.expanduser(os.environ.get("OLIT_ROOT", "~/loom/browser")))
-
-
 def _server_env(model):
     env = {
         **os.environ,
@@ -64,7 +60,7 @@ def start_server(model):
     log = open(records / "watch-server.log", "w")
     _server = subprocess.Popen(
         ["npm", "run", "dev", "--", "--port", str(PORT), "--strictPort"],
-        cwd=_olit_root() / "olit",
+        cwd=harness.subject.root() / "olit",
         env=_server_env(model),
         stdout=log,
         stderr=subprocess.STDOUT,
@@ -177,7 +173,7 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
     events, error, visualization_id, checked = [], None, None, None
     driver = subprocess.Popen(
         ["node", str(HERE / "watch_drive.mjs"), json.dumps(request)],
-        env={**os.environ, "OLIT_ROOT": str(_olit_root())},
+        env={**os.environ, "OLIT_ROOT": str(harness.subject.root())},
         stdout=subprocess.PIPE,
         text=True,
     )

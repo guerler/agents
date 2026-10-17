@@ -1,13 +1,11 @@
 """loom's scenarios are read as loom writes them; what cannot be judged here is skipped and says why."""
 
-import os
-
 import pytest
 
+import subject
 from evals.lib import loom_scenarios
 from evals.lib.loom_scenarios import Unsupported, adapt
 
-LOOM = os.path.expanduser(os.environ.get("LOOM_ROOT", "~/loom"))
 TOOLS = {"run_tool", "invoke_workflow"}
 
 
@@ -51,7 +49,7 @@ def test_routing_keeps_the_tags_the_agent_has():
 
 
 def test_every_loaded_loom_scenario_is_fully_graded():
-    loaded, skipped = loom_scenarios.load(os.path.join(LOOM, "evals", "scenarios"))
+    loaded, skipped = loom_scenarios.load(str(subject.loom_scenarios()))
     for scenario in loaded:
         assert not loom_scenarios.unsupported(scenario["assertions"]), scenario["id"]
         calls = scenario["assertions"].get("toolCalls", {})
