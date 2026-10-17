@@ -79,8 +79,9 @@ the same Galaxy, and `lib/watch_drive.mjs` types each input into the real page w
 (Chrome if installed), waiting out Galaxy jobs and the follow-ups they start. The run is graded
 off the conversation the page saves to Galaxy, so the verdict means the same as a headless one.
 `--video` records it as `records/videos/<timestamp>-<scenario>.mp4` (or in a `DIR` given after it), condensed with
-ffmpeg: the frames where nothing changes are dropped, so waits on the model and on jobs leave the video, and it is
-encoded as H.264, which GitHub, Drive and Slack play as is.
+ffmpeg: frames that change nothing, or too little of the picture (a spinner while a job waits), are dropped, so
+waits on the model and on jobs leave the video; the end of each turn is held long enough to read. It is encoded as
+H.264, which GitHub, Drive and Slack play as is. The knobs are in `settings.py`.
 `--slow-mo MS` slows it, `--hold N` keeps the window open. It needs a scenario that does not restart or approve, and on
 the dev server one that stages a dataset.
 

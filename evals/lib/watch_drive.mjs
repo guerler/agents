@@ -44,6 +44,8 @@ const context = await browser.newContext({
   ...(args.video ? { recordVideo: { dir: args.video, size: { width: 1440, height: 900 } } } : {}),
 });
 const page = await context.newPage();
+/** The recording starts with the page; turn ends are reported on its clock, for the video's holds. */
+const recorded = Date.now();
 /** Where Olit runs: the page itself, or the frame Galaxy mounts the plugin in. */
 let app = page;
 
@@ -267,7 +269,7 @@ try {
     await app.click("#send-btn");
     emit({ event: "turn_start", input: input.slice(0, 80) });
     await quiet(clock);
-    emit({ event: "turn_end" });
+    emit({ event: "turn_end", at: (Date.now() - recorded) / 1000 });
   }
   if (args.chart?.length) emit({ event: "page", chart: await chartChecks(args.chart) });
 

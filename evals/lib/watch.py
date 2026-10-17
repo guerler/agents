@@ -89,12 +89,29 @@ def stop_server():
     _server = None
 
 
-def condense(source, target):
+def condense(source, target, holds=()):
     """The run's video with the frames that change nothing dropped, so the waits on the model and
-    on Galaxy's jobs leave it and what is left plays at its own pace."""
-    command = ["ffmpeg", "-v", "error", "-y", "-i", str(source), "-vf", CONDENSE, *ENCODE, str(target)]
+    on Galaxy's jobs leave it and what is left plays at its own pace. The frame at each of `holds`,
+    seconds into the recording where a turn ended, stays on screen long enough to read."""
+    cuts = [0.0, *sorted(holds), None]
+    pieces = []
     try:
-        subprocess.run(command, check=True, capture_output=True, text=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            for index, (start, end) in enumerate(zip(cuts, cuts[1:])):
+                if end is not None and end - start < 0.1:
+                    continue
+                window = ["-ss", str(start), *(["-t", str(end - start)] if end is not None else [])]
+                hold = f",tpad=stop_mode=clone:stop_duration={settings.VIDEO_TURN_HOLD_SECONDS}" if end else ""
+                piece = pathlib.Path(tmp) / f"{index}.mp4"
+                command = ["ffmpeg", "-v", "error", "-y", *window, "-i", str(source), "-vf", CONDENSE + hold]
+                subprocess.run([*command, *ENCODE, str(piece)], check=True, capture_output=True, text=True)
+                pieces.append(piece)
+            listing = pathlib.Path(tmp) / "pieces.txt"
+            listing.write_text("".join(f"file '{p}'\n" for p in pieces))
+            command = ["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy"]
+            subprocess.run(
+                [*command, "-movflags", "+faststart", str(target)], check=True, capture_output=True, text=True
+            )
     except FileNotFoundError:
         return "ffmpeg is not installed"
     except subprocess.CalledProcessError as e:
@@ -103,13 +120,13 @@ def condense(source, target):
     return None
 
 
-def keep_video(recorded, folder, name):
+def keep_video(recorded, folder, name, holds=()):
     """Keep the page's recording, condensed, in the videos folder under the run's own name.
     Without ffmpeg the recording is kept as Playwright wrote it."""
     if not recorded:
         return
     video = pathlib.Path(folder) / f"{name}.mp4"
-    problem = condense(recorded, video)
+    problem = condense(recorded, video, holds)
     if problem:
         video = video.with_suffix(".webm")
         pathlib.Path(recorded).replace(video)
@@ -176,7 +193,7 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
         "slowMo": slow_mo,
         "holdMs": hold * 1000,
     }
-    events, error, visualization_id, checked = [], None, None, None
+    events, error, visualization_id, checked, holds = [], None, None, None, []
     stderr = tempfile.TemporaryFile(mode="w+")
     driver = subprocess.Popen(
         ["node", str(HERE / "watch_drive.mjs"), json.dumps(request)],
@@ -199,12 +216,14 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
             for check, seen in (message.get("chart") or {}).items():
                 print(f"          chart {check}: {'ok' if seen['ok'] else 'FAILED'}, {seen['detail']}", flush=True)
         elif message.get("event") == "video":
-            keep_video(message.get("path"), video, name)
+            keep_video(message.get("path"), video, name, holds)
         elif message.get("event") == "auto_follow_up":
             # A follow-up is a run of its own, bracketed as the headless harness does.
             events.extend(["turn_end", "auto_follow_up", "turn_start"])
         elif message.get("event") in ("turn_start", "turn_end", "work_settled"):
             events.append(message["event"])
+            if message.get("at") is not None:
+                holds.append(message["at"])
         elif message.get("event") == "console":
             print(f"          console: {message.get('text', '')}", flush=True)
         if message.get("event") in ("ready", "turn_start", "auto_follow_up", "work_settled"):

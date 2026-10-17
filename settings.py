@@ -18,3 +18,4 @@ VIDEO_FPS = 15
 VIDEO_CRF = 23  # H.264 quality: lower is sharper and larger; 23 keeps the page's text sharp
 VIDEO_DECIMATE = "hi=64*12:lo=64*5:frac=0.33"  # mpdecimate: drop frames that repeat the last one
 VIDEO_SCENE_THRESHOLD = 0.00003  # also drop frames that change less of the picture; a spinner is ~0.00001
+VIDEO_TURN_HOLD_SECONDS = 3  # how long the end of each turn stays on screen
