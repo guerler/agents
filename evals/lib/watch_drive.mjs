@@ -14,6 +14,8 @@ const require = createRequire(path.join(process.env.OLIT_ROOT, "package.json"));
 const { chromium } = require("playwright");
 
 const emit = (line) => process.stdout.write(JSON.stringify(line) + "\n");
+/** A Galaxy page counts as loaded once its HTML is; what the run needs from it is awaited after. */
+const LOAD = { waitUntil: "domcontentloaded", timeout: 120_000 };
 /** Jobs already reported settled, so a later turn does not report them again. */
 const settled = new Set();
 const TERMINAL = new Set([
@@ -206,7 +208,7 @@ async function chartChecks(wanted) {
 
 /** Sign in as a person does, then make the run's history the one Galaxy's panel shows. */
 async function signIn({ user, password }) {
-  await page.goto(`${args.root}login/start`);
+  await page.goto(`${args.root}login/start`, LOAD);
   await page.fill('#login input[name="login"]', user);
   await page.fill('#login input[name="password"]', password);
   await page.click('#login button[type="submit"]');
@@ -240,7 +242,7 @@ async function olitFrame() {
 
 try {
   if (args.login) await signIn(args.login);
-  await page.goto(args.url);
+  await page.goto(args.url, LOAD);
   if (args.login) await closeToolPanel();
   await until(async () => (app = await olitFrame()), 120_000, "Olit's page");
   // The status line says ready and the input takes text: neither alone, since the textarea is
