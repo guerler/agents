@@ -41,6 +41,6 @@ labelled by date. Regenerate it after ingesting a run:
 
 ## Archive
 
-`archive/` holds the snapshots up to 2026-10-16 and their chart. They scored a separate parity
-tier of loom scenarios, adapted loosely enough that some graded on nothing, so they are kept to
-read, not to compare against.
+`archive/` holds the snapshots up to 2026-10-16; their chart is `evals.last.svg` at the
+repository root. They scored a separate parity tier of loom scenarios, adapted loosely enough
+that some graded on nothing, so they are kept to read, not to compare against.

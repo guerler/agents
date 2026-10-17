@@ -8,8 +8,12 @@ recorded videos of watched runs. The agent under test lives in its own repositor
 ![Passing scenarios per baseline](evals.svg)
 
 Each point is a baseline run of the full suite, labelled by date, with passing scenarios out of
-the total beside it. A scenario passes when every run of it passes. Baselines before
-2026-10-17 are in [evals/snapshots/archive](evals/snapshots/archive).
+the total beside it. A scenario passes when every run of it passes.
+
+![Passing scenarios per baseline up to 2026-10-16](evals.last.svg)
+
+The baselines from 2026-09-18 to 2026-10-16, scored in separate tiers before the cleanup, are
+kept as they were charted. Their snapshots are in [evals/snapshots/archive](evals/snapshots/archive).
 
 ```bash
 export OLIT_ROOT=~/loom/browser
