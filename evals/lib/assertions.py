@@ -29,6 +29,29 @@ INVOCATION_FAILED = frozenset({"cancelled", "failed"})
 
 DIMENSIONS = ("validity", "routing", "tools", "behavior")
 
+# Every top-level key the harness reads; `id` and `source` are set by the loaders.
+SCENARIO_KEYS = {
+    "name",
+    "description",
+    "inputs",
+    "timeoutMs",
+    "assertions",
+    "dataset",
+    "runs",
+    "optIn",
+    "requires",
+    "capabilities",
+    "emptyHistory",
+    "toolTest",
+    "workflows",
+    "approveWhenPlanned",
+    "restartAfter",
+    "recoverSession",
+    "systemPrompt",
+    "id",
+    "source",
+}
+
 # Every key the checkers below read, by family; a scenario naming any other would go ungraded.
 ASSERTION_KEYS = {
     "messages": {"repliesInChat"},
@@ -862,9 +885,10 @@ def unsupported(assertions):
 
 
 def validate_scenarios(scenarios):
-    """Every key a checker reads and every regex compiles, so authoring bugs fail at load time."""
+    """Every key is read and every regex compiles, so authoring bugs fail at load time."""
     problems = []
     for scenario in scenarios:
+        problems += [f"{scenario.get('id')}: nothing reads {key}" for key in sorted(set(scenario) - SCENARIO_KEYS)]
         problems += [
             f"{scenario.get('id')}: no checker reads {name}" for name in unsupported(scenario.get("assertions"))
         ]

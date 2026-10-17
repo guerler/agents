@@ -31,6 +31,7 @@ def test_tool_names_drop_the_mcp_prefix():
 def test_what_cannot_be_judged_here_is_refused_with_its_reason():
     cases = [
         ({"env": {"LOOM_MODEL_SCRIPT": "x"}}, "configures loom"),
+        ({"fixture": "notebook.md"}, "sets fixture, which this harness does not read"),
         ({"assertions": {"activity": {}, "notebook": {}}}, "no checker reads activity, notebook"),
         ({"assertions": {"plan": {"exists": True, "source": "notebook"}}}, "no checker reads plan.source"),
         ({"assertions": {"events": {"mustNotInclude": ["agent_start"]}}}, "always starts one"),

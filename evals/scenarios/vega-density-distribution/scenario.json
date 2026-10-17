@@ -1,7 +1,6 @@
 {
   "name": "vega: a distribution uses a native density or bin transform",
   "description": "The expressive end. A smooth distribution needs a density transform whose output fields the file does not contain, so this exercises the produced-field allowance in the tool's name check: a spec encoding `density` and `value` must be accepted rather than refused as unknown columns.",
-  "tier": 2,
   "dataset": { "file": "health.csv", "history": "vega density" },
   "inputs": ["Show the distribution of Glucose from the dataset in this history as a smooth density curve."],
   "timeoutMs": 300000,

@@ -1,8 +1,6 @@
 {
   "name": "visualizations: a structure opens in a structure viewer",
   "description": "A protein structure, which vega_dataset cannot read because it is not tabular, so the route is a Galaxy visualization. Showing and saving both open it; a show must leave nothing saved, since rendering once cost a permanent row in the user's visualization list, and a save must be a structure viewer on the dataset.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "file": "peptide.pdb",
     "history": "structure viewing $run",

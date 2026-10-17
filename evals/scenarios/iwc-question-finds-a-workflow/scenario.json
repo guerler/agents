@@ -1,8 +1,6 @@
 {
   "name": "iwc: a plain question over the user's data finds a community workflow",
   "description": "Tier 3, live Galaxy. FINDING_A_WORKFLOW fires on a described analysis, not only on a plan request: the user asks what changed between their samples and never says 'plan' or 'Galaxy', and the registry check still has to happen before tools are assembled by hand. plan-consults-iwc covers the same tool call behind a plan request, which is the gating this behaviour denies, so it does not cover this. Asserts the ranked recommend rather than the keyword search, since the prompt says search is for a named workflow and recommend ranks a goal. Nothing is imported or invoked: step 3 offers candidates and waits for the user to choose. No data is staged, as loom's counterpart stages none either: what is under test is whether the registry is consulted, not how reads are handled. The chatText assertion rides on live IWC ranking -- the top hit for this sentence starts from count tables while the user has reads, so a correct reply says counts have to come first -- and is the line to revisit if the ranking moves. loom's own iwc-find-from-question is held out of the import because it asserts a skill.hint activity event olit does not produce.",
-  "tier": 3,
-  "substrate": "live",
   "inputs": [
     "I have paired-end RNA-seq from six mouse liver samples, three treated and three control, and I want to know which genes changed."
   ],

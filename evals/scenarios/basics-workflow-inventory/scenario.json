@@ -1,8 +1,6 @@
 {
   "name": "basics: take inventory of the workflows on the instance",
   "description": "Tier 3, live Galaxy. What a researcher asks on arriving: what workflows are here, and which relate to my assay. The subject filter is the hard part -- Galaxy's own ?search drops raw terms under four characters, so delegating 'rna seq' to it matches every workflow, and a naive name substring matches none. Asks about the workflows this scenario stages rather than the server's total: the instance is shared and accumulates workflows from other work, so a global count is not the scenario's to assert. The subject filter is still the hard part.",
-  "tier": 3,
-  "substrate": "live",
   "workflows": {
     "files": [
       "rnaseq-quantification.ga",

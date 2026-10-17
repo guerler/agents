@@ -1,8 +1,6 @@
 {
   "name": "basics: say what is in the history in front of the user",
   "description": "Tier 3, live Galaxy. The other half of arriving: not what the server can do, but what the user already has. The history is bound by the record, so naming its contents needs no question back to the user -- asking which history to look at is itself the failure this guards.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "file": "health.tabular",
     "history": "history contents"

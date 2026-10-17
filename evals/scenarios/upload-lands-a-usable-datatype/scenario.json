@@ -1,8 +1,6 @@
 {
   "name": "upload: bring in a csv Galaxy can address by column",
   "description": "The acquisition half split out of picks-something-and-runs-it, and the one place a datatype is graded. upload_file_from_url passes file_type straight to Galaxy's fetch API, where 'auto' sniffs this file correctly as csv with five columns; naming a datatype instead overrides the sniffer, and tabular splits on a tab the file does not contain, so the whole record becomes one field. Nothing downstream reports that as a problem: a column filter either raises IndexError on a column that does not exist or compares the entire comma-joined line as a string and keeps only the header. Graded on the columns Galaxy ended up with rather than on the extension, because a file can carry the right datatype and still be unparsed, which is what tabular_to_csv produced when it was pointed at the broken upload. The question about columns is asked so the reply has to agree with the history.",
-  "tier": 3,
-  "substrate": "live",
   "emptyHistory": "csv datatype $run",
   "inputs": [
     "Load https://zenodo.org/record/1319069/files/iris.csv into this Galaxy, then tell me how many columns it has."

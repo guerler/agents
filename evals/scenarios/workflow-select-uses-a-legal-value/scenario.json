@@ -1,8 +1,6 @@
 {
   "name": "workflow: pick the offered comparison, not an invented one",
   "description": "The workflow's second input is a select whose legal values are two exact strings, 'c2>10' and 'c2<10'. Nothing in the prompt spells either of them, so the only way to supply one is to read the option list off get_workflow_input_template. An agent that sees only a default guesses a plausible expression ('c2 < 10', 'price < 10') and Galaxy takes it literally. This exists because olit's hand-written template projection dropped the options entirely and returned only the default, which the unit tests now pin and this grades end to end. Checked against the value Galaxy recorded for the invocation, not the agent's narration.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "file": "prices.csv",
     "history": "workflow select $run"

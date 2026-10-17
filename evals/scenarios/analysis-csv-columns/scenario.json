@@ -1,8 +1,6 @@
 {
   "name": "analysis: group a comma-delimited table and report the figures",
   "description": "Pyodide over a CSV, which is a different parse from the tabular case in analysis-column-statistics: download_dataset writes every dataset to a `.dat` path and pandas infers nothing from that, so the separator has to come from what the tool reports rather than from the filename. Replaces a sum over prices.csv, whose Price column held two distinct values and totalled a round 96000 -- a figure that proved the tool was called rather than that anything was computed. Grouping 768 rows by Outcome cannot be answered from a preview: the counts are 500 and 268 and the group means differ by thirty points of glucose, so a run that parses the file as one column, or reads only the first lines, lands nowhere near. The prompt names the columns and the grouping and nothing about delimiters or parsers; choosing those is the behaviour under test.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "file": "health.csv",
     "history": "csv analysis $run",

@@ -1,7 +1,6 @@
 {
   "name": "vega: a mean per category is a transform, not a materialised table",
   "description": "An aggregate is the case Vintent computed in Python and embedded. Vega-Lite expresses it natively, so the spec must still reference the dataset and carry the aggregation as an encoding or transform. Asserts the reference, which is what fails if the agent computes the means itself and hands them over as rows.",
-  "tier": 2,
   "dataset": { "file": "health.csv", "history": "vega aggregate" },
   "inputs": ["Chart the average Glucose for each Outcome group from the dataset in this history as a bar chart."],
   "timeoutMs": 300000,

@@ -1,8 +1,6 @@
 {
   "name": "visualizations: the vcf in this history, on a named genome, from one sentence",
   "description": "Replays a real session, verbatim. The user names a file by part of its name and a genome by id, and nothing else: not the plugin, not the parameter, not where the genome comes from. So the agent has to find the vcf among the datasets beside it, choose a viewer that renders vcf, and resolve `hg18` to the entry the plugin stores. IGV declares `genome` three times under one conditional, a data table for a built-in, IGV's hosted json list, and a history dataset, and where the server's fasta_indexes table is empty the built-in case resolves to nothing and the agent has to read that and try another origin; where it holds hg18 (usegalaxy.eu), the built-in entry is an equally valid answer. The live session failed here three ways, all fixed since and all still graded: the options tool raised because its handler had moved modules, the agent addressed the parameter as `source.genome` instead of the published path, and the refusal for a missing branch named the case values without saying that they go in `config`. Graded on the config the visualization carries, whether it was shown or saved, and on what Galaxy stores when it was saved, because IGV renders an unusable genome and the chat reports success either way. The user asked to see it, not to keep it, so showing it is a full answer. hg18's fastaURL, or the built-in's table row, is in the resolved options and nowhere in the request, so a config holding it was built from resolved options and one holding only an id was not.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "history": "igv vcf $run",
     "files": [

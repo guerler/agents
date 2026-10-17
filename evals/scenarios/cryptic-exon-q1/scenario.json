@@ -1,9 +1,7 @@
 {
   "name": "cryptic-exon-q1: name the gene carrying the cryptic exon",
-  "description": "CompBioBench cryptic-exon-q1, against a pinned dataset revision. Tier 3, live Galaxy. The input is staged into a clean history and nothing else is prescribed: no tools, no steps, no plan shape. The first turn is the benchmark prompt verbatim; the second is a fixed approval, because Olit holds a multi-step analysis at the plan gate and a single-turn benchmark would measure the gate rather than the science. The third turn resumes after the harness has settled the submitted jobs, the same suspend/resume contract async-work-suspends-and-resumes exercises; `settleTimeoutMs` widens that window because an alignment outlives the 180s default. A fourth turn confirms once more, because the agent reaches real data and then stops at side-issues it has already judged optional; this measures whether one minimal confirmation carries it to an answer. Kept visible here rather than as harness behaviour. Graded the way the benchmark grades it, on the final HGNC symbol. Hold the huggingface.co URL, never the CDN URL it redirects to: that one is signed and expires.",
-  "tier": 3,
+  "description": "CompBioBench cryptic-exon-q1, against a pinned dataset revision. Tier 3, live Galaxy. The input is staged into a clean history and nothing else is prescribed: no tools, no steps, no plan shape. The first turn is the benchmark prompt verbatim; the second is a fixed approval, because Olit holds a multi-step analysis at the plan gate and a single-turn benchmark would measure the gate rather than the science. The third turn resumes after the harness has settled the submitted jobs, the same suspend/resume contract async-work-suspends-and-resumes exercises; an alignment outlives the default wait, so run it with `OLIT_EVAL_GALAXY_WAIT=5400`. A fourth turn confirms once more, because the agent reaches real data and then stops at side-issues it has already judged optional; this measures whether one minimal confirmation carries it to an answer. Kept visible here rather than as harness behaviour. Graded the way the benchmark grades it, on the final HGNC symbol. Hold the huggingface.co URL, never the CDN URL it redirects to: that one is signed and expires.",
   "optIn": "benchmark",
-  "substrate": "live",
   "dataset": {
     "url": "https://huggingface.co/datasets/Genentech/compbiobench-data-v1/resolve/246c12e4530147fb5a3990f3e4100bfee3d71737/data/cryptic.exon.q1.fq.gz?download=true",
     "name": "cryptic.exon.q1.fq.gz",
@@ -26,6 +24,5 @@
         "\\bGNG10\\b"
       ]
     }
-  },
-  "settleTimeoutMs": 5400000
+  }
 }

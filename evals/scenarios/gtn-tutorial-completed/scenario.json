@@ -1,8 +1,6 @@
 {
   "name": "gtn: identify a tutorial, pull it, and complete its analysis on Galaxy",
   "description": "The whole arc a researcher arriving from the training material follows: find the relevant GTN tutorial, read it, and carry its method out on their own data. Deliberately scoped to a tutorial whose tools exist on a stock server -- Data Manipulation Olympics uses Filter, Group, Join and Select rather than a mapper and a genome index -- because a tutorial needing an 8-hour pipeline and an uninstalled toolshed repository is a workflow test, not an eval. The counting question cannot be answered by eye at 600 rows, and it is graded on datasets Galaxy actually produced, so answering it in the browser scratchpad instead of on Galaxy fails. One produced dataset is enough: the tutorial's SQL variant answers it in a single Query Tabular step, as validly as Filter then Count. Three turns, and the third is an approval: anything that executes must pass the four-stage plan gate first, so a scenario that asks for work without ever approving it measures the gate rather than the execution. The first draft did exactly that and stopped at a plan, correctly.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "file": "medals.tabular",
     "history": "gtn tutorial $run"

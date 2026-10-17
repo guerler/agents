@@ -1,7 +1,6 @@
 {
   "name": "literature: the Galaxy NAR papers land as PDFs",
   "description": "Tier 3, live Galaxy with literature tools (usegalaxy.eu); skipped on a Galaxy without the Europe PMC route it requires. The request is a user's own, verbatim. Galaxy has to hold the result: a PDF of each of the six Galaxy update papers in Nucleic Acids Research (2016 to 2026), named by any of its PMCID, PMID, DOI suffix or OpenAlex id, so a Europe PMC download, an OpenAlex download and a direct upload all count. The same papers buried in thousands of free-text hits, or a different paper's citing works, do not. Europe PMC serves all six PDFs; their OpenAlex open-access links point at the publisher, which refuses the download.",
-  "tier": 3,
   "requires": {
     "tools": [
       "aoptk_query_literature",

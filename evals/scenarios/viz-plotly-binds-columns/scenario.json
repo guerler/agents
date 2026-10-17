@@ -1,8 +1,6 @@
 {
   "name": "visualizations: a named plugin is bound by value, not by the entry it was chosen from",
   "description": "The user names plotly and two columns, so the saved config must bind them the way the plugin reads them: a select stores its value, a data_column stores its column. get_visualization_options returns whole entries for the inputs that take one, and handing those back for a scalar input produces a config Galaxy stores and the plugin cannot read. Graded on what Galaxy holds, because the chart renders empty while the agent reports success, so neither the chat nor the artifact pane shows the defect. columnsAreIndices rides along for free here, but the multi-track case belongs to viz-plotly-tracks-index-columns: this scenario is about how a value is represented, that one about whether the value identifies the right column.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "file": "prices.csv",
     "history": "plotly columns $run",

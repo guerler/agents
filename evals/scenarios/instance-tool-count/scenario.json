@@ -1,7 +1,6 @@
 {
   "name": "instance: how many tools are installed",
   "description": "Tier 2. The panel's top level is mostly sections, so an agent that counts panel entries answers ~20 when the server has an order of magnitude more. Asserts the answer is not a section count.",
-  "tier": 2,
   "inputs": [
     "How many tools are available on this Galaxy?"
   ],

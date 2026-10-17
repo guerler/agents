@@ -1,8 +1,6 @@
 {
   "name": "visualizations: a track, a genome and a locus on one saved visualization",
   "description": "Three turns against one IGV visualization, each needing a different kind of parameter. The bed opens it and becomes the dataset it references. The gff3 is added as a track, which means writing the dataset into the parameter that takes one, not the genome parameter that also takes a dataset and accepts neither format. The genome is then switched, and its value is an entry copied whole from a remote list the plugin names, so it cannot be invented from an id. Finally a locus is set, which must not cost the tracks or the genome, because saving replaces the config rather than merging into it. Graded on what Galaxy stores, since every one of these reports success in chat whether or not it survived.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "history": "igv tracks $run",
     "files": [

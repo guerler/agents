@@ -1,7 +1,6 @@
 {
   "name": "demo: from a differential expression table to a written-up volcano plot",
   "description": "The scenario shown to the community, replaced as Olit grows. Tier 3, live Galaxy, default model. One researcher's session on the GTN volcano plot tutorial's own data (limma-voom, mouse mammary gland luminal cells, pregnant vs lactating): bring the table in from Zenodo, find the tutorial, follow its method with Galaxy's Volcano Plot tool, draw an interactive chart, and write the record page. Ground truth from the table itself: 1610 genes pass adj.P.Val < 0.01 and |logFC| > 0.58 (669 positive, 941 negative logFC; unchanged with inclusive bounds), and Csn1s2b has the smallest P value.",
-  "tier": 3,
   "optIn": "demo",
   "requires": {
     "tools": [

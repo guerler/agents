@@ -13,7 +13,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
 
-from .assertions import unsupported  # noqa: E402
+from .assertions import SCENARIO_KEYS, unsupported  # noqa: E402
 
 # loom grades against a stub, so a scenario may name data nothing creates. On a live Galaxy
 # `execution-after-approval`'s dataset id and history do not resolve, the agent is right to
@@ -41,6 +41,9 @@ MCP_PREFIX = "mcp__galaxy__"
 
 # loom also routes `local` and `hybrid`; this agent has no local execution.
 ROUTING_TAGS = {"remote"}
+
+# loom's own keys, read here and not passed on.
+LOOM_KEYS = {"tier", "requiresModel", "requiresGalaxy", "loomArgs"}
 
 # loom's `--tools` mapped to the nearest capability set.
 TOOL_CAPABILITIES = {
@@ -107,6 +110,9 @@ def adapt(scenario, tools):
     """The scenario as this harness grades it; raises Unsupported when it cannot be judged here."""
     if scenario.get("env") or scenario.get("config"):
         raise Unsupported("configures loom itself (env, config)")
+    unread = sorted(set(scenario) - SCENARIO_KEYS - LOOM_KEYS)
+    if unread:
+        raise Unsupported(f"sets {', '.join(unread)}, which this harness does not read")
     assertions = dict(scenario.get("assertions") or {})
     unread = unsupported(assertions)
     if unread:
@@ -117,7 +123,7 @@ def adapt(scenario, tools):
         assertions["toolCalls"] = _tool_calls(assertions["toolCalls"], tools)
     if "plan" in assertions:
         assertions["plan"] = _plan(assertions["plan"])
-    out = {**scenario, "assertions": assertions}
+    out = {**{k: v for k, v in scenario.items() if k not in LOOM_KEYS}, "assertions": assertions}
     capabilities = _capabilities(scenario.get("loomArgs") or [])
     if capabilities:
         out["capabilities"] = capabilities

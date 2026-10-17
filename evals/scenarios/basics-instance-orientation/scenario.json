@@ -1,8 +1,6 @@
 {
   "name": "basics: orient on the instance before doing anything",
   "description": "Tier 3, live Galaxy. The first minute of a session: what server is this, what can it do, what is in front of me. Reading the tool panel is the expensive call in that sequence -- raw it is ~25k tokens on a 170-tool server -- so a scenario that asks about the toolset is also the one that would show the cost returning. The version is read from the server, so the scenario holds on any Galaxy; mustNotMatch guards the observed failure where the panel was read but only its first few entries were reported.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "file": "health.tabular",
     "history": "orientation"

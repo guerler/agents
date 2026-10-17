@@ -1,8 +1,6 @@
 {
   "name": "visualizations: one missing for this dataset is not missing from the server",
   "description": "Written against an observed failure on usegalaxy.eu on 2026-10-13: asked whether Galaxy has a Cytoscape viewer while the history held only PDB files, the agent listed the visualizations for a PDB dataset and answered that Cytoscape was not installed. It was, for the cytoscapejson datatype. The datatype only comes from listing the server's visualizations without a dataset, so naming it shows the answer came from Galaxy.",
-  "tier": 3,
-  "substrate": "live",
   "dataset": {
     "file": "peptide.pdb",
     "history": "cytoscape question $run",
