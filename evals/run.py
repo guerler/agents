@@ -63,7 +63,7 @@ def _resolve_run_tokens(scenario):
     return sub(copy.deepcopy(scenario))
 
 
-def main():
+def parse_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("scenario", nargs="?", help="substring filter on scenario directory")
     ap.add_argument("--model", help="substring filter on model id; without it, the matrix's default models")
@@ -137,8 +137,11 @@ def main():
     ap.add_argument(
         "--hold", type=int, default=0, metavar="SECONDS", help="with --watch, keep the browser open after a run"
     )
-    args = ap.parse_args()
+    return ap.parse_args()
 
+
+def select(args):
+    """The scenarios and models this invocation runs, or the exit code when there are none."""
     with open(os.path.join(HERE, "models.json")) as f:
         matrix = json.load(f)
     scenarios = load_scenarios(os.path.join(HERE, "scenarios"), args.scenario)
@@ -177,7 +180,6 @@ def main():
     scenarios = runnable
 
     models, skipped = available_models(matrix, args.model, args.all_models)
-
     for model, missing in skipped:
         print(f"  skip {model['id']}: needs {', '.join(missing)}")
     if not models:
@@ -193,6 +195,75 @@ def main():
         for problem in problems:
             print(f"  {problem}")
         return 1
+    return scenarios, models
+
+
+def grade(scenario, run):
+    """The run's failures and the dimensions it exercised; a run that errored is not graded."""
+    if run.error:
+        return [], set()
+    try:
+        return evaluate(scenario, run)
+    except Exception as exc:
+        run.error = f"could not grade: {type(exc).__name__}: {exc}"
+        return [], set()
+
+
+def to_row(model, scenario, run_index, run, failures, exercised):
+    return {
+        "model": model["id"],
+        "scenario": scenario["id"],
+        "source": scenario.get("source", "agents"),
+        "run": run_index + 1,
+        "error": run.error,
+        # Galaxy never finished the work; nothing about the agent was measured.
+        "stalled": run.stalled,
+        # Wall clock spent waiting on Galaxy. Information, not a verdict.
+        "waitedSeconds": round(run.waited, 1),
+        "statusCode": run.status_code,
+        "dimensions": sorted(exercised),
+        "failures": [{"assertion": f.assertion, "detail": f.detail, "dimension": f.dimension} for f in failures],
+        "steps": run.steps,
+        "maxSteps": run.max_steps,
+        "toolsCalled": run.tools_called,
+        "events": run.events,
+        "artifacts": run.artifacts,
+        # A pass is the artifact worth keeping, not just the verdict.
+        "chatText": run.chat_text if run.messages else "",
+        "messages": run.messages or [],
+        "logs": run.logs or [],
+    }
+
+
+def report(args, model, scenario, run, row, failures, tag):
+    """One line per run, then where to read it. Flushed: a full matrix runs for many minutes."""
+    note = (run.error or "").replace("\n", " ") or (failures[0].detail if failures else "")
+    budget = f" {run.steps}/{run.max_steps} steps" if run.max_steps else ""
+    if run.waited >= 1:
+        budget += f" waited {run.waited:.0f}s"
+    print(f"  [{outcome(row):5s}] {model['id']:24s} {scenario['id']:34s}{tag}{budget} {note[:52]}", flush=True)
+    for f in failures[1:]:
+        print(f"          {f}")
+    if not args.no_pages and run.config:
+        page = label_record_page(run, scenario["id"], model["id"])
+        if page:
+            print(f"          notebook: {page}", flush=True)
+    if args.watch:
+        session = watch.retitle(run, scenario["id"], model["id"]) if run.config else None
+    elif not args.no_sessions and run.config and run.messages:
+        session = save_session(run.config, scenario["id"], model["id"], run)
+    else:
+        session = None
+    if session:
+        print(f"          session:  {session}", flush=True)
+
+
+def main():
+    args = parse_args()
+    selected = select(args)
+    if isinstance(selected, int):
+        return selected
+    scenarios, models = selected
 
     started = time.strftime("%Y-%m-%dT%H-%M-%S")
     # A watched run's completions go through the browser, past the recorder.
@@ -206,8 +277,7 @@ def main():
     def capture(scenario, model, run_index):
         if not records:
             return None
-        name = f"{scenario['id']}--{model['id']}--run{run_index + 1}.jsonl.gz"
-        return os.path.join(records, name)
+        return os.path.join(records, f"{scenario['id']}--{model['id']}--run{run_index + 1}.jsonl.gz")
 
     repeat = max(1, args.repeat) if args.repeat else 0
     times = f" x {repeat} run(s)" if repeat > 1 else " x per-scenario runs"
@@ -224,69 +294,12 @@ def main():
                     run = watch.run_watched(scenario, model, args.video, args.slow_mo, args.hold, args.watch)
                 else:
                     run = run_scenario(scenario, model, capture=capture(scenario, model, run_index))
-                if run.error:
-                    failures, exercised = [], set()
-                    verdict = "quota" if is_quota(run) else ("STALL" if run.stalled else "ERROR")
-                    note = run.error.replace("\n", " ")
-                else:
-                    try:
-                        failures, exercised = evaluate(scenario, run)
-                        verdict = "pass" if not failures else "FAIL"
-                        note = "" if not failures else failures[0].detail
-                    except Exception as exc:
-                        failures, exercised = [], set()
-                        verdict = "ERROR"
-                        note = f"could not grade: {type(exc).__name__}: {exc}"
-                        run.error = run.error or note
+                failures, exercised = grade(scenario, run)
                 # After grading, which reads what the run staged.
                 remove_imported_workflows(getattr(run, "staged", None))
-                # Flushed per result: a full matrix runs for many minutes, and Python buffers a pipe.
-                tag = f" #{run_index + 1}" if runs > 1 else ""
-                budget = f" {run.steps}/{run.max_steps} steps" if run.max_steps else ""
-                if run.waited >= 1:
-                    budget += f" waited {run.waited:.0f}s"
-                print(f"  [{verdict:5s}] {model['id']:24s} {scenario['id']:34s}{tag}{budget} {note[:52]}", flush=True)
-                for f in failures[1:]:
-                    print(f"          {f}")
-                if not args.no_pages and run.config:
-                    page = label_record_page(run, scenario["id"], model["id"])
-                    if page:
-                        print(f"          notebook: {page}", flush=True)
-                if args.watch:
-                    session = watch.retitle(run, scenario["id"], model["id"]) if run.config else None
-                    if session:
-                        print(f"          session:  {session}", flush=True)
-                elif not args.no_sessions and run.config and run.messages:
-                    session = save_session(run.config, scenario["id"], model["id"], run)
-                    if session:
-                        print(f"          session:  {session}", flush=True)
-                results.append(
-                    {
-                        "model": model["id"],
-                        "scenario": scenario["id"],
-                        "source": scenario.get("source", "agents"),
-                        "run": run_index + 1,
-                        "error": run.error,
-                        # Galaxy never finished the work; nothing about the agent was measured.
-                        "stalled": run.stalled,
-                        # Wall clock spent waiting on Galaxy. Information, not a verdict.
-                        "waitedSeconds": round(run.waited, 1),
-                        "statusCode": run.status_code,
-                        "dimensions": sorted(exercised),
-                        "failures": [
-                            {"assertion": f.assertion, "detail": f.detail, "dimension": f.dimension} for f in failures
-                        ],
-                        "steps": run.steps,
-                        "maxSteps": run.max_steps,
-                        "toolsCalled": run.tools_called,
-                        "events": run.events,
-                        "artifacts": run.artifacts,
-                        # A pass is the artifact worth keeping, not just the verdict.
-                        "chatText": run.chat_text if run.messages else "",
-                        "messages": run.messages or [],
-                        "logs": run.logs or [],
-                    }
-                )
+                row = to_row(model, scenario, run_index, run, failures, exercised)
+                report(args, model, scenario, run, row, failures, f" #{run_index + 1}" if runs > 1 else "")
+                results.append(row)
                 # A killed suite otherwise loses every result; the file is rewritten each time.
                 if args.json_out:
                     with open(args.json_out, "w") as f:
@@ -295,8 +308,6 @@ def main():
     print_leaderboard(results, models)
     print_instability(results)
     if args.json_out:
-        with open(args.json_out, "w") as f:
-            json.dump(results, f, indent=2)
         print(f"\nraw results -> {args.json_out}")
     # Neither a quota limit nor a Galaxy stall is a failure of the agent, so neither fails the suite.
     graded = [r for r in results if not is_quota(r) and not r.get("stalled")]
