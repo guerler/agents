@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scenario-driven evals for olit. Ported from loom's `evals/run.ts`."""
+"""Scenario-driven evals against a real model and a real Galaxy."""
 
 import argparse
 import copy
@@ -86,14 +86,14 @@ def main():
         type=int,
         default=0,
         metavar="N",
-        help="override the run count; scenarios shared with loom carry their own",
+        help="override the run count; loom's scenarios carry their own",
     )
     ap.add_argument(
         "--loom",
         default=os.environ.get("LOOM_SCENARIOS", os.path.expanduser("~/loom/evals/scenarios")),
-        help="loom's scenario directory, the source of truth for shared scenarios",
+        help="loom's scenario directory, read as loom writes it",
     )
-    ap.add_argument("--only-local", action="store_true", help="skip the scenarios shared with loom")
+    ap.add_argument("--only-local", action="store_true", help="skip loom's scenarios")
     ap.add_argument(
         "--records",
         default=os.path.join(os.path.dirname(HERE), "records", "content"),
@@ -151,12 +151,12 @@ def main():
     if not args.only_local:
         if not os.path.isdir(args.loom):
             print(f"  note: loom not found at {args.loom}; running the local set only")
-            shared = []
+            loom = []
         else:
-            shared, skipped = loom_scenarios.load(args.loom, args.scenario)
+            loom, skipped = loom_scenarios.load(args.loom, args.scenario)
             for name, why in sorted(skipped.items()):
                 print(f"  skip {name}: {why}")
-        scenarios = shared + scenarios
+        scenarios = loom + scenarios
 
     if args.exclude:
         kept = [s for s in scenarios if not any(term in s["id"] for term in args.exclude)]

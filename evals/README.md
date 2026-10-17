@@ -1,9 +1,8 @@
 # olit evals
 
-Scenario-driven behavioural tests, ported from loom's `evals/`. The unit suites in
-olit's `src/**/*.test.ts` in loom's `browser/` check that the machinery is correct; these check
-that the **agent behaves like Orbit** — which is the claim the project actually
-rests on, and the one thing a unit test cannot answer.
+Scenario-driven tests of what the agent accomplishes against a real model and a real Galaxy.
+The unit suites in loom check that the machinery is correct; these check the behaviour and the
+Galaxy state it leaves, which a unit test cannot answer.
 
 ```bash
 python evals/run.py                    # every scenario on the default model, galaxy-ai
@@ -93,14 +92,9 @@ JSON, and a gateway 500 once a real tool result was echoed back, sat outside wha
 scenarios measure. A model that computes over the preview rather than the file answers wrongly
 and is marked wrong rather than passing by luck; the `chatText` falsify break proves it.
 
-**A scenario sets its own tool surface.** A scenario shared with loom carries loom's
-`--tools` restriction and is run under the matching capability manifest, so both suites
-put the same tools in front of the model; scenarios without one get the full tool
-surface this plugin ships with. This was previously fixed at the full surface on the
-argument that trimming measures a condition olit never runs in — true of production,
-but loom does not run trimmed in production either, so a fixed surface on one side and a
-trimmed surface on the other compared two different configurations. Any paired number
-taken before this change carries that confound.
+**A scenario sets its own tool surface.** A loom scenario carries loom's `--tools` restriction
+and runs under the matching capability set; other scenarios get the full tool surface the
+plugin ships with.
 
 ## Models
 
@@ -119,7 +113,7 @@ shells — `source ~/.zshrc` first, or put the export in `~/.zshenv`.
 ## Dimensions
 
 Runs are graded on loom's four decision-correctness dimensions rather than a single
-pass/fail, because "did it behave like Orbit" is not one question:
+pass/fail, because "did it behave well" is not one question:
 
 - **validity** — a well-formed `## Plan X: <title> [routing]` block with enough
   described steps. The gate: a model that cannot emit a parseable plan fails
@@ -143,28 +137,27 @@ drawn in chat and only an *approved* plan reaches the record. A scenario that ne
 approves anything should therefore find nothing on the record, and that is a property
 worth grading rather than papering over.
 
-## Scenarios come from loom
+## Scenarios from loom
 
-`loom/evals/scenarios/` is the source of truth for every scenario both suites run. This
-suite reads those files **unmodified** at run time and adapts them in one place
-(`lib/loom_scenarios.py`), so a scenario cannot drift between the two: there is one copy.
-
-Point the loader elsewhere with `--loom <dir>` or `LOOM_SCENARIOS`; without loom checked
-out, the run reports the shared set as unavailable and continues with the local set.
-
-What the adapter translates, and why each is a divergence rather than a bug:
+Scenarios in loom's `evals/scenarios/` run here too, read unmodified at run time by
+`lib/loom_scenarios.py`. It translates only what has a faithful counterpart:
 
 | loom | here |
 |---|---|
-| `loomArgs: ["--tools", ...]` | the nearest capability manifest. loom restricts individual tools; this suite gates families, so the mapping is coarse and written down rather than implied |
-| `runs` / `requiresModel` | honoured, so both suites run a scenario the same number of times. loom defaults model scenarios to 3 |
-| `events.mustInclude` | loom's pi lifecycle names mapped to the smaller set this harness synthesises; unmapped names are dropped rather than failing on an event this runtime never emits |
-| `plan.routingIn` | when the correct answer names a tag this suite does not teach (`local`, `hybrid`), routing is not graded. The rest of the plan still is |
+| `mcp__galaxy__<tool>` | the bare tool name |
+| `events` | pi's lifecycle names mapped to the `turn_start`/`turn_end` this harness emits |
+| `plan.routingIn` | narrowed to the tags the agent routes (`remote`) |
+| `loomArgs: ["--tools", ...]` | the nearest capability set; loom restricts tools, this suite gates families |
+| `runs` / `requiresModel` | honoured; loom defaults model scenarios to 3 runs |
 
-**`scenarios/` holds only what cannot cross**, and should stay small. Today: the approval
-gate (`execution-after-approval`, `gate-holds-before-approval`), which asserts a property
-loom expresses differently; `analysis-csv-columns`; and `smoke-answers`. Anything added
-here that loom could also run belongs upstream instead.
+Anything else is skipped and the run header says why: an assertion family or key no checker
+reads (`activity`, `notebook`, `toolResults`, `plan.source`), a scenario needing loom's project
+directory or configuration (`cwd/`, `env`, `config`), a tool or routing tag the agent does not
+have, or an assertion that no turn starts. The reasons are read off each scenario, so a new
+loom scenario is picked up, or skipped with its reason, with no change here. Point the loader
+elsewhere with `--loom <dir>` or `LOOM_SCENARIOS`, or skip loom's with `--only-local`.
+
+A scenario of this repo naming a key no checker reads is refused at load time.
 
 **A few scenarios are model-knowledge probes, and their description says so in its first
 line.** They grade what the agent knows rather than whether a feature works, so a red verdict
@@ -182,7 +175,6 @@ runs each (scenario, model) tuple N times and lists any tuple whose runs disagre
 honestly be reported as one verdict. loom's `findings.md` specifies this as "Phase 6" and
 has not built it yet.
 
-Not a correctness oracle. `mentionsOneOf` checks that a plan names a plausible tool
-for the assay, not that the analysis is right — loom leaves that to a judge layer and
-so does this. And the suite says nothing about execution: every scenario stops at or
-before approval, so nothing here exercises a real Galaxy job.
+Not a correctness oracle for plans. `mentionsOneOf` checks that a plan names a plausible tool
+for the assay, not that the analysis is right; loom leaves that to a judge layer and so does
+this. Results are judged where Galaxy holds them: datasets, jobs, invocations, pages.
