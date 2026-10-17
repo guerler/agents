@@ -23,8 +23,13 @@ from .entries import digest
 
 HERE = pathlib.Path(__file__).resolve().parent
 PORT = int(os.environ.get("OLIT_WATCH_PORT", settings.WATCH_PORT))
-# Drop each frame too close to the one before it, then play what is left at the video's rate.
-CONDENSE = f"mpdecimate={settings.VIDEO_DECIMATE},setpts=N/({settings.VIDEO_FPS}*TB)"
+# Drop each frame too close to the one before it, and each that changes too little of the picture,
+# such as a spinner turning while a job waits; then play what is left at the video's rate.
+CONDENSE = (
+    f"mpdecimate={settings.VIDEO_DECIMATE},"
+    f"select='eq(n,0)+gt(scene,{settings.VIDEO_SCENE_THRESHOLD})',"
+    f"setpts=N/({settings.VIDEO_FPS}*TB)"
+)
 # H.264 MP4 plays in GitHub, Drive, Slack and QuickTime.
 ENCODE = ["-r", str(settings.VIDEO_FPS), "-an", "-c:v", "libx264", "-crf", str(settings.VIDEO_CRF)]
 ENCODE += ["-preset", "slow", "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
