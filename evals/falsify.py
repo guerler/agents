@@ -67,7 +67,9 @@ class Break:
 
 def build():
     """The session a run drives is built from source, so an edit counts only once rebuilt."""
-    subprocess.run(subject.BUILD["olit"], shell=True, cwd=ROOT, check=True, capture_output=True)
+    built = subprocess.run(subject.BUILD["olit"], shell=True, cwd=ROOT, capture_output=True, text=True)
+    if built.returncode:
+        raise SystemExit(f"build failed:\n{(built.stderr or built.stdout)[-2000:]}")
 
 
 BREAKS = [
@@ -267,6 +269,7 @@ def run_scenarios(scenarios, model):
     with tempfile.TemporaryDirectory() as tmp:
         report = pathlib.Path(tmp) / "result.json"
         for name in scenarios:
+            report.unlink(missing_ok=True)
             cmd = [sys.executable, str(HERE / "run.py"), name, "--json", str(report)]
             if model:
                 cmd += ["--model", model]
@@ -315,8 +318,8 @@ def main():
     for family in wanted:
         brk = BY_FAMILY[family]
         print(f"\n=== {family}: {brk.why}")
-        brk.apply()
         try:
+            brk.apply()
             results = run_scenarios(brk.scenarios, args.model)
         finally:
             brk.restore()
