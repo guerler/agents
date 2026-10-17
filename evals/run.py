@@ -17,17 +17,11 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 from lib import loom_scenarios, watch  # noqa: E402
+from lib.config import required_env  # noqa: E402
 from lib.grading import DIMENSIONS, evaluate, validate_scenarios  # noqa: E402
-from lib.harness import (  # noqa: E402
-    label_record_page,
-    load_scenarios,
-    missing_tools,
-    opted_out,
-    remove_imported_workflows,
-    required_env,
-    run_scenario,
-    save_session,
-)
+from lib.harness import load_scenarios, missing_tools, opted_out, run_scenario  # noqa: E402
+from lib.publish import label_record_page, save_session  # noqa: E402
+from lib.staging import remove_imported_workflows  # noqa: E402
 from lib.tooltests import Galaxy  # noqa: E402
 
 # HTTP 429 means out of budget, not a behavioural failure; graded separately.

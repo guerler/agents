@@ -5,125 +5,21 @@ import contextlib
 import json
 import os
 import pathlib
-import re
-import runpy
 import sys
 import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import subject  # noqa: E402
 
-from . import tooltests  # noqa: E402
+from .config import build_config, upstream  # noqa: E402
 from .entries import digest  # noqa: E402
 from .plan import parse_latest_plan  # noqa: E402
 from .record import recording  # noqa: E402
+from .session import Session, TurnFailed  # noqa: E402
+from .staging import GalaxyClock, _empty_history, _stage, _timed, galaxy_wait_timeout  # noqa: E402
 
-# The eval substrate is a real Galaxy, deliberately.
-
-
-# A turn result carries the whole transcript, far past asyncio's 64 KiB line default.
-LINE_LIMIT = 1 << 30
-# What a failed session said last, kept for the error a run reports.
-STDERR_TAIL = 40
 # The entries a run appends; anything settle hands back holding one is a follow-up run.
 FOLLOW_UP_KINDS = {"pi.user", "pi.assistant", "pi.tool-result"}
-
-
-class TurnFailed(Exception):
-    """A turn the agent returned as failed; the status, when the provider stated one."""
-
-    def __init__(self, message):
-        super().__init__(message)
-        stated = re.match(r"(\d{3})\b", message or "")
-        self.status_code = int(stated.group(1)) if stated else None
-
-
-class Session:
-    """One agent session in its own process, spoken to over JSON lines.
-
-    The agent publishes itself as a Node module (`subject.session()`); a request is one line,
-    and its result is the line that answers it.
-    """
-
-    def __init__(self, config):
-        self.config = config
-        self._process = None
-        self._stderr = []
-        self._drain = None
-
-    async def init(self):
-        self._process = await asyncio.create_subprocess_exec(
-            *subject.session(),
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            limit=LINE_LIMIT,
-        )
-        self._drain = asyncio.create_task(self._keep_stderr())
-        await self._request({"op": "create", "config": self.config})
-        return self
-
-    async def _keep_stderr(self):
-        async for line in self._process.stderr:
-            self._stderr = [*self._stderr[-(STDERR_TAIL - 1) :], line.decode(errors="replace").rstrip()]
-
-    async def _request(self, request):
-        self._process.stdin.write((json.dumps(request) + "\n").encode())
-        await self._process.stdin.drain()
-        line = await self._process.stdout.readline()
-        if not line:
-            tail = "\n".join(self._stderr[-10:])
-            raise RuntimeError(f"the agent exited during {request['op']}:\n{tail}")
-        reply = json.loads(line)
-        if "error" in reply:
-            raise RuntimeError(f"the agent refused {request['op']}: {reply['error']}")
-        return reply["result"]
-
-    async def turn(self, text):
-        """The user's message, answered: how it settled, and the entries the run appended."""
-        result = await self._request({"op": "turn", "text": text})
-        if result.get("status") == "unanswered" and result.get("reason") not in ("turn_limit", "aborted"):
-            raise TurnFailed(digest(result.get("entries"))["error"] or result.get("reason") or "the turn failed")
-        return result
-
-    async def settle(self, timeout):
-        """Wait for submitted work and the runs its follow-ups start, as an open tab would."""
-        return await self._request({"op": "settle", "timeout": timeout})
-
-    async def restart(self):
-        """A tab closed and opened again with nothing stored: the records Galaxy keeps attached to
-        the launch history, which the caller chooses among with `recover`, as a user does."""
-        return (await self._request({"op": "restart"}) or {}).get("records") or []
-
-    async def recover(self, page_id=None):
-        """Continue the session whose record is `page_id`, or start a new one."""
-        await self._request({"op": "recover", "page_id": page_id})
-
-    async def export(self):
-        """The conversation as a saved session, as the page saves it."""
-        return await self._request({"op": "export"})
-
-    async def close(self):
-        """Give the process back; a suite is hundreds of sessions in one interpreter."""
-        process = self._process
-        if process is None or process.returncode is not None:
-            return
-        try:
-            process.stdin.write(b'{"op": "close"}\n')
-            await process.stdin.drain()
-            process.stdin.close()
-            await asyncio.wait_for(process.wait(), timeout=10)
-        except (asyncio.TimeoutError, ConnectionError):
-            process.kill()
-            await process.wait()
-        finally:
-            if self._drain:
-                self._drain.cancel()
-
-
-def _providers():
-    """The agent's provider registry, as it publishes it."""
-    return subject.describe().get("providers") or {}
 
 
 class RunResult:
@@ -187,121 +83,6 @@ class RunResult:
         return "\n\n".join(parts)
 
 
-def declared_base(model):
-    """The endpoint a model entry names, with an `${ENV}` reference resolved; Galaxy's own proxy
-    for the `galaxy` provider, as the plugin reaches it."""
-    base = model.get("baseUrl") or ""
-    if base.startswith("${") and base.endswith("}"):
-        base = os.environ.get(base[2:-1], "")
-    if not base and model.get("provider") == "galaxy":
-        root = os.environ.get("GALAXY_URL", "").strip().rstrip("/")
-        base = f"{root}/api/plugins/olit" if root else ""
-    return base
-
-
-def upstream(model):
-    """Where this model's completions actually go, which is what a recorder stands in for."""
-    provider = _providers().get(model.get("provider"))
-    return declared_base(model) or (provider["base_url"] if provider else None)
-
-
-def build_config(model, capabilities=None, base_url=None):
-    """Resolve through the agent's provider registry, so evals and the app agree."""
-    # Shared scenarios carry loom's restricted surface; others get the full one.
-    capabilities = capabilities or os.environ.get("OLIT_EVAL_CAPABILITIES", "llm,local,read,write")
-    base = base_url or declared_base(model)
-    config = {
-        "galaxy_root": "http://stub.invalid/",
-        "ai_provider": model.get("provider"),
-        "ai_model": model["model"],
-        # Write is granted, or "did not execute" would assert about an unadvertised tool.
-        "capabilities": capabilities.split(","),
-    }
-    if base:
-        config["ai_base_url"] = base.rstrip("/")
-    max_steps = os.environ.get("OLIT_EVAL_MAX_STEPS", "").strip()
-    if max_steps:
-        config["max_steps"] = int(max_steps)
-    # An output ceiling for endpoints that reserve credit against the model's maximum otherwise.
-    max_tokens = os.environ.get("OLIT_EVAL_MAX_TOKENS", "").strip()
-    if max_tokens:
-        config["ai_max_tokens"] = int(max_tokens)
-    galaxy_root = os.environ.get("GALAXY_URL", "").strip()
-    config["galaxy_root"] = galaxy_root.rstrip("/") + "/"
-    config["galaxy_key"] = os.environ.get("GALAXY_API_KEY", "")
-    key = _api_key(model)
-    if key:
-        config["ai_api_key"] = key
-    return config
-
-
-def required_env(model):
-    """What a model needs set to run: its key variable as the registry names it, and envRequires."""
-    provider = _providers().get(model.get("provider"))
-    names = [provider["auth_env"]] if provider and provider.get("auth_env") else []
-    return names + [v for v in model.get("envRequires", []) if v not in names]
-
-
-def _api_key(model):
-    """The registry names the env var; envRequires is the fallback for custom entries."""
-    if model.get("provider") == "galaxy":
-        # Galaxy's proxy authenticates the Galaxy user, as every other Galaxy request does.
-        return os.environ.get("GALAXY_API_KEY", "")
-    provider = _providers().get(model.get("provider"))
-    if provider and provider.get("auth_env"):
-        return os.environ.get(provider["auth_env"], "")
-    for name in model.get("envRequires", []):
-        if name.endswith("_KEY"):
-            return os.environ.get(name, "")
-    return ""
-
-
-def label_record_page(run, scenario_id, model_id):
-    """Title the session's record page after the scenario, and say where to read it.
-
-    The agent already saved it: `notebook_resume` creates a Galaxy page under a slug derived
-    from the session id. Untitled that way it is a uuid among hundreds, so this names it.
-    """
-    if not run.document:
-        return None
-    config = run.config
-    slug = f"olit-{run.document['session']['id']}"
-    galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
-    try:
-        pages = galaxy.call(f"api/pages?search=slug:{slug}") or []
-        page = next((p for p in pages if p.get("slug") == slug and not p.get("deleted")), None)
-        if not page:
-            return None
-        title = f"eval: {scenario_id} [{model_id}]"
-        galaxy.call(f"api/pages/{page['id']}", method="PUT", body={"title": title})
-        return f"{config['galaxy_root']}u/{page.get('username')}/p/{slug}"
-    except Exception:
-        # Reporting must never decide a run; the page is saved either way.
-        return None
-
-
-def save_session(config, scenario_id, model_id, run):
-    """Save the run as an Olit visualization, so it reopens in the UI as a conversation.
-
-    The agent saves its record page itself; saving the conversation is the page's job, and an
-    eval has no page. Without this a run is reviewable only as JSONL.
-    """
-    if not run.document:
-        return None
-    root = config["galaxy_root"]
-    galaxy = tooltests.Galaxy(root, config.get("galaxy_key", ""))
-    title = f"eval: {scenario_id} [{model_id}]"
-    document = {**run.document, "session": {**run.document["session"], "title": title}}
-    try:
-        created = galaxy.call(
-            "api/visualizations", method="POST", body={"title": title, "config": document, "type": "olit"}
-        )
-        return f"{root}visualizations/display?visualization=olit&visualization_id={created['id']}"
-    except Exception:
-        # Reporting must never decide a run.
-        return None
-
-
 async def _run(scenario, model, base_url=None):
     config = build_config(model, scenario.get("capabilities"), base_url)
     if scenario.get("systemPrompt"):
@@ -324,24 +105,6 @@ async def _run(scenario, model, base_url=None):
         return RunResult([], [], [], error=f"the agent ran past its {budget:.0f}s budget", waited=waited.total)
     finally:
         await session.close()
-
-
-def _stage(scenario, config):
-    """The fixtures a scenario starts from, on the environment's clock."""
-    wait = galaxy_wait_timeout()
-    if scenario.get("dataset"):
-        staged = stage_dataset(config, scenario["dataset"], wait)
-        if scenario.get("workflows"):
-            staged["workflow_ids"] = import_workflows(staged["galaxy"], scenario["workflows"])
-            staged.setdefault("imported_workflow_ids", []).extend(staged["workflow_ids"].values())
-        return staged
-    if scenario.get("workflows"):
-        return stage_workflows(config, scenario["workflows"], wait)
-    if scenario.get("emptyHistory"):
-        return stage_empty(config, scenario["emptyHistory"])
-    if scenario.get("toolTest"):
-        return stage_tool_test(config, scenario["toolTest"], wait)
-    return None
 
 
 async def _drive(scenario, session, config, staged, waited=None):
@@ -438,36 +201,11 @@ def _awaiting_approval(new_messages):
 
 
 DEFAULT_TIMEOUT_MS = 150_000
-DEFAULT_GALAXY_WAIT_SECONDS = 600
 
 
-def galaxy_wait_timeout():
-    """How long a Galaxy wait may take. The environment's clock, set per run, never per scenario."""
-    stated = os.environ.get("OLIT_EVAL_GALAXY_WAIT", "").strip()
-    return float(stated) if stated else DEFAULT_GALAXY_WAIT_SECONDS
-
-
-class GalaxyClock:
-    """The wall clock spent waiting on Galaxy, a wait still in progress included.
-
-    Each wait is bounded on its own by `galaxy_wait_timeout`; this clock keeps the waits out of
-    the agent's budget and records how long they took.
-    """
-
-    def __init__(self):
-        self.total = 0.0
-        self._since = None
-
-    async def wait(self, awaitable):
-        self._since = time.monotonic()
-        try:
-            return await awaitable
-        finally:
-            self.total += time.monotonic() - self._since
-            self._since = None
-
-    def now(self):
-        return self.total + (time.monotonic() - self._since if self._since is not None else 0.0)
+def scenario_timeout(scenario):
+    """The wall clock one run gets; every wait inside the run is bounded by this same number."""
+    return (scenario.get("timeoutMs") or DEFAULT_TIMEOUT_MS) / 1000
 
 
 async def _within_agent_budget(coro, budget, waited):
@@ -485,16 +223,6 @@ async def _within_agent_budget(coro, budget, waited):
     return task.result()
 
 
-async def _timed(waited, func, *args):
-    """Run a Galaxy wait off the event loop, on the Galaxy clock."""
-    return await waited.wait(asyncio.to_thread(func, *args))
-
-
-def scenario_timeout(scenario):
-    """The wall clock one run gets; every wait inside the run is bounded by this same number."""
-    return (scenario.get("timeoutMs") or DEFAULT_TIMEOUT_MS) / 1000
-
-
 def _guarded(scenario, model, base_url):
     try:
         return asyncio.run(_run(scenario, model, base_url))
@@ -509,6 +237,28 @@ def run_scenario(scenario, model, capture=None):
         return _guarded(scenario, model, None)
     with recording(target, capture) as base_url:
         return _guarded(scenario, model, base_url)
+
+
+async def _settle(session, events, timeout, waited, absorb):
+    """Wait for the work the session submitted and the runs its follow-ups start, as a tab would.
+
+    The session decides what to follow up on and how many times in a row; the runs it started come
+    back as the entries they appended. Galaxy's clock, not the agent's.
+    """
+    result = await waited.wait(session.settle(timeout))
+    if result.get("settled"):
+        events.append("work_settled")
+    entries = result.get("entries") or []
+    # A follow-up queued while the turn was still streaming hands its user entry back with that
+    # turn, so its run arrives here without one; it is still a run to grade.
+    if any(e.get("kind") in FOLLOW_UP_KINDS for e in entries):
+        events.append("auto_follow_up")
+        events.append("turn_start")
+        run = digest(entries)
+        if run["error"]:
+            raise TurnFailed(run["error"])
+        absorb(entries)
+        events.append("turn_end")
 
 
 def load_scenarios(root, only=None):
@@ -543,235 +293,3 @@ def missing_tools(scenario, installed):
     wanted = (scenario.get("requires") or {}).get("tools") or []
     absent = [t for t in wanted if not any(i == t or f"/{t}/" in i for i in installed)]
     return f"this Galaxy lacks {', '.join(absent)}" if absent else None
-
-
-def stage_tool_test(config, spec, timeout):
-    """A history holding a tool test's inputs, plus the expectation used to grade it."""
-    galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
-    tool_id = spec["tool"]
-    index = spec.get("testIndex", 0)
-    history_id, ids, test = tooltests.stage(galaxy, tool_id, timeout, index)
-    return {
-        "galaxy": galaxy,
-        "history_id": history_id,
-        "dataset_ids": ids,
-        "test": test,
-        "tool_id": tool_id,
-    }
-
-
-def stage_empty(config, name):
-    """An empty history, in the shape the assertions read. For acquisition scenarios."""
-    galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
-    history_id = galaxy.new_history(name or "olit eval")
-    return {
-        "galaxy": galaxy,
-        "history_id": history_id,
-        "dataset_ids": {},
-        "test": None,
-        "tool_id": None,
-    }
-
-
-def _empty_history(config, scenario):
-    """A fresh, empty history for scenarios that stage no data."""
-    galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
-    return galaxy.new_history(f"olit eval: {scenario.get('id', 'scenario')}")
-
-
-def import_workflows(galaxy, spec):
-    """The fixture workflows, freshly imported. Returns {filename: workflow_id}.
-
-    Nothing is looked up by name to make room: a workflow of the same name may be the user's.
-    The run deletes what it imported, by the ids returned here (remove_imported_workflows).
-    """
-    base = pathlib.Path(__file__).resolve().parent.parent / "fixtures" / "workflows"
-    definitions = {name: json.loads((base / name).read_text()) for name in spec["files"]}
-    return {name: galaxy.call("api/workflows", "POST", {"workflow": d})["id"] for name, d in definitions.items()}
-
-
-def remove_imported_workflows(staged):
-    """Delete exactly the workflows this run imported, by id."""
-    if not staged:
-        return
-    for workflow_id in staged.get("imported_workflow_ids", []):
-        try:
-            staged["galaxy"].call(f"api/workflows/{workflow_id}", "DELETE")
-        except Exception:
-            # Cleanup must never decide a run; a workflow left behind is named in the log.
-            print(f"  could not delete imported workflow {workflow_id}", flush=True)
-
-
-def stage_workflows(config, spec, timeout):
-    """Import fixture workflows, so questions about the instance have a countable answer."""
-    galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
-    ids = import_workflows(galaxy, spec)
-    history_id = galaxy.new_history(spec.get("history") or "olit eval")
-    return {
-        "galaxy": galaxy,
-        "history_id": history_id,
-        "dataset_ids": {},
-        "workflow_ids": ids,
-        "imported_workflow_ids": list(ids.values()),
-        "test": None,
-        "tool_id": None,
-    }
-
-
-def _fixture_path(name):
-    path = pathlib.Path(__file__).resolve().parent.parent / "fixtures" / name
-    if not path.exists():
-        gen = path.with_suffix(path.suffix + ".gen.py")
-        if not gen.exists():
-            gen = path.parent / (path.stem + ".gen.py")
-        path.write_text(runpy.run_path(str(gen))["build"]())
-    return path
-
-
-def _stage_file(galaxy, history_id, spec, timeout):
-    """A fixture from disk, or a pinned URL Galaxy fetches itself."""
-    name = spec.get("name") or spec["file"]
-    datatype = spec.get("datatype")
-    if spec.get("url"):
-        dataset_id = galaxy.fetch_url(history_id, spec["url"], name, datatype)
-    else:
-        dataset_id = galaxy.upload(history_id, name, _fixture_path(name).read_bytes(), datatype)
-    landed = galaxy.await_dataset(dataset_id, timeout)
-    if landed.get("state") != "ok":
-        raise tooltests.ToolTestError(f"{name} landed in state {landed.get('state')}")
-    if datatype and landed.get("extension") != datatype:
-        raise tooltests.ToolTestError(f"{name} asked for datatype {datatype} and landed as {landed.get('extension')}")
-    return dataset_id
-
-
-def stage_dataset(config, spec, timeout):
-    """A history holding the scenario's fixtures, as a researcher's would when they sit down.
-
-    `file` stages one from `fixtures/`, `url` has Galaxy fetch one, and `files` stages
-    several so a scenario can be about combining them.
-    """
-    galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
-    wanted = spec.get("files") or [spec]
-    history_id = galaxy.new_history(spec.get("history") or "olit eval")
-    dataset_ids = {(f.get("name") or f["file"]): _stage_file(galaxy, history_id, f, timeout) for f in wanted}
-    dataset_id = dataset_ids[wanted[0].get("name") or wanted[0]["file"]]
-    staged = {
-        "galaxy": galaxy,
-        "history_id": history_id,
-        "dataset_ids": dataset_ids,
-        "test": None,
-        "tool_id": None,
-    }
-    if spec.get("thenRuns"):
-        staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id, spec["thenRuns"], timeout)
-    if spec.get("thenInvokes"):
-        staged["invocation_id"], workflow_id = _stage_invocation(
-            galaxy, history_id, dataset_id, spec["thenInvokes"], timeout
-        )
-        staged.setdefault("imported_workflow_ids", []).append(workflow_id)
-    return staged
-
-
-def _stage_run(galaxy, history_id, dataset_id, spec, timeout):
-    """Leave a prior job in the history, as a researcher would find after a session.
-
-    Staged rather than requested: asked to do something visibly impossible the agent
-    refuses before running, and then nothing exercises how it handles a result that
-    already exists. `expectState` is asserted, so a scenario cannot silently test a
-    failure that never failed or an empty result that came back full.
-    """
-    inputs = dict(spec.get("inputs") or {})
-    for key, value in list(inputs.items()):
-        if value == "$dataset":
-            inputs[key] = {"src": "hda", "id": dataset_id}
-    submitted = galaxy.call(
-        "api/tools", method="POST", body={"history_id": history_id, "tool_id": spec["tool_id"], "inputs": inputs}
-    )
-    outputs = submitted.get("outputs") or []
-    if not outputs:
-        raise tooltests.ToolTestError(f"{spec['tool_id']} produced no output to fail")
-    produced_id = outputs[0]["id"]
-    wanted = spec.get("expectState", "error")
-    state = galaxy.await_dataset(produced_id, timeout).get("state")
-    if state != wanted:
-        raise tooltests.ToolTestError(
-            f"{spec['tool_id']} was expected to land in state {wanted!r} but landed in "
-            f"{state!r}; the scenario would not be testing what it claims"
-        )
-    return produced_id
-
-
-# Job states Galaxy will not leave, matching core/src/agent/watch.ts.
-RUNNING_STATES = ("new", "queued", "running", "paused", "upload", "setting_metadata")
-# What Galaxy advances on its own; `paused` waits on a failed input or on the user.
-ADVANCING_STATES = ("new", "queued", "running", "upload", "setting_metadata")
-
-
-# Galaxy 26 moves a settled invocation from `scheduled` to `completed`, so pinning either
-# word races the scheduler. What the staging asserts is the job outcome below.
-INVOCATION_TERMINAL = ("scheduled", "completed", "cancelled", "failed")
-
-
-def _await_invocation(galaxy, invocation_id, timeout):
-    """The invocation once Galaxy stops driving it, and the states of its jobs."""
-    for _ in range(max(1, int(timeout // 2))):
-        invocation = galaxy.call(f"api/invocations/{invocation_id}")
-        if invocation.get("state") in INVOCATION_TERMINAL:
-            jobs = galaxy.call(f"api/invocations/{invocation_id}/jobs_summary")
-            states = (jobs or {}).get("states") or {}
-            # An invocation reads `scheduled` before its jobs exist, so an empty summary
-            # is "not started yet", not "nothing left running".
-            if states and not any(states.get(s) for s in RUNNING_STATES):
-                return invocation, states
-        time.sleep(2)
-    return galaxy.call(f"api/invocations/{invocation_id}"), {}
-
-
-def _stage_invocation(galaxy, history_id, dataset_id, spec, timeout):
-    """Leave a finished workflow run in the history, as a researcher would find it.
-
-    `expectJobState` is asserted, so a scenario cannot silently test a run that failed
-    in a way it does not describe, or one that quietly succeeded.
-    """
-    workflow = spec["workflow"]
-    workflow_id = import_workflows(galaxy, {"files": [workflow]})[workflow]
-    invocation = galaxy.call(
-        f"api/workflows/{workflow_id}/invocations",
-        "POST",
-        {
-            "history_id": history_id,
-            "inputs": {str(spec.get("inputStep", 0)): {"src": "hda", "id": dataset_id}},
-            "inputs_by": "step_index",
-        },
-    )
-    settled, states = _await_invocation(galaxy, invocation["id"], timeout)
-    wanted_job = spec.get("expectJobState", "error")
-    if settled.get("state") not in INVOCATION_TERMINAL or not states.get(wanted_job):
-        raise tooltests.ToolTestError(
-            f"{workflow} was expected to settle with a {wanted_job!r} job, and reached "
-            f"{settled.get('state')!r} with jobs {states}; the scenario would not be testing "
-            f"what it claims"
-        )
-    return invocation["id"], workflow_id
-
-
-async def _settle(session, events, timeout, waited, absorb):
-    """Wait for the work the session submitted and the runs its follow-ups start, as a tab would.
-
-    The session decides what to follow up on and how many times in a row; the runs it started come
-    back as the entries they appended. Galaxy's clock, not the agent's.
-    """
-    result = await waited.wait(session.settle(timeout))
-    if result.get("settled"):
-        events.append("work_settled")
-    entries = result.get("entries") or []
-    # A follow-up queued while the turn was still streaming hands its user entry back with that
-    # turn, so its run arrives here without one; it is still a run to grade.
-    if any(e.get("kind") in FOLLOW_UP_KINDS for e in entries):
-        events.append("auto_follow_up")
-        events.append("turn_start")
-        run = digest(entries)
-        if run["error"]:
-            raise TurnFailed(run["error"])
-        absorb(entries)
-        events.append("turn_end")

@@ -73,9 +73,9 @@ def test_no_wait_carries_a_cap_of_its_own():
     """A hardcoded 600s let staging outlive a 420s scenario, which is how the conflict showed."""
     import inspect
 
-    from lib import harness, tooltests
+    from lib import harness, staging, tooltests
 
-    for func in (harness._await_invocation, harness._settle, tooltests.Galaxy.await_dataset):
+    for func in (staging._await_invocation, harness._settle, tooltests.Galaxy.await_dataset):
         timeout = inspect.signature(func).parameters["timeout"]
         assert timeout.default is inspect.Parameter.empty, f"{func.__name__} still defaults its own cap"
 
@@ -83,7 +83,7 @@ def test_no_wait_carries_a_cap_of_its_own():
 def test_the_environment_clock_is_set_per_run_not_per_scenario():
     import os
 
-    from lib.harness import DEFAULT_GALAXY_WAIT_SECONDS, galaxy_wait_timeout
+    from lib.staging import DEFAULT_GALAXY_WAIT_SECONDS, galaxy_wait_timeout
 
     assert galaxy_wait_timeout() == DEFAULT_GALAXY_WAIT_SECONDS
     os.environ["OLIT_EVAL_GALAXY_WAIT"] = "14400"
@@ -95,20 +95,20 @@ def test_the_environment_clock_is_set_per_run_not_per_scenario():
 
 def test_staging_waits_on_the_environment_clock_not_the_scenario_budget(monkeypatch):
     """A queued upload must not spend the budget that exists to catch a stalled agent."""
-    from lib import harness
+    from lib import staging
 
     seen = {}
     monkeypatch.setenv("OLIT_EVAL_GALAXY_WAIT", "3600")
-    monkeypatch.setattr(harness, "stage_dataset", lambda config, spec, timeout: seen.setdefault("timeout", timeout))
-    harness._stage({"dataset": {"file": "x.tabular"}, "timeoutMs": 1_000}, {})
+    monkeypatch.setattr(staging, "stage_dataset", lambda config, spec, timeout: seen.setdefault("timeout", timeout))
+    staging._stage({"dataset": {"file": "x.tabular"}, "timeoutMs": 1_000}, {})
     assert seen["timeout"] == 3600.0, "staging read the scenario budget instead of the environment clock"
 
 
 def test_a_staging_failure_is_a_stall_and_not_a_behavioural_verdict(monkeypatch):
-    from lib import harness
+    from lib import harness, tooltests
 
     def explode(scenario, config):
-        raise harness.tooltests.ToolTestError("x.tabular landed in state running")
+        raise tooltests.ToolTestError("x.tabular landed in state running")
 
     monkeypatch.setattr(harness, "_stage", explode)
     monkeypatch.setattr(harness, "build_config", lambda *a, **k: {})
@@ -119,11 +119,11 @@ def test_a_staging_failure_is_a_stall_and_not_a_behavioural_verdict(monkeypatch)
 
 
 def test_the_wait_is_recorded_even_when_staging_stalls(monkeypatch):
-    from lib import harness
+    from lib import harness, tooltests
 
     def slow_then_fail(scenario, config):
         time.sleep(0.05)
-        raise harness.tooltests.ToolTestError("stalled")
+        raise tooltests.ToolTestError("stalled")
 
     monkeypatch.setattr(harness, "_stage", slow_then_fail)
     monkeypatch.setattr(harness, "build_config", lambda *a, **k: {})
@@ -133,7 +133,8 @@ def test_the_wait_is_recorded_even_when_staging_stalls(monkeypatch):
 
 def test_a_galaxy_wait_does_not_spend_the_agent_budget():
     """A queued job settling on Galaxy is the environment's clock, so the agent keeps its budget."""
-    from lib.harness import GalaxyClock, _within_agent_budget
+    from lib.harness import _within_agent_budget
+    from lib.staging import GalaxyClock
 
     clock = GalaxyClock()
 
@@ -146,7 +147,8 @@ def test_a_galaxy_wait_does_not_spend_the_agent_budget():
 
 
 def test_the_agent_own_time_is_still_cut_off_at_the_budget():
-    from lib.harness import GalaxyClock, _within_agent_budget
+    from lib.harness import _within_agent_budget
+    from lib.staging import GalaxyClock
 
     async def agent():
         await asyncio.sleep(0.5)
@@ -165,12 +167,12 @@ def test_the_agent_own_time_is_still_cut_off_at_the_budget():
 
 def test_an_environment_wait_given_as_a_float_still_bounds_the_invocation_poll(monkeypatch):
     """OLIT_EVAL_GALAXY_WAIT is read as a float, and range() takes only integers."""
-    from lib import harness
+    from lib import staging
 
     class Galaxy:
         def call(self, path):
             return {"state": "scheduled"} if path.endswith("invocations/i1") else {"states": {"ok": 1}}
 
-    monkeypatch.setattr(harness.time, "sleep", lambda seconds: None)
-    settled, states = harness._await_invocation(Galaxy(), "i1", 1800.0)
+    monkeypatch.setattr(staging.time, "sleep", lambda seconds: None)
+    settled, states = staging._await_invocation(Galaxy(), "i1", 1800.0)
     assert settled["state"] == "scheduled" and states == {"ok": 1}

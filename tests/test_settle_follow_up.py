@@ -12,7 +12,9 @@ import pytest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "evals"))
 
-from lib.harness import GalaxyClock, TurnFailed, _settle  # noqa: E402
+from lib.harness import _settle  # noqa: E402
+from lib.session import TurnFailed  # noqa: E402
+from lib.staging import GalaxyClock  # noqa: E402
 
 
 class Session:

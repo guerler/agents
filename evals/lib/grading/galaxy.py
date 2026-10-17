@@ -2,7 +2,7 @@
 
 import re
 
-from ..harness import ADVANCING_STATES
+from ..staging import ADVANCING_STATES
 from .base import LOCAL_TOOLS, Failure, _resolve_staged
 
 # Galaxy has renamed these across releases.

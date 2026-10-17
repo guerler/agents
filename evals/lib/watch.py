@@ -15,7 +15,8 @@ import subprocess
 import tempfile
 import time
 
-from . import harness, tooltests
+from . import config as configuration
+from . import harness, staging, tooltests
 from .entries import digest
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -47,7 +48,7 @@ def _server_env(model):
     if model.get("provider") != "galaxy":
         env["LLM_PROVIDER"] = model["provider"]
         env["LLM_MODEL"] = model["model"]
-        key = harness._api_key(model)
+        key = configuration._api_key(model)
         if key:
             env["LLM_KEY"] = key
     return env
@@ -135,10 +136,10 @@ def run_watched(scenario, model, video=None, slow_mo=0, hold=0, target="dev"):
     if not (scenario.get("dataset") or scenario.get("emptyHistory")):
         return harness.RunResult([], [], [], error="watch mode launches on a staged history; this scenario has none")
 
-    config = harness.build_config(model, scenario.get("capabilities"))
+    config = configuration.build_config(model, scenario.get("capabilities"))
     waited = time.time()
     try:
-        staged = harness._stage(scenario, config)
+        staged = staging._stage(scenario, config)
     except Exception as e:
         return harness.RunResult([], [], [], error=f"{type(e).__name__}: {e}", stalled=True)
     waited = time.time() - waited
