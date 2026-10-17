@@ -33,6 +33,21 @@ export GALAXY_URL=http://localhost:8080
 export GALAXY_API_KEY=...          # User > Preferences > Manage API Key
 ```
 
+Optional settings, all read from the environment:
+
+| Variable | Default | What it sets |
+|---|---|---|
+| `OLIT_ROOT` | `~/loom/browser` (via `make`) | the agent checkout under test; the tests need it too |
+| `OLIT_EVAL_GALAXY_WAIT` | 600 | seconds any one wait on Galaxy may take, staging and jobs alike |
+| `OLIT_EVAL_CAPABILITIES` | `llm,local,read,write` | the tool families a scenario without its own gets |
+| `OLIT_EVAL_MAX_STEPS` | the agent's own | the step cap per turn |
+| `OLIT_EVAL_MAX_TOKENS` | none | an output ceiling, for endpoints that reserve credit against the maximum |
+| `LOOM_SCENARIOS` | `~/loom/evals/scenarios` | where loom's scenarios are read from |
+| `GALAXY_USER`, `GALAXY_PASSWORD` | none | the account `--watch galaxy` signs in as |
+| `OLIT_WATCH_PORT` | 5180 | the dev server `--watch` starts |
+| `GALAXY_TEST_DATA`, `GALAXY_ROOT` | none | a galaxy-test-data clone, or a Galaxy checkout whose cache holds one |
+| `LOCAL_LLM_URL` | none | the endpoint of the `local-llama` model in `models.json` |
+
 A scenario can say what it needs. `"requires": {"tools": [...]}` names tools by short id; a
 Galaxy without them skips the scenario and the header says which are missing. `"optIn": "<label>"`
 keeps an expensive scenario out of the default run; `--include <label>`, or naming the scenario,
