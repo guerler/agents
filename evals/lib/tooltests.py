@@ -136,8 +136,8 @@ def expected_dir():
     return None
 
 
-def expected_bytes(name, extra_dirs=()):
-    for d in [*extra_dirs, VENDORED_EXPECTATIONS, expected_dir()]:
+def expected_bytes(name):
+    for d in [VENDORED_EXPECTATIONS, expected_dir()]:
         if d and (pathlib.Path(d) / name).exists():
             return (pathlib.Path(d) / name).read_bytes()
     raise ToolTestError(
@@ -146,10 +146,10 @@ def expected_bytes(name, extra_dirs=()):
     )
 
 
-def stage(galaxy, tool_id, timeout, test_index=0, history_name=None):
+def stage(galaxy, tool_id, timeout, test_index=0):
     """A history holding the test's input files. Returns (history_id, {filename: dataset_id})."""
     test = galaxy.tests(tool_id)[test_index]
-    history_id = galaxy.new_history(history_name or f"eval {tool_id} #{test_index}")
+    history_id = galaxy.new_history(f"eval {tool_id} #{test_index}")
     ids = {}
     for name, _ in test.get("required_files") or []:
         ids[name] = galaxy.upload(history_id, name, galaxy.test_file(tool_id, name))
@@ -202,7 +202,7 @@ def compare(produced, expected, attributes):
     return None, f"comparison {method!r} not implemented"
 
 
-def grade_output(galaxy, tool_id, dataset_id, expectation, extra_dirs=()):
+def grade_output(galaxy, dataset_id, expectation):
     """A failed job never passes, whatever its bytes say.
 
     Cut1 exits non-zero on a perl locale warning yet writes the correct output; grading
@@ -213,5 +213,5 @@ def grade_output(galaxy, tool_id, dataset_id, expectation, extra_dirs=()):
     if state != "ok":
         return False, f"job state {state}, output not graded"
     produced = galaxy.call(f"api/datasets/{dataset_id}/display", raw=True)
-    want = expected_bytes(expectation["value"], extra_dirs)
+    want = expected_bytes(expectation["value"])
     return compare(produced, want, expectation.get("attributes"))

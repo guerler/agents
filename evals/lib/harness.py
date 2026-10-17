@@ -59,7 +59,7 @@ class RunResult:
         self.staged = staged
         self.logs = logs
         self.tools_called = tools_called
-        # Every event the brain emitted, plus turn boundaries synthesised by the harness.
+        # The turn boundaries and settles the harness observed.
         self.events = events or []
         self.error = error
         # The run never reached the agent: Galaxy did not finish the work it was waiting on.

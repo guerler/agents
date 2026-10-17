@@ -10,7 +10,7 @@ import subject  # noqa: E402
 from .base import Failure  # noqa: E402
 
 
-def _record_ids_resolve(spec, run, failures, content):
+def _record_ids_resolve(failures, content):
     """A truncated id addresses nothing, so the step cannot be resumed from."""
     for token in set(re.findall(r"`([0-9a-f]{8,32})`", content or "")):
         if len(token) % 16 == 0:
@@ -71,7 +71,7 @@ def _record(spec, run, failures, exercised):
         if needle.lower() in content.lower():
             failures.append(Failure("record.mustNotMention", f"the record holds {needle!r}", "record"))
     if spec.get("idsResolve"):
-        _record_ids_resolve(spec, run, failures, content)
+        _record_ids_resolve(failures, content)
 
     if spec.get("notEmpty"):
         planted = {line.strip() for line in subject.describe()["record"]["starter"].splitlines() if line.strip()}

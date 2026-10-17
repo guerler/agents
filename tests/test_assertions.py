@@ -267,7 +267,7 @@ def test_record_ids_are_judged_by_length_without_asking_galaxy():
     from lib.grading.record import _record_ids_resolve
 
     failures = []
-    _record_ids_resolve({}, None, failures, "job `4838ba20a6d86765d07974451a31d1b7`, truncated `4838ba20a6d8`")
+    _record_ids_resolve(failures, "job `4838ba20a6d86765d07974451a31d1b7`, truncated `4838ba20a6d8`")
     assert [f.assertion for f in failures] == ["record.idsResolve"]
 
 

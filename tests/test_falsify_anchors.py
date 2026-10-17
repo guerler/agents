@@ -5,8 +5,6 @@ anchor is not unique, so a stale break stops the suite rather than testing nothi
 says so when someone runs the suite against a model and a Galaxy. Anchors are checked here
 instead, where a rename shows immediately.
 
-On 2026-10-05 the breaks moved from the Python brain to src/agent/. Four were retired rather than
-moved, because the code they broke now belongs to galaxy-ops (falsify.RETIRED says why for each).
 An anchor that exists is not yet a proof: only a falsify run shows a break still sinks its
 scenarios, and PROVEN records the ones that have been shown to on the TypeScript agent.
 """
@@ -18,9 +16,6 @@ import sys
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-
-# Anchors that have stopped matching and await a validated re-anchor; strictly expected to fail.
-DECAYED: set[str] = set()
 
 # Families a falsify run has shown to sink their scenarios on the TypeScript agent, each against a
 # scenario that passed without the break (gemini-3.1-flash-lite, 2026-10-05/06). The rest are
@@ -56,9 +51,7 @@ def _anchors():
     for index, brk in enumerate(module.BREAKS):
         for position, (path, find, _) in enumerate(brk.edits):
             name = f"{brk.family}:{pathlib.Path(path).stem}:{index}.{position}"
-            decayed = pytest.mark.xfail(strict=True, reason="anchor decayed; needs a validated re-anchor")
-            marks = [decayed] if name in DECAYED else []
-            out.append(pytest.param(brk.family, path, find, module.subject.source(path), marks=marks, id=name))
+            out.append(pytest.param(brk.family, path, find, module.subject.source(path), id=name))
     return out
 
 

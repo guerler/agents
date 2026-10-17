@@ -395,7 +395,7 @@ def _tool_output(spec, run, failures, exercised):
     expectation = (test.get("outputs") or [{}])[0]
     matched, detail = None, "no produced dataset matched the expectation"
     for dataset in produced:
-        ok, why = tooltests.grade_output(galaxy, staged["tool_id"], dataset["id"], expectation)
+        ok, why = tooltests.grade_output(galaxy, dataset["id"], expectation)
         if ok:
             matched, detail = dataset, why
             break
