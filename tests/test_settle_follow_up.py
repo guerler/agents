@@ -50,3 +50,22 @@ def test_a_failed_follow_up_is_reported_rather_than_dropped():
 
 def test_nothing_appended_is_no_follow_up():
     assert settle([]) == (["work_settled"], [])
+
+
+class Turns:
+    def __init__(self, entries):
+        self.entries = entries
+
+    async def turn(self, text):
+        return {"status": "answered", "entries": self.entries}
+
+    async def export(self):
+        return {"session": {"id": "s"}}
+
+
+def test_a_turn_counts_as_started_only_once_the_model_answered():
+    from lib.harness import _drive
+
+    for entries, expected in (([assistant("Hello.")], ["turn_start", "turn_end"]), ([], ["turn_end"])):
+        run = asyncio.run(_drive({"inputs": ["hi"]}, Turns(entries), {"max_steps": 9}, None))
+        assert run.events == expected

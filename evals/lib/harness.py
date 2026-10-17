@@ -369,11 +369,14 @@ async def _drive(scenario, session, config, staged, waited=None):
         # The most any single run needed, which is what the cap actually constrains.
         state["steps"] = max(state["steps"], run["steps"])
         state["last"] = run["chat"]
+        return run
 
     async def turn(text):
-        events.append("turn_start")
         result = await session.turn(text)
-        absorb(result.get("entries"), result.get("reason") == "turn_limit")
+        run = absorb(result.get("entries"), result.get("reason") == "turn_limit")
+        # Started means the model answered at least once, as pi's agent_start does.
+        if run["steps"]:
+            events.append("turn_start")
         # Only after the turn returns: a turn that dies mid-flight must not look complete.
         events.append("turn_end")
 
