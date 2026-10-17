@@ -1,88 +1,19 @@
-"""Load loom's scenarios unchanged and adapt them to this harness.
+"""Loom's scenarios, read as loom writes them and graded where this harness can judge them.
 
-One source of truth prevents test drift; runtime differences are translated explicitly here.
-`scenarios/` holds only what cannot cross.
+Translation covers only what has a faithful counterpart here. A scenario that needs anything
+else is skipped with the reason, read off the scenario itself, so adopting a new loom scenario
+needs no change in this file.
 """
 
 import json
 import os
+import pathlib
+import sys
 
-# Excluded, not translated: adapting these would change what they measure.
-NOT_PORTABLE = {
-    "init-gate-galaxy-no-connection": "asserts no turn starts; this harness always emits turn_start",
-    "standing-instructions-tool-preference": (
-        "exercises a workspace LOOM.md; olit runs in a browser with no project directory "
-        "and no standing-instructions channel to steer a plan"
-    ),
-    "evidence-gate-in-progress-contradiction": (
-        "asserts loom's /override command, its activity.jsonl events and plan anchors, none "
-        "of which olit has. olit has no evidence gate by design: its watcher records job status "
-        "under the id and never changes a checkbox, so a step marked `- [x]` over a failed or "
-        "unfinished run is not detected"
-    ),
-    "iwc-find-from-question": (
-        "asserts a skill.hint activity event for loom's iwc-candidates trigger; olit has no "
-        "activity log, so what this uniquely measures is an artifact it does not produce. The "
-        "rest of it is olit's own iwc-question-finds-a-workflow: plan-consults-iwc does not "
-        "cover it, because asking for a plan is the gating this behaviour denies"
-    ),
-    # loom v0.8.0's capture cluster: its harness writes a `loom-job` notebook block the moment a
-    # submission answers, so each of these forbids `turn_start` to prove the agent was never
-    # involved. olit's record is a Galaxy Page the model writes and this harness always emits
-    # `turn_start`, so they measure an artifact olit does not produce, exactly as
-    # init-gate-galaxy-no-connection does. Held out after all five failed structurally in the
-    # 2026-10-04 suite run.
-    **{
-        name: (
-            "asserts no turn starts (events.mustNotInclude agent_start/tool_execution_start/"
-            "turn_start), because loom's harness registers the submission without the agent; "
-            "olit has no capture hook and always emits turn_start"
-        )
-        for name in (
-            "submission-capture-local-upload",
-            "submission-capture-mapped-over-jobs",
-            "submission-capture-refuses-to-guess",
-            "submission-capture-registers-every-tool",
-            "submission-capture-udt-provenance",
-        )
-    },
-    **{
-        name: (
-            "drives a loom slash command with no agent turn (events.mustNotInclude turn_start) and "
-            "asserts loom's activity log; olit has no slash commands and always starts a turn"
-        )
-        for name in (
-            "capture-dead-turn-recovered-on-session-start",
-            "capture-drift-on-reattempt",
-            "capture-enrichment-mapped-over-step",
-            "capture-enrichment-retries-then-completes",
-            "capture-enrichment-unavailable-after-n",
-            "capture-reconcile-finds-unregistered-job",
-            "lesson-hostile-draft-rejected",
-            "lesson-surfaced-on-signature",
-            "observation-redaction-hostile-result",
-            "registry-carrier-imported-on-pull",
-            "registry-evaluates-mapped-over-invocation",
-            "registry-gate-holds-imported-run",
-            "registry-import-restores-approvals",
-            "registry-propose-approve-revoke",
-            "registry-unopenable-read-only",
-        )
-    },
-    "galaxy-mcp-connect-identity": (
-        "asserts loom's MCP wiring: a connect tool and mcp__galaxy__ results naming the server; "
-        "olit reaches Galaxy through the page's session and has no connect step"
-    ),
-    "galaxy-mcp-large-output": (
-        "asserts loom's MCP output recovery (a truncated result plus mcp_read_output); olit's "
-        "tools page large results themselves"
-    ),
-    "galaxy-mcp-upload-hidden": (
-        "uploads a file from loom's project directory with galaxy_upload_local_file; olit runs in "
-        "a browser with no project directory"
-    ),
-    "lesson-changes-plan": ("asserts loom's lessons index and its lessons_search tool, which olit does not have"),
-}
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
+import subject  # noqa: E402
+
+from .assertions import unsupported  # noqa: E402
 
 # loom grades against a stub, so a scenario may name data nothing creates. On a live Galaxy
 # `execution-after-approval`'s dataset id and history do not resolve, the agent is right to
@@ -98,23 +29,17 @@ LIVE_DATA = {
     },
 }
 
-# pi's lifecycle events mapped to the smaller set this harness emits; unmapped names drop.
+# pi's lifecycle events, by the names this harness emits.
 EVENT_NAMES = {
     "agent_start": "turn_start",
     "turn_start": "turn_start",
     "turn_end": "turn_end",
 }
 
-# loom calls galaxy-mcp's tools by the names pi's MCP support gives them; this suite uses the bare
-# names galaxy-mcp declares.
+# loom calls galaxy-mcp's tools by the names pi's MCP support gives them.
 MCP_PREFIX = "mcp__galaxy__"
 
-
-def _tool_name(name):
-    return name.removeprefix(MCP_PREFIX) if isinstance(name, str) else name
-
-
-# loom also teaches `local` and `hybrid`; this build has no local execution.
+# loom also routes `local` and `hybrid`; this agent has no local execution.
 ROUTING_TAGS = {"remote"}
 
 # loom's `--tools` mapped to the nearest capability set.
@@ -124,64 +49,76 @@ TOOL_CAPABILITIES = {
 }
 
 
-def _adapt_events(spec):
+class Unsupported(Exception):
+    """The scenario asserts something this harness cannot judge faithfully."""
+
+
+def _tool_name(name):
+    return name.removeprefix(MCP_PREFIX) if isinstance(name, str) else name
+
+
+def _events(spec):
     out = {}
-    for key in ("mustInclude", "mustNotInclude"):
-        names = spec.get(key)
-        if not names:
-            continue
-        mapped = [EVENT_NAMES[n] for n in names if n in EVENT_NAMES]
-        if mapped:
-            out[key] = sorted(set(mapped))
+    for key, names in spec.items():
+        missing = [n for n in names if n not in EVENT_NAMES]
+        if missing:
+            raise Unsupported(f"events {', '.join(missing)} have no counterpart here")
+        out[key] = sorted({EVENT_NAMES[n] for n in names})
+    if "turn_start" in out.get("mustNotInclude", []):
+        raise Unsupported("asserts no turn starts, and this harness always starts one")
     return out
 
 
-def _adapt_tool_calls(spec):
+def _tool_calls(spec, tools):
     out = dict(spec)
-    wanted = out.get("mustInclude")
-    if wanted:
-        out["mustInclude"] = [{**w, "name": _tool_name(w.get("name"))} for w in wanted]
-    banned = out.get("mustNotInclude")
-    if banned:
-        out["mustNotInclude"] = [_tool_name(n) for n in banned]
+    if spec.get("mustInclude"):
+        out["mustInclude"] = [{**w, "name": _tool_name(w.get("name"))} for w in spec["mustInclude"]]
+        lacking = [w["name"] for w in out["mustInclude"] if w["name"] not in tools]
+        if lacking:
+            raise Unsupported(f"expects {', '.join(lacking)}, which the agent does not have")
+    if spec.get("mustNotInclude"):
+        out["mustNotInclude"] = [_tool_name(n) for n in spec["mustNotInclude"]]
     return out
 
 
-def _adapt_plan(spec):
+def _plan(spec):
     out = dict(spec)
-    routing = out.get("routingIn")
-    if routing and not set(routing) <= ROUTING_TAGS:
-        out.pop("routingIn")  # correct answer names a tag this suite lacks; grade the rest
+    if spec.get("routingIn"):
+        allowed = [r for r in spec["routingIn"] if r in ROUTING_TAGS]
+        if not allowed:
+            raise Unsupported(f"expects routing {spec['routingIn']}, which the agent does not have")
+        out["routingIn"] = allowed
     return out
 
 
-def _capabilities_for(scenario):
-    """Capability string implied by `loomArgs`, or None for the default surface."""
-    args = scenario.get("loomArgs") or []
+def _capabilities(args):
+    """The capability set loom's command line asks for, or None for the default surface."""
     if "--no-tools" in args:
         return "llm,local"
     if "--tools" in args:
         requested = args[args.index("--tools") + 1]
-        return TOOL_CAPABILITIES.get(requested)
+        if requested not in TOOL_CAPABILITIES:
+            raise Unsupported(f"runs loom with --tools {requested}")
+        return TOOL_CAPABILITIES[requested]
     return None
 
 
-def adapt(scenario):
-    """Translate one loom scenario into the shape this harness grades."""
-    out = dict(scenario)
-    assertions = dict(out.get("assertions") or {})
+def adapt(scenario, tools):
+    """The scenario as this harness grades it; raises Unsupported when it cannot be judged here."""
+    if scenario.get("env") or scenario.get("config"):
+        raise Unsupported("configures loom itself (env, config)")
+    assertions = dict(scenario.get("assertions") or {})
+    unread = unsupported(assertions)
+    if unread:
+        raise Unsupported(f"no checker reads {', '.join(unread)}")
     if "events" in assertions:
-        events = _adapt_events(assertions["events"])
-        if events:
-            assertions["events"] = events
-        else:
-            assertions.pop("events")
+        assertions["events"] = _events(assertions["events"])
     if "toolCalls" in assertions:
-        assertions["toolCalls"] = _adapt_tool_calls(assertions["toolCalls"])
+        assertions["toolCalls"] = _tool_calls(assertions["toolCalls"], tools)
     if "plan" in assertions:
-        assertions["plan"] = _adapt_plan(assertions["plan"])
-    out["assertions"] = assertions
-    capabilities = _capabilities_for(scenario)
+        assertions["plan"] = _plan(assertions["plan"])
+    out = {**scenario, "assertions": assertions}
+    capabilities = _capabilities(scenario.get("loomArgs") or [])
     if capabilities:
         out["capabilities"] = capabilities
     # loom defaults model scenarios to 3 runs; honour it so both suites use the same n.
@@ -190,25 +127,29 @@ def adapt(scenario):
 
 
 def load(root, only=None):
-    """Every portable loom scenario, adapted. Empty when loom is not checked out."""
+    """Every loom scenario under `root`: (the ones graded here, {skipped id: why})."""
     if not os.path.isdir(root):
-        return []
-    out = []
+        return [], {}
+    tools = set(subject.describe()["tools"])
+    loaded, skipped = [], {}
     for entry in sorted(os.listdir(root)):
         path = os.path.join(root, entry, "scenario.json")
-        if not os.path.isfile(path):
+        if not os.path.isfile(path) or (only and only not in entry):
             continue
-        if only and only not in entry:
-            continue
-        if entry in NOT_PORTABLE:
+        if os.path.isdir(os.path.join(root, entry, "cwd")):
+            skipped[entry] = "needs loom's project directory (cwd/)"
             continue
         with open(path) as f:
-            scenario = adapt(json.load(f))
+            try:
+                scenario = adapt(json.load(f), tools)
+            except Unsupported as e:
+                skipped[entry] = str(e)
+                continue
         live = LIVE_DATA.get(entry)
         if live:
             scenario["dataset"] = live["dataset"]
             scenario["inputs"] = [live["first_input"], *scenario["inputs"][1:]]
         scenario["id"] = entry
-        scenario["shared"] = True
-        out.append(scenario)
-    return out
+        scenario["source"] = "loom"
+        loaded.append(scenario)
+    return loaded, skipped

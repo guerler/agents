@@ -153,8 +153,8 @@ def main():
             print(f"  note: loom not found at {args.loom}; running the local set only")
             shared = []
         else:
-            shared = loom_scenarios.load(args.loom, args.scenario)
-            for name, why in sorted(loom_scenarios.NOT_PORTABLE.items()):
+            shared, skipped = loom_scenarios.load(args.loom, args.scenario)
+            for name, why in sorted(skipped.items()):
                 print(f"  skip {name}: {why}")
         scenarios = shared + scenarios
 
