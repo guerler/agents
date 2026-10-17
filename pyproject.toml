@@ -1,5 +1,5 @@
-# Formatting and linting for this repo. There is no package to build here: the evals,
-# seams and comparison tools are run in place against a checkout named by OLIT_ROOT.
+# Formatting and linting for this repo. There is no package to build here: the evals run in
+# place against a checkout named by OLIT_ROOT.
 
 [tool.black]
 line-length = 120
