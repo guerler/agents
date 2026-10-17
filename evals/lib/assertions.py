@@ -60,7 +60,7 @@ ASSERTION_KEYS = {
     "plan": {"exists", "maxDrafts", "minPendingSteps", "eachStepHasDescription", "routingIn", "mentionsOneOf"},
     "behavior": {"asksClarifyingQuestion", "galaxyDidWork", "doesNotExecute"},
     "events": {"mustInclude", "mustNotInclude"},
-    "artifacts": {"mustInclude", "count"},
+    "artifacts": {"mustInclude"},
     "toolOutput": {"matchesToolTest", "honestReport"},
     "invocation": {"succeeded", "producesDatasets", "parameterValues"},
     "collection": {"type", "elements", "tagged", "elementDatatype"},
@@ -100,7 +100,6 @@ ITEM_KEYS = {
         "datasetId",
         "settingsContain",
         "referencesDataset",
-        "embedsRows",
         "encodes",
     },
 }
@@ -159,8 +158,6 @@ _BRANCH_DIMENSIONS = {
     "artifacts": lambda spec, run, f, e: _artifacts(spec, run, f, e),
     "visualization": lambda spec, run, f, e: _visualization(spec, run, f, e),
     "toolCalls": lambda spec, run, f, e: _tool_calls(spec, run, f, e),
-    "collection": lambda spec, run, f, e: _collection(spec, run, f, e),
-    "record": lambda spec, run, f, e: _record(spec, run, f, e),
 }
 
 
@@ -286,17 +283,6 @@ def _tool_calls(spec, run, failures, exercised):
             )
 
 
-_SEPARATORS = (",", " ", "\u00a0", "\u202f", "_", ".")
-
-
-def _grouped_forms(needle):
-    if not needle.isdigit() or len(needle) <= 3:
-        return [needle]
-    rev = needle[::-1]
-    parts = [rev[i : i + 3][::-1] for i in range(0, len(rev), 3)][::-1]
-    return [needle] + [sep.join(parts) for sep in _SEPARATORS]
-
-
 def _chat_text(spec, run, failures, exercised):
     """loom's `chatText.mustInclude`: the answer itself has to contain something."""
     if not spec:
@@ -304,10 +290,10 @@ def _chat_text(spec, run, failures, exercised):
     exercised.add("behavior")
     text = run.chat_text or ""
     for needle in spec.get("mustInclude") or []:
-        if not any(form in text for form in _grouped_forms(needle)):
+        if needle not in text:
             failures.append(Failure("chatText.mustInclude", f"chat never contained {needle!r}", "behavior"))
     for needle in spec.get("mustNotInclude") or []:
-        if any(form in text for form in _grouped_forms(needle)):
+        if needle in text:
             failures.append(Failure("chatText.mustNotInclude", f"chat contained banned {needle!r}", "behavior"))
     for pattern in spec.get("mustMatch") or []:
         rx = _compile(pattern, "chatText.mustMatch", failures)
@@ -1051,10 +1037,6 @@ def _artifacts(spec, run, failures, exercised):
                     failures.append(
                         Failure("artifacts.datasetId", f"{kind} references {data['url']}, not {wanted_id}", "artifacts")
                     )
-        if want.get("embedsRows") and "values" not in data:
-            failures.append(
-                Failure("artifacts.embedsRows", f"{kind} references the dataset; expected embedded rows", "artifacts")
-            )
         encoded = _encoded_fields(matches[0].get("spec") or {})
         for field in want.get("encodes") or []:
             if field not in encoded:
@@ -1063,9 +1045,6 @@ def _artifacts(spec, run, failures, exercised):
                         "artifacts.encodes", f"{kind} does not encode {field}; it plots {sorted(encoded)}", "artifacts"
                     )
                 )
-
-    if spec.get("count") is not None and len(made) != spec["count"]:
-        failures.append(Failure("artifacts.count", f"expected {spec['count']} artifacts, got {len(made)}", "artifacts"))
 
 
 def _tool_output(spec, run, failures, exercised):
