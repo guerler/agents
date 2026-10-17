@@ -2,6 +2,10 @@
 
 One JSON per full eval-suite run, written by `python3 evals/ingest_run.py <suite --json output>`.
 
+A baseline's raw output stays on local disk under `records/`, which holds only folders and is never
+committed: `records/baselines/<date>.json` and `.log` for the suite's `--json` output and its console,
+`records/content/<timestamp>/` for each run's model traffic, `records/videos/` for watched runs.
+
 The raw suite result carries every transcript and runs to several megabytes. These
 snapshots keep only what stays useful: the per-scenario verdict, the failures behind it,
 the worst step count, the tools each run called, and the totals. Tens of KB each, so the
