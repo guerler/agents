@@ -315,9 +315,10 @@ async def _run(scenario, model, base_url=None):
         return RunResult([], [], [], error=f"{type(e).__name__}: {e}", stalled=True, waited=waited.total)
     # The session is bound to its history from the start, as the page binds it from the URL.
     config["history_id"] = staged["history_id"] if staged else _empty_history(config, scenario)
-    session = await Session(config).init()
+    session = Session(config)
     budget = scenario_timeout(scenario)
     try:
+        await session.init()
         return await _within_agent_budget(_drive(scenario, session, config, staged, waited), budget, waited)
     except asyncio.TimeoutError:
         return RunResult([], [], [], error=f"the agent ran past its {budget:.0f}s budget", waited=waited.total)
