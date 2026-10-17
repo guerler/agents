@@ -205,6 +205,21 @@ async function signIn({ user, password }) {
   if (!current.ok()) throw new Error(`could not make the run's history current: ${current.status()}`);
 }
 
+/**
+ * Close Galaxy's tool panel, so the video gives Olit and the history the width. A fresh browser
+ * opens with it showing; the Tools activity toggles it, and Galaxy keeps that in local storage.
+ */
+async function closeToolPanel() {
+  const panel = page.locator("#toolbox-panel");
+  try {
+    await panel.waitFor({ state: "visible", timeout: 30_000 });
+    await page.click("#activity-tools");
+    await panel.waitFor({ state: "hidden", timeout: 10_000 });
+  } catch {
+    emit({ event: "console", text: "the tool panel stayed as it was" });
+  }
+}
+
 /** The frame holding Olit's input, once Galaxy has mounted the plugin. */
 async function olitFrame() {
   for (const frame of page.frames()) {
@@ -217,6 +232,7 @@ try {
   const deadline = Date.now() + args.timeoutMs;
   if (args.login) await signIn(args.login);
   await page.goto(args.url);
+  if (args.login) await closeToolPanel();
   await until(async () => (app = await olitFrame()), 120_000, "Olit's page");
   await until(async () => / ready\b/i.test(await text()), 240_000, "the agent to be ready");
   emit({ event: "ready" });

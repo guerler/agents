@@ -81,7 +81,8 @@ python evals/run.py demo-volcano-from-gtn --watch --video
 `--watch galaxy` opens Olit as `GALAXY_URL` serves it instead, inside Galaxy's own UI with its history panel, so the
 video shows the whole Galaxy page. No dev server starts: the plugin Galaxy has installed is the one under test. The
 browser signs in through Galaxy's login form as `GALAXY_USER` with `GALAXY_PASSWORD`, the account `GALAXY_API_KEY`
-belongs to, makes the run's history current, and drives Olit in the frame Galaxy mounts it in. A scenario with an
+belongs to, makes the run's history current, closes the tool panel so Olit and the history get the width, and drives Olit in
+the frame Galaxy mounts it in. A scenario with an
 `emptyHistory` opens Olit on that history with no dataset, so the run can bring its own data in. A plugin build reaches
 no model but Galaxy's own, so this runs only on Galaxy AI.
 
