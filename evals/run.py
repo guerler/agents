@@ -335,18 +335,21 @@ def print_instability(results):
 
 def print_leaderboard(results, models):
     """Per-model score on each dimension: exercised runs that produced no failure."""
-    print(f"\n{'model':24s} " + " ".join(f"{d:>10s}" for d in DIMENSIONS) + f" {'errors':>7s} {'quota':>6s}")
-    print("-" * (24 + 11 * len(DIMENSIONS) + 15))
+    seen = {d for r in results for d in r["dimensions"]} | {f["dimension"] for r in results for f in r["failures"]}
+    dimensions = [*DIMENSIONS, *sorted(seen - set(DIMENSIONS))]
+    width = max(len(d) for d in dimensions) + 1
+    print(f"\n{'model':24s} " + " ".join(f"{d:>{width}s}" for d in dimensions) + f" {'errors':>7s} {'quota':>6s}")
+    print("-" * (24 + (width + 1) * len(dimensions) + 15))
     for model in models:
         rows = [r for r in results if r["model"] == model["id"]]
         cells = []
-        for dim in DIMENSIONS:
-            exercised = [r for r in rows if dim in r["dimensions"]]
+        for dim in dimensions:
+            exercised = [r for r in rows if dim in r["dimensions"] or any(f["dimension"] == dim for f in r["failures"])]
             if not exercised:
-                cells.append(f"{'-':>10s}")
+                cells.append(f"{'-':>{width}s}")
                 continue
             clean = [r for r in exercised if not any(f["dimension"] == dim for f in r["failures"])]
-            cells.append(f"{len(clean)}/{len(exercised):<8d}")
+            cells.append(f"{f'{len(clean)}/{len(exercised)}':>{width}s}")
         errors = sum(1 for r in rows if r["error"] and not is_quota(r))
         quota = sum(1 for r in rows if is_quota(r))
         print(f"{model['id']:24s} " + " ".join(cells) + f" {errors:>7d} {quota:>6d}")
