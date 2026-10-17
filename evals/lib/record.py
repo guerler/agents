@@ -32,6 +32,13 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(reply)
 
+    def handle(self):
+        try:
+            super().handle()
+        except (BrokenPipeError, ConnectionResetError):
+            # The session hung up first, as one past its budget does; its reply is recorded anyway.
+            pass
+
     def log_message(self, *args):
         pass
 

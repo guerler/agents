@@ -58,3 +58,39 @@ def test_what_arrived_in_time_is_still_recorded(tmp_path):
     rows = [json.loads(line) for line in gzip.open(path, "rt")]
     assert [r["response"] for r in rows] == [{"ok": True}]
     assert rows[0]["request"] == {"model": "m"}
+
+
+def test_a_caller_that_hung_up_does_not_raise_in_the_recorder(tmp_path, monkeypatch):
+    import socket
+    import time
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    from lib import record
+
+    class Slow(BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.rfile.read(int(self.headers.get("content-length") or 0))
+            time.sleep(0.3)
+            self.send_response(200)
+            self.send_header("content-length", "2")
+            self.end_headers()
+            self.wfile.write(b"{}")
+
+        def log_message(self, *args):
+            pass
+
+    errors = []
+    monkeypatch.setattr(record._Recorder, "handle_error", lambda self, request, address: errors.append(address))
+    upstream = ThreadingHTTPServer(("127.0.0.1", 0), Slow)
+    threading.Thread(target=upstream.serve_forever, daemon=True).start()
+    try:
+        with recording(f"http://127.0.0.1:{upstream.server_port}", str(tmp_path / "run.jsonl.gz")) as url:
+            port = int(url.rsplit(":", 1)[1])
+            caller = socket.create_connection(("127.0.0.1", port))
+            caller.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b"\x01\x00\x00\x00\x00\x00\x00\x00")
+            caller.sendall(b"POST /v1/chat/completions HTTP/1.1\r\nhost: x\r\ncontent-length: 2\r\n\r\n{}")
+            caller.close()
+            time.sleep(0.8)
+    finally:
+        upstream.shutdown()
+    assert errors == []
