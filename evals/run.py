@@ -270,6 +270,7 @@ def main():
                     {
                         "model": model["id"],
                         "scenario": scenario["id"],
+                        "source": scenario.get("source", "agents"),
                         "run": run_index + 1,
                         "error": run.error,
                         # Galaxy never finished the work; nothing about the agent was measured.

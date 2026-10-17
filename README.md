@@ -7,12 +7,8 @@ being produced.
 ![Passing scenarios per baseline](evals.svg)
 
 Each point is a baseline run of the full suite, labelled by date, with passing scenarios out of
-the tier's total beside it. A scenario passes when every run of it passes.
-
-- **Grounded:** Olit's own scenarios, run against a live Galaxy. They ask whether the agent does
-  real Galaxy work correctly.
-- **Parity:** scenarios taken from Orbit's own eval suite. They ask whether Olit behaves like
-  Orbit on Orbit's tests.
+the total beside it. A scenario passes when every run of it passes. Baselines before
+2026-10-17 are in [evals/snapshots/archive](evals/snapshots/archive).
 
 ```bash
 export OLIT_ROOT=~/loom/browser

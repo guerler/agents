@@ -4,7 +4,7 @@ One JSON per full eval-suite run, written by `python3 evals/ingest_run.py <suite
 
 The raw suite result carries every transcript and runs to several megabytes. These
 snapshots keep only what stays useful: the per-scenario verdict, the failures behind it,
-the worst step count, the tools each run called, and the tier totals. Tens of KB each, so the
+the worst step count, the tools each run called, and the totals. Tens of KB each, so the
 history is cheap to keep and a later run can be compared scenario by scenario.
 
     run-<date>.json              one suite run
@@ -13,14 +13,11 @@ history is cheap to keep and a later run can be compared scenario by scenario.
 ## Shape
 
     date, model, commit, note, runs
-    tiers.parity     { scenarios, clean, failing, environment }
-    tiers.grounded   { scenarios, clean, failing, environment }
-    scenarios[]      { scenario, tier, runs[], tools[][], verdict, max_steps, failures[] }
+    totals         { scenarios, clean, failing, environment }
+    scenarios[]    { scenario, source, runs[], tools[][], verdict, max_steps, failures[] }
 
-**The two tiers are counted apart and must stay that way.** `parity` is the Loom-shared
-set, which measures whether Olit behaves as the reference evaluation expects. `grounded`
-reads authoritative Galaxy state. A parity failure and a grounded failure are different
-kinds of evidence, and a combined number would hide which one moved.
+`source` says where a scenario is defined: `agents` for this repo's, `loom` for one read from
+loom's scenario directory. Both are graded the same way and counted in one total.
 
 `environment` counts scenarios lost to a provider fault or an external host, never charged
 to the agent. A scenario that both failed and errored across its runs counts as failing.
@@ -33,7 +30,13 @@ scenario that starts passing for a different reason is visible rather than just 
 
 ## Overview chart
 
-`evals.svg` at the repository root plots each tier's passing scenarios across every snapshot,
+`evals.svg` at the repository root plots the passing scenarios across every snapshot,
 labelled by date. Regenerate it after ingesting a run:
 
     python3 evals/chart.py
+
+## Archive
+
+`archive/` holds the snapshots up to 2026-10-16 and their chart. They scored a separate parity
+tier of loom scenarios, adapted loosely enough that some graded on nothing, so they are kept to
+read, not to compare against.

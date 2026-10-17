@@ -4,11 +4,8 @@
     python3 evals/ingest_run.py /tmp/suite.json [--date YYYY-MM-DD]
 
 The raw result carries every transcript and runs to megabytes; what is worth keeping over
-time is the per-scenario verdict and the tier totals. Snapshots land in `evals/snapshots/`
-as `run-<date>.json`, one per suite run, and are what a later run is compared against.
-
-Tiers are scored apart on purpose: parity failures and Galaxy-grounded failures are
-different evidence and must never be added into one number.
+time is the per-scenario verdict and the totals. Snapshots land in `evals/snapshots/` as
+`run-<date>.json`, one per suite run, and are what a later run is compared against.
 """
 
 import argparse
@@ -22,11 +19,6 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 OUT_DIR = HERE / "snapshots"
-LOOM_SCENARIOS = pathlib.Path(os.path.expanduser("~/loom/evals/scenarios"))
-
-
-def tier_of(name, shared):
-    return "parity" if name in shared else "grounded"
 
 
 def verdict(runs):
@@ -53,10 +45,6 @@ def main():
     if not raw:
         sys.exit("no results in that file")
 
-    shared = set(os.listdir(LOOM_SCENARIOS)) if LOOM_SCENARIOS.is_dir() else set()
-    if not shared:
-        print("warning: loom scenarios not found, every scenario will read as grounded", file=sys.stderr)
-
     date = args.date or dt.date.fromtimestamp(pathlib.Path(args.result).stat().st_mtime).isoformat()
 
     by_scenario = collections.OrderedDict()
@@ -67,7 +55,7 @@ def main():
             name,
             {
                 "scenario": name,
-                "tier": tier_of(name, shared),
+                "source": r.get("source", "agents"),
                 "runs": [],
                 "steps": [],
                 "tools": [],
@@ -93,15 +81,12 @@ def main():
         del entry["steps"]
         scenarios.append(entry)
 
-    tiers = {}
-    for tier in ("parity", "grounded"):
-        rows = [s for s in scenarios if s["tier"] == tier]
-        tiers[tier] = {
-            "scenarios": len(rows),
-            "clean": sum(1 for s in rows if s["verdict"] == "pass"),
-            "failing": sum(1 for s in rows if s["verdict"] == "fail"),
-            "environment": sum(1 for s in rows if s["verdict"] == "environment"),
-        }
+    totals = {
+        "scenarios": len(scenarios),
+        "clean": sum(1 for s in scenarios if s["verdict"] == "pass"),
+        "failing": sum(1 for s in scenarios if s["verdict"] == "fail"),
+        "environment": sum(1 for s in scenarios if s["verdict"] == "environment"),
+    }
 
     snapshot = {
         "date": date,
@@ -110,8 +95,8 @@ def main():
         **({"build": args.build} if args.build else {}),
         "note": args.note,
         "runs": len(raw),
-        "tiers": tiers,
-        "scenarios": sorted(scenarios, key=lambda s: (s["tier"], s["scenario"])),
+        "totals": totals,
+        "scenarios": sorted(scenarios, key=lambda s: s["scenario"]),
     }
 
     out_dir = pathlib.Path(args.out).expanduser() if args.out else OUT_DIR
@@ -125,11 +110,10 @@ def main():
         out = out_dir / f"{stem}-{n}.json"
     out.write_text(json.dumps(snapshot, indent=1) + "\n")
     print(out, f"({out.stat().st_size // 1024 or 1} KB)")
-    for tier, t in tiers.items():
-        print(
-            f"  {tier:9} {t['clean']}/{t['scenarios']} clean, "
-            f"{t['failing']} failing, {t['environment']} environment"
-        )
+    print(
+        f"  {totals['clean']}/{totals['scenarios']} clean, "
+        f"{totals['failing']} failing, {totals['environment']} environment"
+    )
 
 
 def git_commit():

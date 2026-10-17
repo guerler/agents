@@ -1,4 +1,4 @@
-"""Render evals.svg at the repository root: passing scenarios per tier across every snapshot.
+"""Render evals.svg at the repository root: passing scenarios across every baseline snapshot.
 
 python3 evals/chart.py
 """
@@ -14,7 +14,6 @@ from matplotlib.ticker import PercentFormatter  # noqa: E402
 
 SNAPSHOTS = pathlib.Path(__file__).resolve().parent / "snapshots"
 OUT = SNAPSHOTS.parents[1] / "evals.svg"
-TIERS = (("grounded", "black", "D", "-"), ("parity", "gray", ".", ":"))
 
 
 def order(path):
@@ -24,48 +23,33 @@ def order(path):
 
 def main():
     paths = sorted(SNAPSHOTS.glob("run-*.json"), key=order)
-    snapshots = [json.loads(p.read_text()) for p in paths]
+    if not paths:
+        raise SystemExit(f"no snapshots in {SNAPSHOTS}; ingest a baseline first")
+    totals = [json.loads(p.read_text())["totals"] for p in paths]
     labels = []
     for path in paths:
         day, nth = order(path)
         labels.append(day[5:] + (f" ({nth})" if nth > 1 else ""))
 
     fig, ax = plt.subplots(figsize=(14.0, 6.0))
-    x = range(len(snapshots))
-    rates = {
-        tier: [100 * s["tiers"][tier]["clean"] / s["tiers"][tier]["scenarios"] for s in snapshots] for tier, *_ in TIERS
-    }
-    for tier, color, marker, style in TIERS:
-        counts = [s["tiers"][tier] for s in snapshots]
-        other = rates["parity" if tier == "grounded" else "grounded"]
-        ax.plot(
-            x,
-            rates[tier],
-            color=color,
-            marker=marker,
-            markersize=7,
-            linewidth=1.5,
-            linestyle=style,
-            label=tier,
-            zorder=3,
+    x = range(len(totals))
+    rates = [100 * t["clean"] / t["scenarios"] for t in totals]
+    ax.plot(x, rates, color="black", marker="D", markersize=7, linewidth=1.5, zorder=3)
+    for i, (rate, t) in enumerate(zip(rates, totals)):
+        ax.annotate(
+            f"{t['clean']}/{t['scenarios']}",
+            (i, rate),
+            textcoords="offset points",
+            xytext=(0, 8),
+            ha="center",
+            fontsize=7,
         )
-        for i, (rate, c) in enumerate(zip(rates[tier], counts)):
-            ax.annotate(
-                f"{c['clean']}/{c['scenarios']}",
-                (i, rate),
-                textcoords="offset points",
-                xytext=(0, 8 if (rate, tier == "grounded") >= (other[i], True) else -14),
-                ha="center",
-                fontsize=7,
-                color=color,
-            )
 
     ax.set_ylabel("Passing Scenarios", fontweight="bold")
-    ax.set_ylim(50, 101)
+    ax.set_ylim(0, 101)
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=100, decimals=0))
     ax.set_xticks(list(x), labels, fontsize=8)
     ax.grid(axis="y", color="lightgray", linewidth=0.5)
-    ax.legend(loc="lower left", frameon=False)
     for tick_labels in (ax.get_xticklabels(), ax.get_yticklabels()):
         plt.setp(tick_labels, fontweight="bold")
     fig.tight_layout()
