@@ -13,11 +13,11 @@ import subject
 from .grading import SCENARIO_KEYS, unsupported
 
 # loom grades against a stub, so a scenario may name data nothing creates. On a live Galaxy
-# `execution-after-approval`'s dataset id and history do not resolve, the agent is right to
+# `execution-after-approval-tools`'s history `hist1` does not resolve, the agent is right to
 # refuse the call, and the run grades as "never called run_tool" — measuring the fixture
 # rather than the approval gate. Stage the data and name it by position instead.
 LIVE_DATA = {
-    "execution-after-approval": {
+    "execution-after-approval-tools": {
         "dataset": {"file": "prices.csv", "datatype": "csv", "history": "execution gate $run"},
         "first_input": (
             "Run the Add column tool (tool id `addValue`) on the dataset in my history, "
