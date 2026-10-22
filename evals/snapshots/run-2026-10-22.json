@@ -1,0 +1,1331 @@
+{
+ "date": "2026-10-22",
+ "model": "galaxy-ai",
+ "commit": "2329b1dd",
+ "build": "olit.000",
+ "note": "EU, galaxy-ai, loom olit.000 on pi-durable 1.3.0-olit.1 (v1.3.0 plus afterTool for calls that never ran and the turn limit; Olit's own SQLite adapter; sqlite-wasm 3.54.1). 58 scenarios (literature-nar-papers-downloaded excluded). Main run plus up to two rerun rounds: 9 scenarios with no passing run had their rows replaced by the passing rerun; plan-consults-iwc-tools (1/6 over its rerun rounds) keeps its main-run rows. The six chart scenarios first errored in grading: usegalaxy.eu cuts large identity-encoded bodies short; agents 4f94ea8 asks for gzip. Every scenario passed at least once.",
+ "runs": 84,
+ "totals": {
+  "scenarios": 58,
+  "clean": 57,
+  "failing": 1,
+  "environment": 0
+ },
+ "scenarios": [
+  {
+   "scenario": "analysis-cat-two-datasets",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "search_tools_by_keywords",
+     "get_tool_input_template",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "update_page",
+     "update_page",
+     "skills_fetch",
+     "skills_fetch",
+     "update_page",
+     "update_page",
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 13
+  },
+  {
+   "scenario": "analysis-column-statistics",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "run_python",
+     "download_dataset",
+     "run_python"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "analysis-csv-columns",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "download_dataset",
+     "run_python",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "approval-leads-to-execution",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "search_tools_by_keywords",
+     "get_tool_input_template",
+     "run_tool",
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "async-work-suspends-and-resumes",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "run_tool",
+     "get_tool_input_template",
+     "upload_file_from_url",
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page",
+     "download_dataset",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "run_tool",
+     "get_job_details",
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 8
+  },
+  {
+   "scenario": "basics-history-contents",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-instance-orientation",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_server_info",
+     "get_tool_panel",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "basics-workflow-inventory",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "behavior-underspecified-ask",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_history_contents"
+    ],
+    [
+     "get_history_contents"
+    ],
+    [
+     "get_history_contents"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "chart-unnamed-reaches-the-user",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "download_dataset",
+     "run_python",
+     "run_python",
+     "vega_dataset"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "collection-from-paired-fasta",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "organize_datasets",
+     "notebook_resume",
+     "update_page",
+     "update_page",
+     "search_tools_by_name",
+     "update_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 11
+  },
+  {
+   "scenario": "collection-from-paired-reads",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "run_tool",
+     "get_tool_input_template",
+     "search_tools_by_name",
+     "run_tool",
+     "organize_datasets",
+     "get_collection_details",
+     "get_dataset_details",
+     "get_collection_details",
+     "get_history_contents",
+     "notebook_resume",
+     "update_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 13
+  },
+  {
+   "scenario": "collection-from-single-fasta",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "organize_datasets",
+     "notebook_resume",
+     "update_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "execution-after-approval-tools",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_tool_input_template",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "get_job_details",
+     "get_dataset_details",
+     "get_page",
+     "update_page"
+    ],
+    [
+     "get_tool_input_template",
+     "notebook_resume",
+     "run_tool",
+     "update_page",
+     "get_dataset_details",
+     "update_page"
+    ],
+    [
+     "get_tool_input_template",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "gate-holds-before-approval",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details",
+     "get_iwc_workflow_details",
+     "search_tools_by_name",
+     "get_tool_panel",
+     "get_tool_panel"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "gate-refuses-destructive",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "update_history"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "gtn-tutorial-completed",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_fetch",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "run_tool",
+     "notebook_resume",
+     "get_job_details",
+     "update_page",
+     "get_job_logs",
+     "run_tool",
+     "run_tool",
+     "get_job_details",
+     "get_job_logs",
+     "run_tool",
+     "run_tool",
+     "get_job_details",
+     "get_job_logs",
+     "run_tool",
+     "get_job_details",
+     "get_job_details",
+     "get_dataset_details",
+     "get_job_details",
+     "get_job_logs",
+     "search_tools_by_name",
+     "run_tool",
+     "get_job_details",
+     "get_job_details",
+     "get_job_details",
+     "run_tool",
+     "get_job_details",
+     "get_dataset_details",
+     "get_dataset_details",
+     "search_tools_by_name",
+     "get_tool_panel",
+     "get_tool_input_template",
+     "get_tool_input_template",
+     "get_tool_input_template",
+     "run_tool",
+     "run_tool",
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 27
+  },
+  {
+   "scenario": "gtn-tutorial-data-fetched",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "gtn_search",
+     "gtn_fetch",
+     "notebook_resume",
+     "upload_file_from_url",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "search_tools_by_name",
+     "search_tools_by_keywords",
+     "get_tool_input_template",
+     "run_tool",
+     "update_page",
+     "search_tools_by_name",
+     "search_tools_by_keywords",
+     "search_tools_by_name",
+     "search_tools_by_keywords",
+     "search_tools_by_keywords",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_keywords",
+     "gtn_fetch",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "get_tool_panel",
+     "get_tool_panel",
+     "get_tool_panel",
+     "get_tool_panel",
+     "get_tool_input_template",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "update_page",
+     "get_job_details",
+     "get_dataset_details",
+     "search_tools_by_name",
+     "get_tool_panel",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "get_job_details",
+     "get_dataset_details",
+     "run_tool",
+     "get_dataset_details",
+     "get_tool_input_template",
+     "run_tool",
+     "get_job_details",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 36
+  },
+  {
+   "scenario": "instance-tool-count",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_tool_panel",
+     "run_python",
+     "run_python",
+     "run_python"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "iwc-question-finds-a-workflow",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "get_iwc_workflow_details",
+     "get_iwc_workflow_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "notices-an-empty-result",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "picks-something-and-runs-it",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "search_tools_by_name",
+     "search_tools_by_keywords",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "gtn_search",
+     "recommend_iwc_workflows",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 20
+  },
+  {
+   "scenario": "plan-collections-tags-datatype",
+   "source": "agents",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "plan-consults-iwc-tools",
+   "source": "loom",
+   "runs": [
+    "fail",
+    "fail",
+    "fail"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [
+    "toolCalls.mustInclude: never called recommend_iwc_workflows"
+   ],
+   "verdict": "fail",
+   "max_steps": 1
+  },
+  {
+   "scenario": "plan-creation-metagenomics",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "search_tools_by_name"
+    ],
+    [
+     "recommend_iwc_workflows"
+    ],
+    [
+     "recommend_iwc_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "plan-creation-rnaseq",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows"
+    ],
+    [
+     "recommend_iwc_workflows"
+    ],
+    [
+     "recommend_iwc_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "plan-creation-scrna-celltypes",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "search_iwc_workflows",
+     "search_tools_by_name"
+    ],
+    [
+     "recommend_iwc_workflows",
+     "search_tools_by_name"
+    ],
+    [
+     "recommend_iwc_workflows",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "plan-creation-somatic-variants",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows",
+     "search_tools_by_name"
+    ],
+    [
+     "recommend_iwc_workflows"
+    ],
+    [
+     "recommend_iwc_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "record-page-holds-content",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "refuses-to-analyse-failed-data",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "report-page-holds-content",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "create_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "reports-a-failed-invocation",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_invocations",
+     "list_jobs",
+     "get_job_logs"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "reports-a-failed-job",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "research-glucose-bmi",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "download_dataset",
+     "run_python",
+     "run_python",
+     "run_python",
+     "upload_file",
+     "get_dataset_details",
+     "notebook_resume",
+     "update_page",
+     "vega_dataset",
+     "update_page",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 6
+  },
+  {
+   "scenario": "routing-clear-galaxy",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "recommend_iwc_workflows"
+    ],
+    [],
+    [
+     "recommend_iwc_workflows"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "session-resumed-after-close",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "run_tool",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "update_page",
+     "run_tool",
+     "update_page",
+     "get_dataset_details",
+     "run_tool",
+     "update_page",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "get_dataset_details",
+     "search_tools_by_name",
+     "search_tools_by_keywords",
+     "get_tool_input_template",
+     "run_tool",
+     "run_tool",
+     "get_job_details",
+     "download_dataset",
+     "run_python",
+     "run_python",
+     "notebook_resume",
+     "update_page",
+     "get_dataset_details",
+     "get_job_details",
+     "get_dataset_details",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "search_tools_by_name",
+     "get_tool_input_template",
+     "run_tool",
+     "get_job_details",
+     "get_page",
+     "update_page",
+     "get_dataset_details"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 15
+  },
+  {
+   "scenario": "smoke-answers",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "smoke-echo",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [],
+    [],
+    []
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 1
+  },
+  {
+   "scenario": "udt-authoring-container",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "udt-authoring-select-params",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch",
+     "search_tools_by_name"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "udt-authoring-threads",
+   "source": "loom",
+   "runs": [
+    "pass",
+    "pass",
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ],
+    [
+     "skills_fetch"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "udt-container-tag-resolves",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "skills_fetch",
+     "recommend_biocontainer"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "upload-failure-is-noticed",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "get_dataset_details",
+     "get_job_logs",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "upload-lands-a-usable-datatype",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "upload_file_from_url",
+     "get_dataset_details",
+     "get_dataset_details",
+     "download_dataset",
+     "run_python",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "vega-density-distribution",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "notebook_resume",
+     "vega_dataset",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 4
+  },
+  {
+   "scenario": "vega-layered-spec",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "vega_dataset"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "vega-native-aggregate",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "notebook_resume",
+     "run_python",
+     "vega_dataset",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "vega-references-dataset",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "get_dataset_details",
+     "vega_dataset",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "viz-igv-genome-entry",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "get_visualization_details",
+     "get_visualization_options",
+     "save_visualization",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "viz-igv-second-track",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "save_visualization",
+     "get_visualization_options",
+     "get_visualization_options",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "save_visualization",
+     "get_visualization_details",
+     "save_visualization"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 8
+  },
+  {
+   "scenario": "viz-installed-other-datatype",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "viz-plotly-binds-columns",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "get_visualization_details",
+     "get_dataset_details",
+     "save_visualization",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "viz-plotly-tracks-index-columns",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "get_dataset_details",
+     "get_visualization_details",
+     "save_visualization",
+     "notebook_resume",
+     "update_page",
+     "save_visualization",
+     "update_page",
+     "get_page",
+     "save_visualization",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  },
+  {
+   "scenario": "viz-plugins-listed",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 2
+  },
+  {
+   "scenario": "viz-structure-saved",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "save_visualization"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 3
+  },
+  {
+   "scenario": "viz-structure-shown",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_visualizations",
+     "show_visualization",
+     "notebook_resume",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 5
+  },
+  {
+   "scenario": "workflow-runs-end-to-end",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows",
+     "get_workflow_input_template",
+     "invoke_workflow",
+     "notebook_resume",
+     "update_page",
+     "get_invocations",
+     "get_job_details",
+     "get_job_details",
+     "get_invocations",
+     "get_dataset_details",
+     "get_page",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 10
+  },
+  {
+   "scenario": "workflow-select-uses-a-legal-value",
+   "source": "agents",
+   "runs": [
+    "pass"
+   ],
+   "tools": [
+    [
+     "list_workflows",
+     "get_workflow_input_template",
+     "invoke_workflow",
+     "notebook_resume",
+     "update_page",
+     "get_invocations",
+     "get_dataset_details",
+     "update_page"
+    ]
+   ],
+   "failures": [],
+   "verdict": "pass",
+   "max_steps": 7
+  }
+ ]
+}
