@@ -7,6 +7,7 @@ Galaxy serves those inputs but answers 404 for the expected outputs, so those ar
 vendored in `fixtures/tool-tests/`; `GALAXY_TEST_DATA` names a clone to fall back on.
 """
 
+import gzip
 import hashlib
 import json
 import os
@@ -35,9 +36,13 @@ class Galaxy:
     def call(self, path, method="GET", body=None, raw=False, timeout=120):
         data = json.dumps(body).encode() if body is not None else None
         headers = {"x-api-key": self.key, **({"Content-Type": "application/json"} if data else {})}
+        # usegalaxy.eu cuts large bodies short when they are sent uncompressed (identity).
+        headers["Accept-Encoding"] = "gzip"
         req = urllib.request.Request(f"{self.base}/{path}", data=data, method=method, headers=headers)
         with urllib.request.urlopen(req, timeout=timeout) as r:
             payload = r.read()
+            if r.headers.get("Content-Encoding") == "gzip":
+                payload = gzip.decompress(payload)
         return payload if raw else json.loads(payload or b"null")
 
     # --- the tool's own test -------------------------------------------------
