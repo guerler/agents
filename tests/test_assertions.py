@@ -18,7 +18,7 @@ def test_not_empty_fails_a_page_that_is_actually_empty():
 
         def call(self, path):
             if path.startswith("api/pages?"):
-                return [{"id": "p1", "slug": "olit-s1"}]
+                return [{"id": "p1", "slug": "notebook-s1"}]
             return {"content": "", "content_editor": self._content}
 
     class Run:
@@ -51,7 +51,7 @@ def test_not_empty_accepts_content_appended_below_the_starter():
 
         def call(self, path):
             if path.startswith("api/pages?"):
-                return [{"id": "p1", "slug": "olit-s1"}]
+                return [{"id": "p1", "slug": "notebook-s1"}]
             return {"content": "", "content_editor": self._c}
 
     class Run:

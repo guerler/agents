@@ -12,7 +12,7 @@ def label_record_page(run, scenario_id, model_id):
     if not run.document:
         return None
     config = run.config
-    slug = f"olit-{run.document['session']['id']}"
+    slug = f"notebook-{run.document['session']['id']}"
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     try:
         pages = galaxy.call(f"api/pages?search=slug:{slug}") or []

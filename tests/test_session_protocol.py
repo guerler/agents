@@ -51,8 +51,8 @@ def test_a_restart_offers_the_history_records_and_recovers_only_the_chosen_sessi
 
     record = {
         "id": "a1b2c3d4e5f60718",
-        "slug": "olit-sess-7",
-        "title": "Olit Notebook (sess-7)",
+        "slug": "notebook-0a1b2c3d-4e5f-4a7b-8c9d-0e1f2a3b4c5d",
+        "title": "Notebook (0a1b2c3d)",
         "create_time": "2026-10-01T09:00:00",
         "update_time": "2026-10-02T09:00:00",
     }
@@ -100,6 +100,6 @@ def test_a_restart_offers_the_history_records_and_recovers_only_the_chosen_sessi
     offered = replies[1]["result"]["records"]
     assert [r["pageId"] for r in offered] == [record["id"]], out.stderr[-500:]
     session = replies[3]["result"]["session"]
-    assert session["id"] == "sess-7" and session["recordPageId"] == record["id"]
+    assert session["id"] == "0a1b2c3d-4e5f-4a7b-8c9d-0e1f2a3b4c5d" and session["recordPageId"] == record["id"]
     # The record and identity came back; the lost conversation did not.
     assert session["turn"] == 0
