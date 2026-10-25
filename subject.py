@@ -12,7 +12,7 @@ import description
 
 ENV = "OLIT_ROOT"
 # Where loom keeps the scenarios this repo also runs.
-LOOM_SCENARIOS = "~/loom/evals/scenarios"
+LOOM_SCENARIOS = "~/orbit/evals/scenarios"
 
 # What marks a checkout of the agent: the directories its loop lives in.
 SOURCE = {"olit": ("core/src/agent", "olit/src/agent")}

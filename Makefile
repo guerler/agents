@@ -1,5 +1,5 @@
 # OLIT_ROOT names the checkout under test.
-OLIT_ROOT ?= $(HOME)/loom/browser
+OLIT_ROOT ?= $(HOME)/orbit/browser
 export OLIT_ROOT
 
 .PHONY: format lint test check

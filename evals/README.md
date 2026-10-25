@@ -37,12 +37,12 @@ Optional settings, all read from the environment:
 
 | Variable | Default | What it sets |
 |---|---|---|
-| `OLIT_ROOT` | `~/loom/browser` (via `make`) | the agent checkout under test; the tests need it too |
+| `OLIT_ROOT` | `~/orbit/browser` (via `make`) | the agent checkout under test; the tests need it too |
 | `OLIT_EVAL_GALAXY_WAIT` | 600 | seconds any one wait on Galaxy may take, staging and jobs alike |
 | `OLIT_EVAL_CAPABILITIES` | `llm,local,read,write` | the tool families a scenario without its own gets |
 | `OLIT_EVAL_MAX_STEPS` | the agent's own | the step cap per turn |
 | `OLIT_EVAL_MAX_TOKENS` | none | an output ceiling, for endpoints that reserve credit against the maximum |
-| `LOOM_SCENARIOS` | `~/loom/evals/scenarios` | where loom's scenarios are read from |
+| `LOOM_SCENARIOS` | `~/orbit/evals/scenarios` | where loom's scenarios are read from |
 | `GALAXY_USER`, `GALAXY_PASSWORD` | none | the account `--watch galaxy` signs in as |
 | `OLIT_WATCH_PORT` | 5180 | the dev server `--watch` starts |
 | `GALAXY_TEST_DATA`, `GALAXY_ROOT` | none | a galaxy-test-data clone, or a Galaxy checkout whose cache holds one |

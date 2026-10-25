@@ -16,7 +16,7 @@ The baselines from 2026-09-18 to 2026-10-16, scored in separate tiers before the
 kept as they were charted. Their snapshots are in [evals/snapshots/archive](evals/snapshots/archive).
 
 ```bash
-export OLIT_ROOT=~/loom/browser
+export OLIT_ROOT=~/orbit/browser
 export GALAXY_URL=... GALAXY_API_KEY=...
 
 python3 evals/run.py                 # behavioural scenarios against a real model and Galaxy
