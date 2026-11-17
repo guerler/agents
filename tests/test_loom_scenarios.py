@@ -37,6 +37,7 @@ def test_what_cannot_be_judged_here_is_refused_with_its_reason():
         ({"assertions": {"toolCalls": {"mustInclude": [{"name": "lessons_search"}]}}}, "lessons_search"),
         ({"assertions": {"plan": {"routingIn": ["local"]}}}, "expects routing ['local']"),
         ({"loomArgs": ["--tools", "read,bash"]}, "--tools read,bash"),
+        ({"coreArgs": ["--tools", "read,bash"]}, "--tools read,bash"),
     ]
     for scenario, reason in cases:
         with pytest.raises(Unsupported, match=reason.replace("[", r"\[").replace("]", r"\]")):

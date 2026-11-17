@@ -40,7 +40,7 @@ MCP_PREFIX = "mcp__galaxy__"
 ROUTING_TAGS = {"remote"}
 
 # loom's own keys, read here and not passed on.
-LOOM_KEYS = {"tier", "requiresModel", "requiresGalaxy", "loomArgs"}
+LOOM_KEYS = {"tier", "requiresModel", "requiresGalaxy", "loomArgs", "coreArgs"}
 
 # loom's `--tools` mapped to the nearest capability set.
 TOOL_CAPABILITIES = {
@@ -121,7 +121,7 @@ def adapt(scenario, tools):
     if "plan" in assertions:
         assertions["plan"] = _plan(assertions["plan"])
     out = {**{k: v for k, v in scenario.items() if k not in LOOM_KEYS}, "assertions": assertions}
-    capabilities = _capabilities(scenario.get("loomArgs") or [])
+    capabilities = _capabilities(scenario.get("coreArgs") or scenario.get("loomArgs") or [])
     if capabilities:
         out["capabilities"] = capabilities
     # loom defaults model scenarios to 3 runs; honour it so both suites use the same n.
