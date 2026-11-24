@@ -442,7 +442,13 @@ def _collection(spec, run, failures, exercised):
 
     galaxy, history_id = staged["galaxy"], staged["history_id"]
     contents = galaxy.call(f"api/histories/{history_id}/contents") or []
-    built = [c for c in contents if c.get("history_content_type") == "dataset_collection" and not c.get("deleted")]
+    built = [
+        c
+        for c in contents
+        if c.get("history_content_type") == "dataset_collection"
+        and not c.get("deleted")
+        and c.get("id") != staged.get("collection_id")
+    ]
     if not built:
         failures.append(Failure("collection.exists", "no dataset collection in the staged history", "behavior"))
         return
@@ -458,6 +464,34 @@ def _collection(spec, run, failures, exercised):
             )
             return
         details = [d for d in details if d.get("collection_type") == wanted_type]
+
+    wanted_count = spec.get("count")
+    if wanted_count is not None and len(details) != wanted_count:
+        failures.append(
+            Failure("collection.count", f"{len(details)} collection(s) built, wanted {wanted_count}", "behavior")
+        )
+
+    for identifiers in spec.get("identifiers") or []:
+        seen = [sorted(e.get("element_identifier") for e in d.get("elements") or []) for d in details]
+        if sorted(identifiers) not in seen:
+            failures.append(
+                Failure(
+                    "collection.identifiers",
+                    f"no collection holds exactly {sorted(identifiers)}; built {seen}",
+                    "behavior",
+                )
+            )
+
+    if spec.get("fromJob"):
+        direct = [d.get("name") for d in details if not d.get("job_source_id")]
+        if direct:
+            failures.append(
+                Failure(
+                    "collection.fromJob",
+                    f"{direct} not produced by a Galaxy tool, so the history records no step that made them",
+                    "behavior",
+                )
+            )
 
     wanted_elements = spec.get("elements")
     if wanted_elements is not None:

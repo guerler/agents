@@ -40,7 +40,7 @@ ASSERTION_KEYS = {
     "artifacts": {"mustInclude"},
     "toolOutput": {"matchesToolTest", "honestReport"},
     "invocation": {"succeeded", "producesDatasets", "parameterValues"},
-    "collection": {"type", "elements", "tagged", "elementDatatype"},
+    "collection": {"type", "elements", "tagged", "elementDatatype", "count", "identifiers", "fromJob"},
     "visualization": {
         "referencesDataset",
         "absent",

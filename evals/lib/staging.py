@@ -167,7 +167,8 @@ def stage_dataset(config, spec, timeout):
     """A history holding the scenario's fixtures, as a researcher's would when they sit down.
 
     `file` stages one from `fixtures/`, `url` has Galaxy fetch one, and `files` stages
-    several so a scenario can be about combining them.
+    several so a scenario can be about combining them. `collection` then gathers staged
+    files into a collection, for a scenario that starts from one.
     """
     galaxy = tooltests.Galaxy(config["galaxy_root"], config.get("galaxy_key", ""))
     wanted = spec.get("files") or [spec]
@@ -181,6 +182,8 @@ def stage_dataset(config, spec, timeout):
         "test": None,
         "tool_id": None,
     }
+    if spec.get("collection"):
+        staged["collection_id"] = _stage_collection(galaxy, history_id, dataset_ids, spec["collection"])
     if spec.get("thenRuns"):
         staged["produced_dataset_id"] = _stage_run(galaxy, history_id, dataset_id, spec["thenRuns"], timeout)
     if spec.get("thenInvokes"):
@@ -189,6 +192,44 @@ def stage_dataset(config, spec, timeout):
         )
         staged.setdefault("imported_workflow_ids", []).append(workflow_id)
     return staged
+
+
+def collection_elements(dataset_ids, spec):
+    """Element identifiers for a staged `list` or `list:paired` collection.
+
+    A `list` element names one `file`; a `list:paired` element names a `forward` and a
+    `reverse` file, which become the pair Galaxy nests under the element's name.
+    """
+    if spec["type"] == "list:paired":
+        return [
+            {
+                "name": element["name"],
+                "src": "new_collection",
+                "collection_type": "paired",
+                "element_identifiers": [
+                    {"name": mate, "src": "hda", "id": dataset_ids[element[mate]]} for mate in ("forward", "reverse")
+                ],
+            }
+            for element in spec["elements"]
+        ]
+    return [{"name": element["name"], "src": "hda", "id": dataset_ids[element["file"]]} for element in spec["elements"]]
+
+
+def _stage_collection(galaxy, history_id, dataset_ids, spec):
+    """The collection a researcher already built, with its source files hidden as Galaxy hides them."""
+    created = galaxy.call(
+        "api/dataset_collections",
+        method="POST",
+        body={
+            "history_id": history_id,
+            "collection_type": spec["type"],
+            "name": spec["name"],
+            "element_identifiers": collection_elements(dataset_ids, spec),
+            "copy_elements": True,
+            "hide_source_items": True,
+        },
+    )
+    return created["id"]
 
 
 def _stage_run(galaxy, history_id, dataset_id, spec, timeout):

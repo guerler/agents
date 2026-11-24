@@ -284,3 +284,69 @@ def test_a_failed_dataset_is_named_by_its_name_or_number():
     ):
         assert _names_dataset(text, failed) is named, text
     assert not _names_dataset("anything", {"name": "", "hid": None})
+
+
+def test_collection_grades_what_was_built_not_what_was_staged():
+    """A scenario that starts from a collection must not pass on that collection."""
+    from lib.grading.galaxy import _collection
+
+    def hdca(cid, identifiers, job=None):
+        return {
+            "id": cid,
+            "name": cid,
+            "history_content_type": "dataset_collection",
+            "collection_type": "list",
+            "element_count": len(identifiers),
+            "job_source_id": job,
+            "elements": [{"element_identifier": i} for i in identifiers],
+        }
+
+    class FakeGalaxy:
+        def __init__(self, built):
+            self.built = {c["id"]: c for c in built}
+
+        def call(self, path):
+            if path.startswith("api/histories/"):
+                return list(self.built.values())
+            return self.built[path.split("/")[2].split("?")[0]]
+
+    class Run:
+        def __init__(self, built):
+            self.staged = {"galaxy": FakeGalaxy(built), "history_id": "h1", "collection_id": "staged"}
+
+    spec = {"type": "list", "count": 2, "identifiers": [["ctrl_1", "ctrl_2"], ["treat_1", "treat_2"]], "fromJob": True}
+    staged = hdca("staged", ["ctrl_1", "ctrl_2", "treat_1", "treat_2"])
+
+    def grade(built):
+        failures = []
+        _collection(spec, Run([staged, *built]), failures, set())
+        return sorted(f.assertion for f in failures)
+
+    assert grade([hdca("c1", ["ctrl_1", "ctrl_2"], "j1"), hdca("c2", ["treat_2", "treat_1"], "j2")]) == []
+    assert grade([]) == ["collection.exists"]
+    assert grade([hdca("c1", ["ctrl_1", "ctrl_2"], "j1")]) == ["collection.count", "collection.identifiers"]
+    assert grade([hdca("c1", ["ctrl_1", "ctrl_2"]), hdca("c2", ["treat_1", "treat_2"], "j2")]) == ["collection.fromJob"]
+
+
+def test_staged_collection_pairs_mates_under_each_sample():
+    """Galaxy nests a pair as its own collection under the element's name."""
+    from lib.staging import collection_elements
+
+    ids = {"a_1.fq": "d1", "a_2.fq": "d2", "b.gff3": "d3"}
+    paired = collection_elements(
+        ids, {"type": "list:paired", "elements": [{"name": "a", "forward": "a_1.fq", "reverse": "a_2.fq"}]}
+    )
+    assert paired == [
+        {
+            "name": "a",
+            "src": "new_collection",
+            "collection_type": "paired",
+            "element_identifiers": [
+                {"name": "forward", "src": "hda", "id": "d1"},
+                {"name": "reverse", "src": "hda", "id": "d2"},
+            ],
+        }
+    ]
+    assert collection_elements(ids, {"type": "list", "elements": [{"name": "b", "file": "b.gff3"}]}) == [
+        {"name": "b", "src": "hda", "id": "d3"}
+    ]
