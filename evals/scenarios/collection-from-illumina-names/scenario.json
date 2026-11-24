@@ -1,0 +1,47 @@
+{
+  "name": "collections: reads named the way an Illumina run names them become a paired collection",
+  "description": "Sequencing facilities deliver reads as <sample>_S<n>_L<lane>_R1_001.fastq.gz, where the mate marker sits in the middle of the name rather than at the end. Four such files for two samples land loose. Graded on a list:paired collection of two elements with the compressed Sanger datatype; the exact identifiers are not graded, since liver and liver_S1_L001 both name the sample.",
+  "dataset": {
+    "history": "illumina names $run",
+    "files": [
+      {
+        "file": "SRR000001_1.fastq.gz",
+        "name": "liver_S1_L001_R1_001.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000001_2.fastq.gz",
+        "name": "liver_S1_L001_R2_001.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000002_1.fastq.gz",
+        "name": "kidney_S2_L001_R1_001.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000002_2.fastq.gz",
+        "name": "kidney_S2_L001_R2_001.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      }
+    ]
+  },
+  "inputs": [
+    "My current history has paired-end reads for two tissues straight from the sequencing facility. Group them into a paired collection called \"reads\". Go ahead and do it."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "messages": {
+      "repliesInChat": true
+    },
+    "collection": {
+      "type": "list:paired",
+      "elements": 2,
+      "elementDatatype": "fastqsanger.gz"
+    },
+    "budget": {
+      "maxSteps": 30,
+      "maxRepeatedCall": 8
+    }
+  }
+}

@@ -148,13 +148,13 @@ def _fixture_path(name):
 
 
 def _stage_file(galaxy, history_id, spec, timeout):
-    """A fixture from disk, or a pinned URL Galaxy fetches itself."""
+    """A fixture from disk, or a pinned URL Galaxy fetches itself; `name` is what Galaxy calls it."""
     name = spec.get("name") or spec["file"]
     datatype = spec.get("datatype")
     if spec.get("url"):
         dataset_id = galaxy.fetch_url(history_id, spec["url"], name, datatype)
     else:
-        dataset_id = galaxy.upload(history_id, name, _fixture_path(name).read_bytes(), datatype)
+        dataset_id = galaxy.upload(history_id, name, _fixture_path(spec.get("file") or name).read_bytes(), datatype)
     landed = galaxy.await_dataset(dataset_id, timeout)
     if landed.get("state") != "ok":
         raise tooltests.ToolTestError(f"{name} landed in state {landed.get('state')}")
