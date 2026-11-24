@@ -1,0 +1,69 @@
+{
+  "name": "forum: collection elements tagged with their condition for DESeq2",
+  "description": "From help.galaxyproject.org (2026, 'DESeq2 factors and factor level Input'): DESeq2 can take factor levels from group tags on the elements of one collection. The history holds a list of four count tables. Tagging the elements, in place or through Galaxy's Add tags tool, puts group:ctrl on ctrl_1 and ctrl_2 and group:treat on treat_1 and treat_2. Graded on the tags Galaxy holds on the elements; the staged collection counts, since tagging it in place is as valid as a tagged copy.",
+  "dataset": {
+    "history": "forum tag by condition $run",
+    "files": [
+      {
+        "file": "ctrl_1.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "ctrl_2.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "treat_1.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "treat_2.tabular",
+        "datatype": "tabular"
+      }
+    ],
+    "collection": {
+      "name": "counts",
+      "type": "list",
+      "elements": [
+        {
+          "name": "ctrl_1",
+          "file": "ctrl_1.tabular"
+        },
+        {
+          "name": "ctrl_2",
+          "file": "ctrl_2.tabular"
+        },
+        {
+          "name": "treat_1",
+          "file": "treat_1.tabular"
+        },
+        {
+          "name": "treat_2",
+          "file": "treat_2.tabular"
+        }
+      ]
+    }
+  },
+  "inputs": [
+    "I want to use group tags as DESeq2 factor levels. In my collection \"counts\", tag the control samples with group:ctrl and the treated samples with group:treat."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "messages": {
+      "repliesInChat": true
+    },
+    "collection": {
+      "includeStaged": true,
+      "elementTags": {
+        "ctrl_1": "group:ctrl",
+        "ctrl_2": "group:ctrl",
+        "treat_1": "group:treat",
+        "treat_2": "group:treat"
+      }
+    },
+    "budget": {
+      "maxSteps": 30,
+      "maxRepeatedCall": 8
+    }
+  }
+}

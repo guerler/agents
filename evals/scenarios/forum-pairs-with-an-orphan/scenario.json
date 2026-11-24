@@ -1,0 +1,57 @@
+{
+  "name": "forum: loose reads where one sample lacks its mate become a paired collection of the complete pairs",
+  "description": "From help.galaxyproject.org (2026, 'Paired Reads not all Paired'): a paired collection cannot be built while one file has no mate, and the user does not see which. Five gzipped reads land loose: two complete pairs and SRR000005_1 alone. The agent must build the list:paired collection from the complete pairs and name the file it left out. Graded on the collection Galaxy holds and on the orphan being named in the reply.",
+  "dataset": {
+    "history": "forum orphan mate $run",
+    "files": [
+      {
+        "file": "SRR000001_1.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000001_2.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000002_1.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000002_2.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000005_1.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      }
+    ]
+  },
+  "inputs": [
+    "I uploaded paired-end reads to my current history, but building a paired collection keeps failing. Please make a paired collection called \"reads\" from them and tell me what was wrong."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "messages": {
+      "repliesInChat": true
+    },
+    "collection": {
+      "type": "list:paired",
+      "elements": 2,
+      "identifiers": [
+        [
+          "SRR000001",
+          "SRR000002"
+        ]
+      ]
+    },
+    "chatText": {
+      "mustMatch": [
+        "SRR000005"
+      ]
+    },
+    "budget": {
+      "maxSteps": 30,
+      "maxRepeatedCall": 8
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "name": "forum: a tool run once per element, its outputs kept as a collection",
+  "description": "From help.galaxyproject.org (2026, 'How to use Falco on a dataset collection'): the user runs a tool on one file at a time and does not know Galaxy can run it over a whole collection. The history holds a list of four count tables. Running Line/Word/Character count over the collection maps it over the elements and returns one collection with the same element identifiers. Graded on that collection and that a job made it.",
+  "dataset": {
+    "history": "forum map over $run",
+    "files": [
+      {
+        "file": "ctrl_1.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "ctrl_2.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "treat_1.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "treat_2.tabular",
+        "datatype": "tabular"
+      }
+    ],
+    "collection": {
+      "name": "counts",
+      "type": "list",
+      "elements": [
+        {
+          "name": "ctrl_1",
+          "file": "ctrl_1.tabular"
+        },
+        {
+          "name": "ctrl_2",
+          "file": "ctrl_2.tabular"
+        },
+        {
+          "name": "treat_1",
+          "file": "treat_1.tabular"
+        },
+        {
+          "name": "treat_2",
+          "file": "treat_2.tabular"
+        }
+      ]
+    }
+  },
+  "inputs": [
+    "Count the lines, words and characters of every table in my collection \"counts\", and keep the results together as one collection."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "messages": {
+      "repliesInChat": true
+    },
+    "collection": {
+      "type": "list",
+      "count": 1,
+      "identifiers": [
+        [
+          "ctrl_1",
+          "ctrl_2",
+          "treat_1",
+          "treat_2"
+        ]
+      ],
+      "fromJob": true
+    },
+    "budget": {
+      "maxSteps": 30,
+      "maxRepeatedCall": 8
+    }
+  }
+}
