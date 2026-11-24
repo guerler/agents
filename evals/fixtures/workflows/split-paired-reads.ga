@@ -1,0 +1,59 @@
+{
+ "a_galaxy_workflow": "true",
+ "format-version": "0.1",
+ "name": "Split paired reads into forward and reverse",
+ "tags": [
+  "reads"
+ ],
+ "annotation": "Takes a paired collection of reads and returns the forward and the reverse mates as two lists.",
+ "steps": {
+  "0": {
+   "id": 0,
+   "type": "data_collection_input",
+   "label": "paired reads",
+   "tool_state": "{\"optional\": false, \"collection_type\": \"list:paired\"}",
+   "inputs": [
+    {
+     "name": "paired reads",
+     "description": "Paired-end reads as a list:paired collection"
+    }
+   ],
+   "input_connections": {},
+   "position": {
+    "left": 0,
+    "top": 0
+   },
+   "workflow_outputs": [],
+   "annotation": "Paired-end reads as a list:paired collection"
+  },
+  "1": {
+   "id": 1,
+   "type": "tool",
+   "tool_id": "__UNZIP_COLLECTION__",
+   "tool_version": "1.0.0",
+   "label": "split mates",
+   "tool_state": "{\"input\": {\"__class__\": \"ConnectedValue\"}}",
+   "input_connections": {
+    "input": {
+     "id": 0,
+     "output_name": "output"
+    }
+   },
+   "position": {
+    "left": 250,
+    "top": 0
+   },
+   "workflow_outputs": [
+    {
+     "output_name": "forward",
+     "label": "forward reads"
+    },
+    {
+     "output_name": "reverse",
+     "label": "reverse reads"
+    }
+   ],
+   "annotation": "Forward and reverse mates as separate lists"
+  }
+ }
+}

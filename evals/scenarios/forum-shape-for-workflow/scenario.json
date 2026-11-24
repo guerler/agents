@@ -1,0 +1,63 @@
+{
+  "name": "forum: loose paired reads shaped into the collection a workflow asks for, then run",
+  "description": "From help.galaxyproject.org (2026, 'Paired reads from a collection in SPAdes', 'Forward and reverse reads counts do not match' and others): the data is right but not in the shape the analysis takes, and it surfaces as a failing tool. Four FASTQ files sit loose in the history; the saved workflow takes one list:paired collection. The agent has to read the workflow's input, build that collection from the files, and invoke it. Graded on the collection Galaxy holds and on the invocation's own record.",
+  "dataset": {
+    "history": "forum shape for workflow $run",
+    "files": [
+      {
+        "file": "SRR000001_1.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000001_2.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000002_1.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000002_2.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      }
+    ]
+  },
+  "workflows": {
+    "files": [
+      "split-paired-reads.ga"
+    ]
+  },
+  "inputs": [
+    "I uploaded paired-end reads for two samples to my current history. Run my saved workflow \"Split paired reads into forward and reverse\" on them, and tell me when it has finished."
+  ],
+  "timeoutMs": 900000,
+  "assertions": {
+    "messages": {
+      "repliesInChat": true
+    },
+    "toolCalls": {
+      "mustInclude": [
+        {
+          "name": "invoke_workflow"
+        }
+      ]
+    },
+    "collection": {
+      "type": "list:paired",
+      "elements": 2,
+      "identifiers": [
+        [
+          "SRR000001",
+          "SRR000002"
+        ]
+      ]
+    },
+    "invocation": {
+      "succeeded": true
+    },
+    "budget": {
+      "maxSteps": 40,
+      "maxRepeatedCall": 10
+    }
+  }
+}

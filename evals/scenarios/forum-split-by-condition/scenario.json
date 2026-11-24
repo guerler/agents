@@ -1,0 +1,74 @@
+{
+  "name": "forum: a collection of count tables split by condition",
+  "description": "From help.galaxyproject.org (2026, 'Select collection files for DESeq2'): DESeq2 takes one collection per factor level, and the user has one collection of all samples. The history holds a list of four count tables, ctrl_1, ctrl_2, treat_1, treat_2. Filtering with Galaxy's tools (Filter collection, Apply rules) keeps the step in the history. Graded on the control and treated sets Galaxy holds afterwards and that tools produced them; how many intermediate collections the route leaves is not graded.",
+  "dataset": {
+    "history": "forum by condition $run",
+    "files": [
+      {
+        "file": "ctrl_1.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "ctrl_2.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "treat_1.tabular",
+        "datatype": "tabular"
+      },
+      {
+        "file": "treat_2.tabular",
+        "datatype": "tabular"
+      }
+    ],
+    "collection": {
+      "name": "counts",
+      "type": "list",
+      "elements": [
+        {
+          "name": "ctrl_1",
+          "file": "ctrl_1.tabular"
+        },
+        {
+          "name": "ctrl_2",
+          "file": "ctrl_2.tabular"
+        },
+        {
+          "name": "treat_1",
+          "file": "treat_1.tabular"
+        },
+        {
+          "name": "treat_2",
+          "file": "treat_2.tabular"
+        }
+      ]
+    }
+  },
+  "inputs": [
+    "My collection \"counts\" has count tables for control and treated samples. For DESeq2 I need the control samples and the treated samples as two separate collections. Please split it by condition."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "messages": {
+      "repliesInChat": true
+    },
+    "collection": {
+      "type": "list",
+      "identifiers": [
+        [
+          "ctrl_1",
+          "ctrl_2"
+        ],
+        [
+          "treat_1",
+          "treat_2"
+        ]
+      ],
+      "fromJob": true
+    },
+    "budget": {
+      "maxSteps": 30,
+      "maxRepeatedCall": 8
+    }
+  }
+}

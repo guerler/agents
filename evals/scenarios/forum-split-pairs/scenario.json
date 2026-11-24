@@ -1,0 +1,66 @@
+{
+  "name": "forum: a paired collection split into forward and reverse lists",
+  "description": "From help.galaxyproject.org (2026, 'Split paired reads into forward and reverse collections'): a tool downstream wants the mates as two lists. The history already holds a list:paired collection. Galaxy's own Unzip collection tool does this in one step and records it; building two lists through the API leaves no step in the history. Graded on the two lists Galaxy holds, their identifiers, and that a tool produced them.",
+  "dataset": {
+    "history": "forum split pairs $run",
+    "files": [
+      {
+        "file": "SRR000001_1.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000001_2.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000002_1.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      },
+      {
+        "file": "SRR000002_2.fastq.gz",
+        "datatype": "fastqsanger.gz"
+      }
+    ],
+    "collection": {
+      "name": "reads",
+      "type": "list:paired",
+      "elements": [
+        {
+          "name": "SRR000001",
+          "forward": "SRR000001_1.fastq.gz",
+          "reverse": "SRR000001_2.fastq.gz"
+        },
+        {
+          "name": "SRR000002",
+          "forward": "SRR000002_1.fastq.gz",
+          "reverse": "SRR000002_2.fastq.gz"
+        }
+      ]
+    }
+  },
+  "inputs": [
+    "The collection \"reads\" in my current history is paired-end. The next tool I use needs the forward reads and the reverse reads as two separate collections. Please make those two collections."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "messages": {
+      "repliesInChat": true
+    },
+    "collection": {
+      "type": "list",
+      "count": 2,
+      "elements": 2,
+      "identifiers": [
+        [
+          "SRR000001",
+          "SRR000002"
+        ]
+      ],
+      "fromJob": true
+    },
+    "budget": {
+      "maxSteps": 30,
+      "maxRepeatedCall": 8
+    }
+  }
+}

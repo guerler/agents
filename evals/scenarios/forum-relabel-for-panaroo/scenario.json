@@ -1,0 +1,63 @@
+{
+  "name": "forum: collection elements relabelled with the extension a tool expects",
+  "description": "From help.galaxyproject.org (2026, 'Panaroo needs gff extension in collection identifiers'): Panaroo reads the element identifier as a file name and rejects one without '.gff'. The history holds a list of three GFF3 files named genome_a, genome_b, genome_c. Relabelling through Galaxy's tools (Relabel identifiers or Apply rules) keeps the step in the history. Graded on the identifiers Galaxy holds afterwards and that a tool produced the collection.",
+  "dataset": {
+    "history": "forum relabel $run",
+    "files": [
+      {
+        "file": "genome_a.gff3",
+        "datatype": "gff3"
+      },
+      {
+        "file": "genome_b.gff3",
+        "datatype": "gff3"
+      },
+      {
+        "file": "genome_c.gff3",
+        "datatype": "gff3"
+      }
+    ],
+    "collection": {
+      "name": "annotations",
+      "type": "list",
+      "elements": [
+        {
+          "name": "genome_a",
+          "file": "genome_a.gff3"
+        },
+        {
+          "name": "genome_b",
+          "file": "genome_b.gff3"
+        },
+        {
+          "name": "genome_c",
+          "file": "genome_c.gff3"
+        }
+      ]
+    }
+  },
+  "inputs": [
+    "I want to run Panaroo on the collection \"annotations\" in my current history, but it needs every element name to end in .gff. Please rename the elements so genome_a becomes genome_a.gff and so on."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "messages": {
+      "repliesInChat": true
+    },
+    "collection": {
+      "type": "list",
+      "identifiers": [
+        [
+          "genome_a.gff",
+          "genome_b.gff",
+          "genome_c.gff"
+        ]
+      ],
+      "fromJob": true
+    },
+    "budget": {
+      "maxSteps": 30,
+      "maxRepeatedCall": 8
+    }
+  }
+}
