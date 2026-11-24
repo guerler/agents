@@ -1,0 +1,73 @@
+{
+  "name": "vega: enriched world happiness with continents and interactive tooltips",
+  "description": "Multi-turn data enrichment and visual analytics scenario. The raw dataset is fetched directly from Zenodo (https://zenodo.org/records/24507283/files/2019.csv) containing country-level happiness and health indicators without continental categorization. In Turn 1, the agent downloads the raw dataset, dynamically retrieves the authoritative UN M49 / ISO-3166 regional reference dataset via Python (Pyodide), performs an in-memory join over country identifiers, computes regional averages for Healthy life expectancy and GDP per capita, and reports exact statistics for Europe and Africa. In Turn 2, the agent saves the enriched dataset to disk, uploads it back to the Galaxy history, synthesizes an interactive Vega-Lite scatter plot colored by continent referencing the new dataset with hover tooltips, and embeds the visualization into the record page.",
+  "dataset": {
+    "url": "https://zenodo.org/records/24507283/files/2019.csv",
+    "name": "2019.csv",
+    "history": "zenodo continent enrichment $run",
+    "datatype": "csv"
+  },
+  "inputs": [
+    "From the 2019 World Happiness dataset in this history (fetched from Zenodo: https://zenodo.org/records/24507283/files/2019.csv), use Python to calculate the average Healthy life expectancy and average GDP per capita for each Continent. Fetch the country-to-continent mapping from https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv. Ensure every country has an assigned continent (map name variations like UK, US, South Korea, Russia, Netherlands, etc.) and verify 100% coverage. Report the calculated averages for Europe and Africa.",
+    "Save the enriched dataset with the Continent column to a CSV file and upload it to the history. Then, create an interactive Vega-Lite scatter plot plotting Healthy life expectancy on the Y-axis against GDP per capita on the X-axis, colored by Continent, with tooltips showing Country or region, Continent, GDP per capita, and Healthy life expectancy, and add the chart into the record page."
+  ],
+  "timeoutMs": 600000,
+  "assertions": {
+    "events": {
+      "mustInclude": [
+        "turn_start"
+      ]
+    },
+    "messages": {
+      "repliesInChat": true
+    },
+    "toolCalls": {
+      "mustInclude": [
+        {
+          "name": "download_dataset",
+          "argsContains": {
+            "dataset_id": "$staged:2019.csv"
+          }
+        },
+        {
+          "name": "run_python"
+        },
+        {
+          "name": "vega_dataset"
+        }
+      ]
+    },
+    "chatText": {
+      "mustMatch": [
+        "\\b0[.,](?:91|92|93)",
+        "\\b0[.,](?:44|45|46)"
+      ]
+    },
+    "artifacts": {
+      "mustInclude": [
+        {
+          "kind": "vega-lite",
+          "referencesDataset": true,
+          "encodes": [
+            "Healthy life expectancy",
+            "GDP per capita",
+            "Country or region"
+          ]
+        }
+      ]
+    },
+    "record": {
+      "notEmpty": true,
+      "mustMention": [
+        "```vega"
+      ],
+      "mustNotMention": [
+        "{{artifact}}"
+      ]
+    },
+    "budget": {
+      "maxSteps": 60,
+      "maxRepeatedCall": 40
+    }
+  }
+}
