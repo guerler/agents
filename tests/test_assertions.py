@@ -350,3 +350,44 @@ def test_staged_collection_pairs_mates_under_each_sample():
     assert collection_elements(ids, {"type": "list", "elements": [{"name": "b", "file": "b.gff3"}]}) == [
         {"name": "b", "src": "hda", "id": "d3"}
     ]
+
+
+def test_element_tags_may_be_set_on_the_staged_collection():
+    """Tagging the elements in place is as valid as a tagged copy, so the staged collection counts."""
+    from lib.grading.galaxy import _collection
+
+    def hdca(cid, tags):
+        return {
+            "id": cid,
+            "name": cid,
+            "history_content_type": "dataset_collection",
+            "collection_type": "list",
+            "elements": [{"element_identifier": i, "object": {"tags": t}} for i, t in tags.items()],
+        }
+
+    class FakeGalaxy:
+        def __init__(self, collections):
+            self.collections = {c["id"]: c for c in collections}
+
+        def call(self, path):
+            if path.startswith("api/histories/"):
+                return list(self.collections.values())
+            return self.collections[path.split("/")[2].split("?")[0]]
+
+    class Run:
+        def __init__(self, staged):
+            self.staged = {"galaxy": FakeGalaxy([staged]), "history_id": "h1", "collection_id": "staged"}
+
+    wanted = {"ctrl_1": "group:ctrl", "treat_1": "group:treat"}
+
+    def grade(spec, tags):
+        failures = []
+        _collection(spec, Run(hdca("staged", tags)), failures, set())
+        return [f.assertion for f in failures]
+
+    spec = {"elementTags": wanted, "includeStaged": True}
+    assert grade(spec, {"ctrl_1": ["group:ctrl"], "treat_1": ["group:treat"]}) == []
+    assert grade(spec, {"ctrl_1": ["group:ctrl"], "treat_1": []}) == ["collection.elementTags"]
+    assert grade({"elementTags": wanted}, {"ctrl_1": ["group:ctrl"], "treat_1": ["group:treat"]}) == [
+        "collection.exists"
+    ]

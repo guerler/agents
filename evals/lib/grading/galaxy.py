@@ -447,7 +447,7 @@ def _collection(spec, run, failures, exercised):
         for c in contents
         if c.get("history_content_type") == "dataset_collection"
         and not c.get("deleted")
-        and c.get("id") != staged.get("collection_id")
+        and (spec.get("includeStaged") or c.get("id") != staged.get("collection_id"))
     ]
     if not built:
         failures.append(Failure("collection.exists", "no dataset collection in the staged history", "behavior"))
@@ -491,6 +491,20 @@ def _collection(spec, run, failures, exercised):
                     f"{direct} not produced by a Galaxy tool, so the history records no step that made them",
                     "behavior",
                 )
+            )
+
+    wanted_tags = spec.get("elementTags")
+    if wanted_tags:
+
+        def tagged(d):
+            tags = {
+                e.get("element_identifier"): (e.get("object") or {}).get("tags") or [] for e in d.get("elements") or []
+            }
+            return all(tag in tags.get(identifier, []) for identifier, tag in wanted_tags.items())
+
+        if not any(tagged(d) for d in details):
+            failures.append(
+                Failure("collection.elementTags", f"no collection's elements carry the tags {wanted_tags}", "behavior")
             )
 
     wanted_elements = spec.get("elements")
