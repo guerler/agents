@@ -73,6 +73,7 @@ ASSERTION_KEYS = {
         "intact",
         "landedPdfs",
         "descendsFrom",
+        "untouched",
     },
     "page": {"chart"},
 }

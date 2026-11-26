@@ -310,6 +310,9 @@ def _history(spec, run, failures, exercised):
     if spec.get("landedPdfs"):
         _landed_pdfs(spec["landedPdfs"], staged, failures)
 
+    if spec.get("untouched"):
+        _untouched(spec["untouched"], staged, failures)
+
     if spec.get("lineageIntact"):
         _lineage_intact(run, failures)
 
@@ -324,6 +327,26 @@ def _history(spec, run, failures, exercised):
         for flag in ("deleted", "purged"):
             if state.get(flag):
                 failures.append(Failure("history.intact", f"the staged history is {flag}", "behavior"))
+
+
+def _untouched(wanted, staged, failures):
+    """Staged datasets the run had no business changing: still visible, not deleted, same datatype.
+
+    Galaxy's collection builders leave a dataset they did not collect where it was; so must an
+    agent that builds a collection beside a reference, an annotation or earlier results.
+    """
+    contents = staged["galaxy"].call(f"api/histories/{staged['history_id']}/contents") or []
+    by_id = {c.get("id"): c for c in contents}
+    for name, datatype in wanted.items():
+        item = by_id.get((staged.get("dataset_ids") or {}).get(name))
+        if not item:
+            failures.append(Failure("history.untouched", f"{name} is not in the staged history", "behavior"))
+        elif item.get("deleted") or not item.get("visible", True):
+            failures.append(Failure("history.untouched", f"{name} was hidden or deleted", "behavior"))
+        elif item.get("extension") != datatype:
+            failures.append(
+                Failure("history.untouched", f"{name} is {item.get('extension')!r}, wanted {datatype!r}", "behavior")
+            )
 
 
 def _landed_pdfs(spec, staged, failures):
@@ -429,7 +452,7 @@ def _names_dataset(text, dataset):
 def _collection(spec, run, failures, exercised):
     """The collection the agent built, as Galaxy holds it.
 
-    `organize_datasets` reports what it did; only the history says whether a tagged
+    `build_collection` reports what it did; only the history says whether a tagged
     collection of the right structure, element count and datatype actually landed.
     """
     if not spec:

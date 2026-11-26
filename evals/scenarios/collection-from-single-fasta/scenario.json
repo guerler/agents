@@ -16,7 +16,7 @@
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },
-    "toolCalls": { "mustInclude": [{ "name": "organize_datasets" }] },
+    "toolCalls": { "mustInclude": [{ "name": "build_collection" }] },
     "collection": {
       "type": "list",
       "elements": 3,

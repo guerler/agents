@@ -1,0 +1,40 @@
+{
+  "name": "collections: reads beside a reference, an annotation and earlier results become a list:paired, and the rest stays as it was",
+  "description": "Real histories are not just the files to collect. Four paired reads for two samples and an orphan mate sit beside a reference assembly, a gene annotation and an earlier BED result. The agent must build a list:paired of the two samples and leave everything else visible with its datatype, as Galaxy's collection builders leave a dataset they did not collect. This is where an inferred structure and a broad default scope go wrong: unrelated files outvoting the pairs, or being swept into a collection and hidden.",
+  "dataset": {
+    "history": "mixed history $run",
+    "files": [
+      { "file": "SRR000001_1.fastq.gz", "datatype": "fastqsanger.gz" },
+      { "file": "SRR000001_2.fastq.gz", "datatype": "fastqsanger.gz" },
+      { "file": "SRR000002_1.fastq.gz", "datatype": "fastqsanger.gz" },
+      { "file": "SRR000002_2.fastq.gz", "datatype": "fastqsanger.gz" },
+      { "file": "SRR000005_1.fastq.gz", "datatype": "fastqsanger.gz" },
+      { "file": "contigs_A.fasta.gz", "name": "reference.fasta.gz", "datatype": "fasta.gz" },
+      { "file": "features.gff3", "name": "genes.gff3", "datatype": "gff3" },
+      { "file": "tracks.bed", "name": "peaks.bed", "datatype": "bed" }
+    ]
+  },
+  "inputs": [
+    "My current history has paired-end reads for two samples, along with a reference, a gene annotation and some earlier results. Put the paired reads into a paired collection called \"reads\" and leave everything else as it is."
+  ],
+  "timeoutMs": 300000,
+  "assertions": {
+    "events": { "mustInclude": ["turn_start"] },
+    "messages": { "repliesInChat": true },
+    "collection": {
+      "type": "list:paired",
+      "count": 1,
+      "elements": 2,
+      "identifiers": [["SRR000001", "SRR000002"]]
+    },
+    "history": {
+      "untouched": {
+        "SRR000005_1.fastq.gz": "fastqsanger.gz",
+        "reference.fasta.gz": "fasta.gz",
+        "genes.gff3": "gff3",
+        "peaks.bed": "bed"
+      }
+    },
+    "budget": { "maxSteps": 20, "maxRepeatedCall": 3 }
+  }
+}

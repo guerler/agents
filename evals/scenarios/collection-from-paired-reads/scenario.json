@@ -1,6 +1,6 @@
 {
   "name": "collections: loose paired reads become a tagged list:paired collection in Galaxy",
-  "description": "The end-to-end counterpart to plan-collections-tags-datatype, which forbids execution and therefore grades prose about this feature rather than the feature. Four gzipped reads for two samples land loose and typed generically, as they do from an archive. The agent must group them into a list:paired collection, tag it, and correct the datatype to the Sanger-quality compressed one. Graded entirely against what Galaxy holds afterwards: organize_datasets reports what it did, and a report is not evidence. The datatype assertion is the one that catches fastqsanger where fastqsanger.gz is needed, which the tool refuses and which an agent has written in a plan.",
+  "description": "The end-to-end counterpart to plan-collections-tags-datatype, which forbids execution and therefore grades prose about this feature rather than the feature. Four gzipped reads for two samples land loose and typed generically, as they do from an archive. The agent must group them into a list:paired collection, tag it, and correct the datatype to the Sanger-quality compressed one. Graded entirely against what Galaxy holds afterwards: build_collection reports what it did, and a report is not evidence. The datatype assertion is the one that catches fastqsanger where fastqsanger.gz is needed, which the tool refuses and which an agent has written in a plan.",
   "dataset": {
     "history": "paired reads $run",
     "files": [
@@ -17,7 +17,7 @@
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },
-    "toolCalls": { "mustInclude": [{ "name": "organize_datasets" }] },
+    "toolCalls": { "mustInclude": [{ "name": "build_collection" }] },
     "collection": {
       "type": "list:paired",
       "elements": 2,

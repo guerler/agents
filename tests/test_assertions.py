@@ -391,3 +391,26 @@ def test_element_tags_may_be_set_on_the_staged_collection():
     assert grade({"elementTags": wanted}, {"ctrl_1": ["group:ctrl"], "treat_1": ["group:treat"]}) == [
         "collection.exists"
     ]
+
+
+def test_untouched_datasets_stay_visible_with_their_datatype():
+    """A dataset the run left alone keeps its visibility and datatype; hiding or retyping it fails."""
+    from lib.grading.galaxy import _untouched
+
+    def staged(**ref):
+        item = {"id": "r1", "visible": True, "deleted": False, "extension": "fasta", **ref}
+
+        class FakeGalaxy:
+            def call(self, path):
+                return [item]
+
+        return {"galaxy": FakeGalaxy(), "history_id": "h1", "dataset_ids": {"reference.fasta": "r1"}}
+
+    def grade(**ref):
+        failures = []
+        _untouched({"reference.fasta": "fasta"}, staged(**ref), failures)
+        return [f.detail for f in failures]
+
+    assert grade() == []
+    assert grade(visible=False) == ["reference.fasta was hidden or deleted"]
+    assert grade(extension="fastqsanger") == ["reference.fasta is 'fastqsanger', wanted 'fasta'"]

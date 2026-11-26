@@ -1,6 +1,6 @@
 {
   "name": "collections: reads unpacked from an archive keep their folder in the name, the collection must not",
-  "description": "An unzip tool names each dataset by its path inside the archive, so four gzipped reads land as run1/SRR000001_1.fastq.gz and so on. The paired collection's element identifiers are the samples, SRR000001 and SRR000002, without the folder. organize_datasets takes the basename first for this reason (the archive-path defect in olit/collections-request.md). Graded on the collection Galaxy holds.",
+  "description": "An unzip tool names each dataset by its path inside the archive, so four gzipped reads land as run1/SRR000001_1.fastq.gz and so on. The paired collection's element identifiers are the samples, SRR000001 and SRR000002, without the folder. build_collection takes the basename first for this reason (the archive-path defect in olit/collections-request.md). Graded on the collection Galaxy holds.",
   "dataset": {
     "history": "archive paths $run",
     "files": [
