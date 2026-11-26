@@ -14,6 +14,7 @@ from .entries import digest
 from .plan import parse_latest_plan
 from .record import recording
 from .session import Session, TurnFailed
+from .side_effects import compare, snapshot
 from .staging import GalaxyClock, _empty_history, _stage, _timed, galaxy_wait_timeout
 
 # The entries a run appends; anything settle hands back holding one is a follow-up run.
@@ -39,6 +40,7 @@ class RunResult:
         stalled=False,
         waited=0.0,
         document=None,
+        side_effects=None,
     ):
         # The chat-shaped transcript grading reads.
         self.messages = messages
@@ -64,6 +66,8 @@ class RunResult:
         self.stalled = stalled
         # Seconds spent waiting on Galaxy: staging plus settles. Recorded, never graded.
         self.waited = waited
+        # What the run changed in the history it was given, before any grading of it.
+        self.side_effects = side_effects
         # The provider's HTTP status, preserved so grading never sniffs the message.
         self.status_code = status_code
 
@@ -81,8 +85,8 @@ class RunResult:
         return "\n\n".join(parts)
 
 
-async def _run(scenario, model, base_url=None):
-    config = build_config(model, scenario.get("capabilities"), base_url)
+async def _run(scenario, model, base_url=None, withhold=None):
+    config = build_config(model, scenario.get("capabilities"), base_url, withhold)
     if scenario.get("systemPrompt"):
         config["instructions"] = scenario["systemPrompt"]
     # Staging is the environment's work, so it is timed by the environment's clock and sits
@@ -96,13 +100,16 @@ async def _run(scenario, model, base_url=None):
     config["history_id"] = staged["history_id"] if staged else _empty_history(config, scenario)
     session = Session(config)
     budget = scenario_timeout(scenario)
+    before = _snapshot(staged)
     try:
         await session.init()
-        return await _within_agent_budget(_drive(scenario, session, config, staged, waited), budget, waited)
+        result = await _within_agent_budget(_drive(scenario, session, config, staged, waited), budget, waited)
     except asyncio.TimeoutError:
-        return RunResult([], [], [], error=f"the agent ran past its {budget:.0f}s budget", waited=waited.total)
+        result = RunResult([], [], [], error=f"the agent ran past its {budget:.0f}s budget", waited=waited.total)
     finally:
         await session.close()
+    result.side_effects = compare(before, _snapshot(staged))
+    return result
 
 
 async def _drive(scenario, session, config, staged, waited=None):
@@ -223,20 +230,28 @@ async def _within_agent_budget(coro, budget, waited):
     return task.result()
 
 
-def _guarded(scenario, model, base_url):
+def _snapshot(staged):
+    """The staged history as it stands, or None when Galaxy cannot say; a side-effect report is never a run outcome."""
     try:
-        return asyncio.run(_run(scenario, model, base_url))
+        return snapshot(staged)
+    except Exception:
+        return None
+
+
+def _guarded(scenario, model, base_url, withhold=None):
+    try:
+        return asyncio.run(_run(scenario, model, base_url, withhold))
     except Exception as e:  # a provider error is a run outcome, not a harness crash
         return RunResult([], [], [], error=f"{type(e).__name__}: {e}", status_code=getattr(e, "status_code", None))
 
 
-def run_scenario(scenario, model, capture=None):
-    """`capture` names a file to record this run's completions into."""
+def run_scenario(scenario, model, capture=None, withhold=None):
+    """`capture` names a file to record this run's completions into; `withhold` names tools left out."""
     target = upstream(model) if capture else None
     if not target:
-        return _guarded(scenario, model, None)
+        return _guarded(scenario, model, None, withhold)
     with recording(target, capture) as base_url:
-        return _guarded(scenario, model, base_url)
+        return _guarded(scenario, model, base_url, withhold)
 
 
 async def _settle(session, events, timeout, waited, absorb):

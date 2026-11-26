@@ -21,7 +21,9 @@ from lib import loom_scenarios, watch  # noqa: E402
 from lib.config import required_env  # noqa: E402
 from lib.grading import DIMENSIONS, evaluate, validate_scenarios  # noqa: E402
 from lib.harness import load_scenarios, missing_tools, opted_out, run_scenario  # noqa: E402
+from lib.manifest import manifest, manifest_path  # noqa: E402
 from lib.publish import label_record_page, save_session  # noqa: E402
+from lib.record import usage  # noqa: E402
 from lib.staging import remove_imported_workflows  # noqa: E402
 from lib.tooltests import Galaxy  # noqa: E402
 
@@ -89,6 +91,20 @@ def parse_args():
         "--loom",
         default=str(subject.loom_scenarios()),
         help="loom's scenario directory, read as loom writes it",
+    )
+    ap.add_argument(
+        "--without",
+        action="append",
+        default=[],
+        metavar="TOOL",
+        help="also run every trial with this tool withheld, interleaved with the run that has it; repeatable, "
+        "and every named tool is withheld together. Each result names its arm",
+    )
+    ap.add_argument(
+        "--for",
+        dest="for_tool",
+        metavar="TOOL",
+        help="only the scenarios that declare TOOL among their targets or controls",
     )
     ap.add_argument("--only-local", action="store_true", help="skip loom's scenarios")
     ap.add_argument(
@@ -158,6 +174,9 @@ def select(args):
                 print(f"  skip {name}: {why}")
         scenarios = loom + scenarios
 
+    if args.for_tool:
+        scenarios = [s for s in scenarios if args.for_tool in (s.get("targets") or []) + (s.get("control") or [])]
+
     if args.exclude:
         kept = [s for s in scenarios if not any(term in s["id"] for term in args.exclude)]
         for dropped in sorted({s["id"] for s in scenarios} - {s["id"] for s in kept}):
@@ -190,13 +209,26 @@ def select(args):
         print("\nNo scenarios matched.")
         return 1
 
+    if args.without:
+        described = subject.describe()
+        if "withhold_tools" not in (described.get("session_config") or {}):
+            print("\nThis agent cannot withhold tools: its description publishes no withhold_tools.")
+            return 2
+        unknown = [t for t in args.without if t not in (described.get("tools") or {})]
+        if unknown:
+            print(f"\nThe agent has no tool named {', '.join(unknown)}.")
+            return 2
+        if args.watch:
+            print("\n--without drives the headless session; it cannot be combined with --watch.")
+            return 2
+
     problems = validate_scenarios(scenarios)
     if problems:
         print("\nScenarios this grader cannot read:")
         for problem in problems:
             print(f"  {problem}")
         return 1
-    return scenarios, models
+    return scenarios, models, galaxy
 
 
 def grade(scenario, run):
@@ -210,12 +242,21 @@ def grade(scenario, run):
         return [], set()
 
 
-def to_row(model, scenario, run_index, run, failures, exercised):
+def to_row(model, scenario, run_index, run, failures, exercised, arm, wall, spent):
     return {
         "model": model["id"],
         "scenario": scenario["id"],
         "source": scenario.get("source", "agents"),
         "run": run_index + 1,
+        # Which side of a with-and-without comparison this run was on, and what it withheld.
+        "arm": arm["name"],
+        "withheld": arm["withhold"],
+        # The whole run from staging to its last turn; staging is the same on both arms.
+        "wallSeconds": round(wall, 1),
+        # Tokens and cost as the provider stated them in the recorded exchanges.
+        "usage": spent,
+        # What changed in the staged history, reported apart from whether it was asked for.
+        "sideEffects": run.side_effects,
         "error": run.error,
         # Galaxy never finished the work; nothing about the agent was measured.
         "stalled": run.stalled,
@@ -264,9 +305,14 @@ def main():
     selected = select(args)
     if isinstance(selected, int):
         return selected
-    scenarios, models = selected
+    scenarios, models, galaxy = selected
 
     started = time.strftime("%Y-%m-%dT%H-%M-%S")
+    arms = (
+        [{"name": "with", "withhold": []}, {"name": "without", "withhold": sorted(args.without)}]
+        if args.without
+        else [{"name": "all", "withhold": []}]
+    )
     # A watched run's completions go through the browser, past the recorder.
     records = None if args.no_records or args.watch else os.path.join(args.records, started)
     if args.video == "":
@@ -275,44 +321,62 @@ def main():
         os.makedirs(records, exist_ok=True)
         print(f"  records: {records}")
 
-    def capture(scenario, model, run_index):
+    def capture(scenario, model, run_index, arm):
         if not records:
             return None
-        return os.path.join(records, f"{scenario['id']}--{model['id']}--run{run_index + 1}.jsonl.gz")
+        side = f"--{arm['name']}" if args.without else ""
+        return os.path.join(records, f"{scenario['id']}--{model['id']}{side}--run{run_index + 1}.jsonl.gz")
 
     repeat = max(1, args.repeat) if args.repeat else 0
     times = f" x {repeat} run(s)" if repeat > 1 else " x per-scenario runs"
     print(f"\n{len(scenarios)} scenario(s) x {len(models)} model(s){times}\n")
+    # Written first as well, so a run that is stopped still says what it ran under.
+    if args.json_out:
+        write_manifest(args, galaxy, models, scenarios, arms, started, finished=False)
     results = []
     for model in models:
         for template in scenarios:
             runs = repeat or max(1, int(template.get("runs") or 1))
+            # Both arms of a trial run back to back, so provider drift falls on both alike.
             for run_index in range(runs):
-                if args.delay and results:
-                    time.sleep(args.delay)
-                scenario = _resolve_run_tokens(template)
-                if args.watch:
-                    run = watch.run_watched(scenario, model, args.video, args.slow_mo, args.hold, args.watch)
-                else:
-                    run = run_scenario(scenario, model, capture=capture(scenario, model, run_index))
-                failures, exercised = grade(scenario, run)
-                # After grading, which reads what the run staged.
-                remove_imported_workflows(getattr(run, "staged", None))
-                row = to_row(model, scenario, run_index, run, failures, exercised)
-                report(args, model, scenario, run, row, failures, f" #{run_index + 1}" if runs > 1 else "")
-                results.append(row)
-                # A killed suite otherwise loses every result; the file is rewritten each time.
-                if args.json_out:
-                    with open(args.json_out, "w") as f:
-                        json.dump(results, f, indent=2)
+                for arm in arms:
+                    if args.delay and results:
+                        time.sleep(args.delay)
+                    scenario = _resolve_run_tokens(template)
+                    path = capture(scenario, model, run_index, arm)
+                    began = time.monotonic()
+                    if args.watch:
+                        run = watch.run_watched(scenario, model, args.video, args.slow_mo, args.hold, args.watch)
+                    else:
+                        run = run_scenario(scenario, model, capture=path, withhold=arm["withhold"])
+                    wall = time.monotonic() - began
+                    failures, exercised = grade(scenario, run)
+                    # After grading, which reads what the run staged.
+                    remove_imported_workflows(getattr(run, "staged", None))
+                    row = to_row(model, scenario, run_index, run, failures, exercised, arm, wall, usage(path))
+                    tag = (f" #{run_index + 1}" if runs > 1 else "") + (f" {arm['name']}" if args.without else "")
+                    report(args, model, scenario, run, row, failures, tag)
+                    results.append(row)
+                    # A killed suite otherwise loses every result; the file is rewritten each time.
+                    if args.json_out:
+                        with open(args.json_out, "w") as f:
+                            json.dump(results, f, indent=2)
 
     print_leaderboard(results, models)
     print_instability(results)
     if args.json_out:
         print(f"\nraw results -> {args.json_out}")
+        print(f"manifest    -> {write_manifest(args, galaxy, models, scenarios, arms, started, finished=True)}")
     # Neither a quota limit nor a Galaxy stall is a failure of the agent, so neither fails the suite.
     graded = [r for r in results if not is_quota(r) and not r.get("stalled")]
     return 0 if all(not r["failures"] and not r["error"] for r in graded) else 1
+
+
+def write_manifest(args, galaxy, models, scenarios, arms, started, finished):
+    written = manifest_path(args.json_out)
+    with open(written, "w") as f:
+        json.dump(manifest(sys.argv, galaxy, models, scenarios, arms, started, finished), f, indent=2)
+    return written
 
 
 def outcome(row):
@@ -328,7 +392,7 @@ def print_instability(results):
     """Name the tuples whose runs disagreed. A flaky cell is a finding, not noise."""
     grouped = {}
     for row in results:
-        grouped.setdefault((row["model"], row["scenario"]), []).append(outcome(row))
+        grouped.setdefault((row["model"], row["scenario"] + _arm_label(row)), []).append(outcome(row))
     unstable = {k: v for k, v in grouped.items() if len(v) > 1 and len(set(v)) > 1}
     if not unstable:
         return
@@ -339,6 +403,10 @@ def print_instability(results):
     print("A cell that is not unanimous cannot be reported as a single verdict.")
 
 
+def _arm_label(row):
+    return f" ({row['arm']})" if row.get("arm") not in (None, "all") else ""
+
+
 def print_leaderboard(results, models):
     """Per-model score on each dimension: exercised runs that produced no failure."""
     seen = {d for r in results for d in r["dimensions"]} | {f["dimension"] for r in results for f in r["failures"]}
@@ -346,8 +414,12 @@ def print_leaderboard(results, models):
     width = max(len(d) for d in dimensions) + 1
     print(f"\n{'model':24s} " + " ".join(f"{d:>{width}s}" for d in dimensions) + f" {'errors':>7s} {'quota':>6s}")
     print("-" * (24 + (width + 1) * len(dimensions) + 15))
-    for model in models:
-        rows = [r for r in results if r["model"] == model["id"]]
+    lanes = [(m["id"], arm) for m in models for arm in dict.fromkeys(r.get("arm") for r in results)]
+    for lane, arm in lanes:
+        rows = [r for r in results if r["model"] == lane and r.get("arm") == arm]
+        if not rows:
+            continue
+        label = lane + (f" ({arm})" if arm not in (None, "all") else "")
         cells = []
         for dim in dimensions:
             exercised = [r for r in rows if dim in r["dimensions"] or any(f["dimension"] == dim for f in r["failures"])]
@@ -358,7 +430,7 @@ def print_leaderboard(results, models):
             cells.append(f"{f'{len(clean)}/{len(exercised)}':>{width}s}")
         errors = sum(1 for r in rows if r["error"] and not is_quota(r))
         quota = sum(1 for r in rows if is_quota(r))
-        print(f"{model['id']:24s} " + " ".join(cells) + f" {errors:>7d} {quota:>6d}")
+        print(f"{label:24s} " + " ".join(cells) + f" {errors:>7d} {quota:>6d}")
     print("\nA dash means no scenario exercised that dimension for this model.")
     if any(is_quota(r) for r in results):
         print("Quota-limited runs were not graded. A daily quota needs a paid key, not a longer delay.")

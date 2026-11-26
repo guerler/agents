@@ -144,6 +144,37 @@ pass/fail, because "did it behave well" is not one question:
   produce a question rather than a fabricated plan, and does the approval gate hold
   (`doesNotExecute`).
 
+## Evaluating one tool
+
+`--without TOOL` runs every trial twice, back to back: once as usual and once with the tool
+withheld through the agent's `withhold_tools` session setting, which the agent must publish in its
+description. Each result names its `arm`, and records `wallSeconds`, `usage` (tokens and the cost
+the provider reported, from the recorded exchanges) and `sideEffects` (what changed in the staged
+history, compared before and after, without judging it). With `--json FILE`, a manifest beside it
+(`FILE.manifest.json`) holds the agent and harness commits, the Galaxy version, the models, the
+command, the configuration and a digest of every scenario.
+
+A scenario says what it is for such an evaluation, and `--for TOOL` runs the scenarios that name the
+tool in either list:
+
+- `targets`: tools whose domain it is in;
+- `control`: tools it should not need;
+- `reachableWithout`: per outcome check, named as the grader reports it (`*` for every other one),
+  how the effect is reached without the tool, as `{"via": ..., "why": ...}`: `agent` (the agent's
+  other tools), `galaxy` (Galaxy's UI or API, but no tool the agent has), `none` (not in Galaxy),
+  or `unknown`.
+
+```bash
+python3 evals/run.py --for build_collection --without build_collection --repeat 3 --model galaxy-ai --json results.json
+python3 evals/report.py results.json -o report.html
+```
+
+`report.py` reads only results and manifests and writes one self-contained page: outcome success
+per model and arm with Wilson intervals, pass^k, steps, wall time, tokens and cost per success,
+the target scenarios split by how each effect is reachable without the tool, tool use on control
+scenarios, side effects and the excluded runs. Process (`toolCalls`, `events`) and efficiency
+(`budget`) checks never decide success there.
+
 ## One deliberate difference from loom
 
 loom reads plans from "wherever they land" — notebook or chat — because its matrix

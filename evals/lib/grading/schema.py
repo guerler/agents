@@ -23,7 +23,15 @@ SCENARIO_KEYS = {
     "systemPrompt",
     "id",
     "source",
+    "targets",
+    "control",
+    "reachableWithout",
 }
+
+# How an effect can be reached without the tool under evaluation: through the agent's other
+# tools, only through Galaxy outside the agent's interface (its UI or an API the agent lacks),
+# not in Galaxy at all, or not established.
+ROUTES = {"agent", "galaxy", "none", "unknown"}
 
 
 # The families an anyOf branch may assert; the rest grade the turn as a whole.
@@ -127,6 +135,7 @@ def validate_scenarios(scenarios):
         problems += [
             f"{scenario.get('id')}: no checker reads {name}" for name in unsupported(scenario.get("assertions"))
         ]
+        problems += _evaluation_problems(scenario)
         spec = ((scenario.get("assertions") or {}).get("chatText")) or {}
         for assertion in ("mustMatch", "mustNotMatch"):
             for pattern in spec.get(assertion) or []:
@@ -134,4 +143,19 @@ def validate_scenarios(scenarios):
                     re.compile(pattern)
                 except re.error as exc:
                     problems.append(f"{scenario.get('id')}: {assertion} /{pattern}/: {exc}")
+    return problems
+
+
+def _evaluation_problems(scenario):
+    """What is wrong with a scenario's tool-evaluation fields."""
+    name = scenario.get("id")
+    problems = []
+    for key in ("targets", "control"):
+        value = scenario.get(key, [])
+        if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+            problems.append(f"{name}: {key} must be a list of tool names")
+    for effect, route in (scenario.get("reachableWithout") or {}).items():
+        via = route.get("via") if isinstance(route, dict) else None
+        if via not in ROUTES:
+            problems.append(f"{name}: reachableWithout {effect} needs via, one of {sorted(ROUTES)}")
     return problems

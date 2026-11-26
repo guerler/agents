@@ -28,7 +28,7 @@ def upstream(model):
     return declared_base(model) or (provider["base_url"] if provider else None)
 
 
-def build_config(model, capabilities=None, base_url=None):
+def build_config(model, capabilities=None, base_url=None, withhold=None):
     """Resolve through the agent's provider registry, so evals and the app agree."""
     # Shared scenarios carry loom's restricted surface; others get the full one.
     capabilities = capabilities or os.environ.get("OLIT_EVAL_CAPABILITIES", "llm,local,read,write")
@@ -40,6 +40,8 @@ def build_config(model, capabilities=None, base_url=None):
         # Write is granted, or "did not execute" would assert about an unadvertised tool.
         "capabilities": capabilities.split(","),
     }
+    if withhold:
+        config["withhold_tools"] = list(withhold)
     if base:
         config["ai_base_url"] = base.rstrip("/")
     max_steps = os.environ.get("OLIT_EVAL_MAX_STEPS", "").strip()

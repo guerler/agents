@@ -130,3 +130,46 @@ def recording(upstream, path):
             # Before the sink goes out of scope: a handler may still be waiting on the
             # provider, and its reply has nowhere to go.
             server.close()
+
+
+def usage(path):
+    """Tokens and cost a recorded run spent, summed over its exchanges; None without a record.
+
+    A streamed reply states its usage in a final chunk, a plain one in its body. Cost is the
+    provider's own figure where it reports one (OpenRouter does), never a price looked up here.
+    """
+    if not path:
+        return None
+    totals = {"exchanges": 0, "failedExchanges": 0, "promptTokens": 0, "completionTokens": 0, "cost": None}
+    try:
+        with gzip.open(path, "rt", encoding="utf-8") as source:
+            lines = list(source)
+    except (OSError, EOFError):
+        return None
+    for line in lines:
+        exchange = json.loads(line)
+        totals["exchanges"] += 1
+        if exchange.get("status", 200) >= 400:
+            totals["failedExchanges"] += 1
+        stated = _stated_usage(exchange.get("response"))
+        if not stated:
+            continue
+        totals["promptTokens"] += stated.get("prompt_tokens") or 0
+        totals["completionTokens"] += stated.get("completion_tokens") or 0
+        if isinstance(stated.get("cost"), (int, float)):
+            totals["cost"] = (totals["cost"] or 0) + stated["cost"]
+    return totals
+
+
+def _stated_usage(response):
+    """The last usage a reply states, from a JSON body or a server-sent event stream."""
+    if isinstance(response, dict):
+        return response.get("usage")
+    found = None
+    for line in (response or "").splitlines():
+        if line.startswith("data: {"):
+            try:
+                found = json.loads(line[6:]).get("usage") or found
+            except ValueError:
+                continue
+    return found
