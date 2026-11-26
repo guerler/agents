@@ -30,6 +30,13 @@
     "I unpacked a zip of paired-end reads into my current history. Group them into a paired collection called \"reads\". Go ahead and do it."
   ],
   "timeoutMs": 600000,
+  "targets": ["build_collection"],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "Galaxy's collection tools build lists and list:paired through run_tool (__BUILD_LIST__, __ZIP_COLLECTION__, __APPLY_RULES__)."
+    }
+  },
   "assertions": {
     "messages": {
       "repliesInChat": true

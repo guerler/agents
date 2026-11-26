@@ -14,6 +14,17 @@
     "My current history has four gzipped FASTA files, paired, two samples. Group them into a paired collection called \"contigs\", tag it \"assembly\", and keep the datatype right for gzipped FASTA. Go ahead and do it."
   ],
   "timeoutMs": 300000,
+  "targets": ["build_collection"],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "Galaxy's collection tools build lists and list:paired through run_tool (__BUILD_LIST__, __ZIP_COLLECTION__, __APPLY_RULES__)."
+    },
+    "collection.tagged": {
+      "via": "galaxy",
+      "why": "Galaxy tags a collection from the history panel or PUT /api/histories/{history_id}/contents/dataset_collections/{id}; no agent tool reaches either, and no Galaxy tool tags a collection (__TAG_FROM_FILE__ tags elements)."
+    }
+  },
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },

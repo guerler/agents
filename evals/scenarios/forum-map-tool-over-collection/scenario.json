@@ -48,6 +48,7 @@
     "Count the lines, words and characters of every table in my collection \"counts\", and keep the results together as one collection."
   ],
   "timeoutMs": 600000,
+  "control": ["build_collection"],
   "assertions": {
     "messages": {
       "repliesInChat": true

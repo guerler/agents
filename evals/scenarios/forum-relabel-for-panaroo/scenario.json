@@ -40,6 +40,7 @@
     "I want to run Panaroo on the collection \"annotations\" in my current history, but it needs every element name to end in .gff. Please rename the elements so genome_a becomes genome_a.gff and so on."
   ],
   "timeoutMs": 600000,
+  "control": ["build_collection"],
   "assertions": {
     "messages": {
       "repliesInChat": true

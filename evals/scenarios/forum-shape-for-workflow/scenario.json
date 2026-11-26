@@ -31,6 +31,13 @@
     "I uploaded paired-end reads for two samples to my current history. Run my saved workflow \"Split paired reads into forward and reverse\" on them, and tell me when it has finished."
   ],
   "timeoutMs": 900000,
+  "targets": ["build_collection"],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "Galaxy's collection tools build lists and list:paired through run_tool (__BUILD_LIST__, __ZIP_COLLECTION__, __APPLY_RULES__)."
+    }
+  },
   "assertions": {
     "messages": {
       "repliesInChat": true

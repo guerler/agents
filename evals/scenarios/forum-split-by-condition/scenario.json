@@ -48,6 +48,7 @@
     "My collection \"counts\" has count tables for control and treated samples. For DESeq2 I need the control samples and the treated samples as two separate collections. Please split it by condition."
   ],
   "timeoutMs": 600000,
+  "control": ["build_collection"],
   "assertions": {
     "messages": {
       "repliesInChat": true

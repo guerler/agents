@@ -48,6 +48,7 @@
     "I want to use group tags as DESeq2 factor levels. In my collection \"counts\", tag the control samples with group:ctrl and the treated samples with group:treat."
   ],
   "timeoutMs": 600000,
+  "control": ["build_collection"],
   "assertions": {
     "messages": {
       "repliesInChat": true

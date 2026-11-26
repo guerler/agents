@@ -14,6 +14,21 @@
     "My current history has four gzipped FASTQ files, paired-end, two samples. Group them into a paired collection called \"reads\", tag it \"sra\", and set the datatype to the Sanger-quality one. Go ahead and do it."
   ],
   "timeoutMs": 300000,
+  "targets": ["build_collection"],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "Galaxy's collection tools build lists and list:paired through run_tool (__BUILD_LIST__, __ZIP_COLLECTION__, __APPLY_RULES__)."
+    },
+    "collection.tagged": {
+      "via": "galaxy",
+      "why": "Galaxy tags a collection from the history panel or PUT /api/histories/{history_id}/contents/dataset_collections/{id}; no agent tool reaches either, and no Galaxy tool tags a collection (__TAG_FROM_FILE__ tags elements)."
+    },
+    "collection.elementDatatype": {
+      "via": "galaxy",
+      "why": "Galaxy changes element datatypes from the collection's edit view or PUT /api/histories/{history_id}/contents/bulk (change_datatype); no agent tool reaches either, and the Galaxy evaluated has no tool converting fastq.gz to fastqsanger.gz."
+    }
+  },
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },

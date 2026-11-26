@@ -42,6 +42,7 @@
     "The collection \"reads\" in my current history is paired-end. The next tool I use needs the forward reads and the reverse reads as two separate collections. Please make those two collections."
   ],
   "timeoutMs": 600000,
+  "control": ["build_collection"],
   "assertions": {
     "messages": {
       "repliesInChat": true
