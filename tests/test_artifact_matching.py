@@ -135,3 +135,9 @@ def test_settings_alternatives_accept_either_genome_source_but_each_in_full():
     assert grade(spec, [igv({"origin": "builtin", "genome": {"id": "hg18", "row": row}})]) == []
     assert grade(spec, [igv({"origin": "igv", "genome": {"id": "hg18", "fastaURL": "https://x/hg18.fasta"}})]) == []
     assert grade(spec, [igv({"origin": "builtin", "genome": {"id": "hg18"}})]), "an unresolved id passed"
+
+
+def test_a_mark_inside_a_layer_counts():
+    layered = {"kind": "vega-lite", "title": "Means", "spec": {"layer": [{"mark": "bar"}, {"mark": {"type": "rule"}}]}}
+    assert grade({"mustInclude": [{"kind": "vega-lite", "mark": "bar"}]}, [layered]) == []
+    assert grade({"mustInclude": [{"kind": "vega-lite", "mark": "rule"}]}, [layered]) == []

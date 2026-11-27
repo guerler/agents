@@ -20,10 +20,19 @@ def _encoded_fields(spec):
     return fields
 
 
-def _mark_of(artifact):
-    """Shells write mark as a bare string or {"type": ...}; both name the same chart."""
-    raw = (artifact.get("spec") or {}).get("mark")
-    return raw.get("type") if isinstance(raw, dict) else raw
+def _marks_of(artifact):
+    """Every mark the chart draws, including inside a layered or concatenated spec.
+
+    Shells write mark as a bare string or {"type": ...}; both name the same chart.
+    """
+    spec = artifact.get("spec") or {}
+    marks = set()
+    for block in [spec, *(spec.get("layer") or []), *(spec.get("concat") or [])]:
+        raw = block.get("mark") if isinstance(block, dict) else None
+        raw = raw.get("type") if isinstance(raw, dict) else raw
+        if raw:
+            marks.add(raw)
+    return marks
 
 
 def _setting(config, path):
@@ -66,7 +75,7 @@ def _inventory(made):
     def entry(a):
         if a.get("kind") == "visualization":
             return {"kind": "visualization", "plugin": a.get("visualization"), "settings": a.get("settings")}
-        return {"kind": a.get("kind"), "mark": _mark_of(a), "title": a.get("title")}
+        return {"kind": a.get("kind"), "mark": sorted(_marks_of(a)) or None, "title": a.get("title")}
 
     return [entry(a) for a in made] or "nothing"
 
@@ -99,7 +108,7 @@ def _artifacts(spec, run, failures, exercised):
         # Each entry picks the artifact meeting its own description, so a turn that charted
         # twice is graded per chart rather than twice over the first one.
         if want.get("mark"):
-            matches = [a for a in matches if _mark_of(a) == want["mark"]]
+            matches = [a for a in matches if want["mark"] in _marks_of(a)]
         if want.get("titleContains"):
             needle = want["titleContains"].lower()
             matches = [a for a in matches if needle in (a.get("title") or "").lower()]
