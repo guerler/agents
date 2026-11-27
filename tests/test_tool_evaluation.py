@@ -67,3 +67,18 @@ def test_evaluation_fields_are_validated():
     assert "s: control must be a list of tool names" in problems
     assert any("reachableWithout * needs via" in p for p in problems)
     assert not any("collection.tagged" in p for p in problems)
+
+
+def test_an_effect_whose_family_failed_elsewhere_is_undetermined():
+    from report import effect_outcome
+
+    def row(*assertions):
+        return {"failures": [{"assertion": a, "dimension": "behavior"} for a in assertions]}
+
+    named = ["collection.tagged"]
+    assert effect_outcome(row(), "collection.tagged", named) is True
+    assert effect_outcome(row("collection.tagged"), "collection.tagged", named) is False
+    assert effect_outcome(row("collection.type"), "collection.tagged", named) is None
+    assert effect_outcome(row("history.untouched"), "collection.tagged", named) is True
+    assert effect_outcome(row("collection.type"), "*", named) is False
+    assert effect_outcome(row("collection.tagged"), "*", named) is True

@@ -72,14 +72,22 @@ def matches(assertion, effect):
     return assertion == effect or assertion.startswith(effect + ".")
 
 
-def effect_passed(row, effect, named):
-    """Whether a run achieved one declared effect; `*` is every outcome check no named effect covers."""
+def effect_outcome(row, effect, named):
+    """True or False for whether a run achieved one declared effect, None when it cannot tell.
+
+    `*` is every outcome check no named effect covers. Graders may stop a family at its first
+    failing check, so a named effect whose family failed elsewhere was possibly never evaluated.
+    """
     if row.get("error"):
         return False
     fails = [f["assertion"] for f in outcome_failures(row)]
     if effect == REST:
         return not [a for a in fails if not any(matches(a, e) for e in named)]
-    return not [a for a in fails if matches(a, effect)]
+    if [a for a in fails if matches(a, effect)]:
+        return False
+    if [a for a in fails if family(a) == family(effect)]:
+        return None
+    return True
 
 
 def median(values):
@@ -161,7 +169,10 @@ class Evaluation:
         }
 
     def by_class(self, model, arm):
-        """Effect successes over valid target runs, grouped by how the effect is reachable without the tool."""
+        """Effect successes over valid target runs, grouped by how the effect is reachable without the tool.
+
+        Each class maps to (achieved, determined, effect names, undetermined).
+        """
         out = {}
         for s in self.target:
             effects, named = self.effects(s)
@@ -170,8 +181,12 @@ class Evaluation:
                 for r in self.runs(model, arm, [s]):
                     if excluded(r):
                         continue
-                    k, n, names = out.get(via, (0, 0, set()))
-                    out[via] = (k + effect_passed(r, effect, named), n + 1, names | {effect})
+                    k, n, names, u = out.get(via, (0, 0, set(), 0))
+                    got = effect_outcome(r, effect, named)
+                    if got is None:
+                        out[via] = (k, n, names | {effect}, u + 1)
+                    else:
+                        out[via] = (k + got, n + 1, names | {effect}, u)
         return out
 
     def contradictions(self):
@@ -182,7 +197,7 @@ class Evaluation:
             for effect, route in effects.items():
                 if route.get("via") not in ("galaxy", "none"):
                     continue
-                reached = [r for r in self.runs(arm="without", scenarios=[s]) if effect_passed(r, effect, named)]
+                reached = [r for r in self.runs(arm="without", scenarios=[s]) if effect_outcome(r, effect, named)]
                 if reached:
                     found.append((s, effect, route["via"], len(reached)))
         return found
@@ -265,6 +280,13 @@ def fraction(k, n):
     return f"{k}/{n}" if n else "—"
 
 
+def achieved(cls):
+    if not cls:
+        return fraction(0, 0)
+    k, n, _, u = cls
+    return fraction(k, n) + (f" <span class='muted'>+{u} undetermined</span>" if u else "")
+
+
 def findings(ev, cells):
     cards = []
     for via in ("galaxy", "none", "agent", "unknown"):
@@ -274,10 +296,10 @@ def findings(ev, cells):
             wo = ev.by_class(m, "without").get(via)
             if not w and not wo:
                 continue
-            names |= (w or (0, 0, set()))[2] | (wo or (0, 0, set()))[2]
+            names |= (w or (0, 0, set(), 0))[2] | (wo or (0, 0, set(), 0))[2]
             lines.append(
-                f"<tr><th>{escape(m)}</th><td class='num'>{fraction(*(w or (0, 0))[:2])}</td>"
-                f"<td class='num'>{fraction(*(wo or (0, 0))[:2])}</td></tr>"
+                f"<tr><th>{escape(m)}</th><td class='num'>{achieved(w)}</td>"
+                f"<td class='num'>{achieved(wo)}</td></tr>"
             )
         if not lines:
             continue
@@ -287,7 +309,7 @@ def findings(ev, cells):
         )
         cards.append(
             f'<div class="finding"><span class="kind {css}">{escape(title)}</span>'
-            f"<p>{escape(meaning.capitalize())}: {effects}.</p>"
+            f"<p>{escape(meaning[:1].upper() + meaning[1:])}: {effects}.</p>"
             f'<table class="mini"><thead><tr><th>Effect achieved</th><th>with</th><th>without</th></tr></thead>'
             f"<tbody>{''.join(lines)}</tbody></table></div>"
         )
@@ -299,6 +321,8 @@ def findings(ev, cells):
             parts.append(f"{wo['steps'] / w['steps']:.1f}× steps")
         if w["wall"] and wo["wall"]:
             parts.append(f"{wo['wall'] / w['wall']:.1f}× wall time")
+        if w["tokens"] and wo["tokens"]:
+            parts.append(f"{wo['tokens'] / w['tokens']:.1f}× tokens")
         if w["costPerSuccess"] and wo["costPerSuccess"]:
             parts.append(f"{wo['costPerSuccess'] / w['costPerSuccess']:.1f}× cost per success")
         if parts:
@@ -449,6 +473,11 @@ def render(ev):
     gained, unhelped = demonstrated(ev)
     tool = ", ".join(ev.tools)
     control_runs = ev.runs(arm="with", scenarios=ev.control)
+
+    def control_passes(arm):
+        valid = [r for r in ev.runs(arm=arm, scenarios=ev.control) if not excluded(r)]
+        return fraction(sum(passed(r) for r in valid), len(valid))
+
     target_runs = ev.runs(arm="with", scenarios=ev.target)
     contradicted = "".join(
         f"<li><code>{escape(e)}</code> in <code>{escape(s)}</code> is declared <b>{via}</b>, "
@@ -475,11 +504,22 @@ def render(ev):
         "median seconds per valid target run, staging and Galaxy jobs included",
         lambda v: f"{v:.0f} s",
     )
-    cost_chart = bars(
-        "Cost per success",
-        [(m, cells[(m, "with")]["costPerSuccess"], cells[(m, "without")]["costPerSuccess"]) for m in ev.models],
-        "USD per successful target run, as the provider reported it",
-        lambda v: f"${v:.3f}",
+    tokens_chart = bars(
+        "Median tokens",
+        [(m, cells[(m, "with")]["tokens"], cells[(m, "without")]["tokens"]) for m in ev.models],
+        "median prompt and completion tokens per valid target run",
+        lambda v: f"{v / 1000:.0f}k",
+    )
+    costs = [(m, cells[(m, "with")]["costPerSuccess"], cells[(m, "without")]["costPerSuccess"]) for m in ev.models]
+    cost_chart = (
+        bars(
+            "Cost per success",
+            costs,
+            "USD per successful target run, as the provider reported it",
+            lambda v: f"${v:.3f}",
+        )
+        if any(w is not None or wo is not None for _, w, wo in costs)
+        else ""
     )
     heads = "".join(f"<th>{escape(m)} {a}</th>" for m in ev.models for a in ARMS)
     return f"""<title>{escape(tool)} Evaluation</title>
@@ -518,7 +558,7 @@ def render(ev):
     {ci_strip(ev, cells)}
     <div class="legend"><span><i class="sw" style="background:var(--with)"></i>with the tool</span><span><i class="sw" style="background:var(--without)"></i>without</span></div>
   </section>
-  <section><h2>Cost and effort</h2>{steps_chart}{wall_chart}{cost_chart}</section>
+  <section><h2>Cost and effort</h2>{steps_chart}{wall_chart}{tokens_chart}{cost_chart}</section>
 </div>
 
 <section>
@@ -528,7 +568,7 @@ def render(ev):
   <div class="scroll"><table>
     <thead><tr><th>Scenario</th>{heads}<th>Tool called</th></tr></thead>
     <tbody>{scenario_rows(ev)}</tbody></table></div>
-  <p class="notes">Tool called on target scenarios {ev.called(target_runs)}/{len(target_runs)}; on control scenarios {ev.called(control_runs)}/{len(control_runs)}.</p>
+  <p class="notes">Tool called on target scenarios {ev.called(target_runs)}/{len(target_runs)}; on control scenarios {ev.called(control_runs)}/{len(control_runs)}. Control scenarios passed {control_passes("with")} with the tool offered and {control_passes("without")} without it.</p>
 </section>
 
 <div class="two">
@@ -557,7 +597,7 @@ def render(ev):
   <ul>
     <li><b>Arms.</b> Each trial runs with the tool and, back to back, with <code>{escape(tool)}</code> withheld by the agent's <code>withhold_tools</code> session setting; same scenarios, staged data, Galaxy and model.</li>
     <li><b>Scoring.</b> Outcome assertions only. <code>toolCalls.*</code> and <code>events.*</code> are process checks and <code>budget.*</code> is efficiency; neither decides success. A run past its own time budget counts as a failure, not an exclusion.</li>
-    <li><b>Classification.</b> Each target scenario declares, per outcome check, how it is reachable without the tool (<code>reachableWithout</code>: <code>agent</code>, <code>galaxy</code>, <code>none</code>), with the reason in its <code>why</code>; hover a tag to read it. The report checks the declaration against the without arm and lists any contradiction above.</li>
+    <li><b>Classification.</b> Each target scenario declares, per outcome check, how it is reachable without the tool (<code>reachableWithout</code>: <code>agent</code>, <code>galaxy</code>, <code>none</code>), with the reason in its <code>why</code>; hover a tag to read it. The report checks the declaration against the without arm and lists any contradiction above. A named effect counts as achieved only when no other check of its family failed, since a grader may stop a family at its first failing check; otherwise the run is counted as undetermined for that effect.</li>
     <li><b>Inputs.</b> Only the harness results and their manifests; no agent source is read.</li>
     <li><b>Caveats.</b> {k} trials per cell; the corpus was written by the tool's authors; no composite score by design.</li>
   </ul>
@@ -631,6 +671,7 @@ td.use { color: var(--muted); font: 12px var(--mono); text-align: center; }
 .finding > .kind { margin-left: 0; justify-self: start; }
 svg { width: 100%; height: auto; display: block; }
 svg .ax { font: 12px var(--sans); fill: var(--fg); } svg .muted { fill: var(--muted); font-size: 11px; }
+span.muted { color: var(--muted); font-size: 12px; white-space: nowrap; }
 svg .val { font: 11.5px var(--mono); fill: var(--fg); }
 svg .grid { stroke: var(--rule); stroke-width: 1; }
 svg .b-with { fill: var(--with); } svg .b-without { fill: var(--without); }
