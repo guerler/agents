@@ -21,20 +21,11 @@
     "messages": {
       "repliesInChat": true
     },
-    "artifacts": {
-      "mustInclude": [
-        {
-          "kind": "vega-lite",
-          "mark": "bar"
-        }
-      ]
-    },
     "record": {
       "notEmpty": true,
       "mustMention": [
         "Glucose",
-        "BMI",
-        "```vega"
+        "BMI"
       ],
       "mustNotMention": [
         "{{artifact}}"
@@ -43,6 +34,46 @@
     "budget": {
       "maxSteps": 20,
       "maxRepeatedCall": 3
+    },
+    "anyOf": [
+      {
+        "artifacts": {
+          "mustInclude": [
+            {
+              "kind": "vega-lite",
+              "mark": "bar"
+            }
+          ]
+        },
+        "record": {
+          "mustMention": [
+            "```vega"
+          ]
+        }
+      },
+      {
+        "artifacts": {
+          "mustInclude": [
+            {
+              "kind": "visualization"
+            }
+          ]
+        },
+        "record": {
+          "mustMention": [
+            "```visualization"
+          ]
+        }
+      }
+    ]
+  },
+  "targets": [
+    "vega_dataset"
+  ],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "The grouped means from Galaxy's Group tool are charted by a Galaxy visualization plugin saved or shown through save_visualization or show_visualization (plotly bar) and placed in the record as a visualization block."
     }
   }
 }

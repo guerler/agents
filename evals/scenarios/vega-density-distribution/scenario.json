@@ -7,7 +7,17 @@
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },
-    "artifacts": { "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true }] },
-    "budget": { "maxSteps": 20, "maxRepeatedCall": 3 }
+    "budget": { "maxSteps": 20, "maxRepeatedCall": 3 },
+    "anyOf": [
+      { "artifacts": { "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true }] } },
+      { "artifacts": { "mustInclude": [{ "kind": "visualization" }] } }
+    ]
+  },
+  "targets": ["vega_dataset"],
+  "reachableWithout": {
+    "*": {
+      "via": "unknown",
+      "why": "plotly_histogram bins rather than smooths; a smooth curve needs a density computed into a dataset first and then a Galaxy visualization plugin saved or shown through save_visualization or show_visualization, which no agent run has shown."
+    }
   }
 }

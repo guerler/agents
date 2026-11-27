@@ -35,7 +35,7 @@ ROUTES = {"agent", "galaxy", "none", "unknown"}
 
 
 # The families an anyOf branch may assert; the rest grade the turn as a whole.
-BRANCH_FAMILIES = {"artifacts", "visualization", "toolCalls"}
+BRANCH_FAMILIES = {"artifacts", "visualization", "toolCalls", "record"}
 
 # Every key the checkers read, by family; a scenario naming any other would go ungraded.
 ASSERTION_KEYS = {

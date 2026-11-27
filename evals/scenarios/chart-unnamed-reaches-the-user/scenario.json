@@ -42,5 +42,14 @@
   "dataset": {
     "file": "health.csv",
     "history": "charting session"
+  },
+  "targets": [
+    "vega_dataset"
+  ],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "The scenario already accepts a Galaxy visualization plugin saved or shown through save_visualization or show_visualization."
+    }
   }
 }

@@ -9,10 +9,26 @@
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },
-    "artifacts": {
-      "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true, "datasetId": "$staged:health.csv" }]
-    },
-    "record": { "notEmpty": true, "mustMention": ["```vega"], "mustNotMention": ["{{artifact}}"] },
-    "budget": { "maxSteps": 20, "maxRepeatedCall": 3 }
+    "record": { "notEmpty": true, "mustNotMention": ["{{artifact}}"] },
+    "budget": { "maxSteps": 20, "maxRepeatedCall": 3 },
+    "anyOf": [
+      {
+        "artifacts": {
+          "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true, "datasetId": "$staged:health.csv" }]
+        },
+        "record": { "mustMention": ["```vega"] }
+      },
+      {
+        "artifacts": { "mustInclude": [{ "kind": "visualization", "dataset": "$staged:health.csv" }] },
+        "record": { "mustMention": ["```visualization"] }
+      }
+    ]
+  },
+  "targets": ["vega_dataset"],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "A scatter of two columns is a Galaxy visualization plugin saved or shown through save_visualization or show_visualization (plotly), placed in the record as a visualization block."
+    }
   }
 }

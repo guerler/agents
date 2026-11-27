@@ -106,5 +106,8 @@
       "maxSteps": 30,
       "maxRepeatedCall": 4
     }
-  }
+  },
+  "control": [
+    "vega_dataset"
+  ]
 }

@@ -51,7 +51,12 @@ def evaluate(scenario, run):
 
 
 # The checker for each family an anyOf branch may assert.
-_BRANCH_CHECKERS = {"artifacts": _artifacts, "visualization": _visualization, "toolCalls": _tool_calls}
+_BRANCH_CHECKERS = {
+    "artifacts": _artifacts,
+    "visualization": _visualization,
+    "toolCalls": _tool_calls,
+    "record": _record,
+}
 assert set(_BRANCH_CHECKERS) == BRANCH_FAMILIES
 
 

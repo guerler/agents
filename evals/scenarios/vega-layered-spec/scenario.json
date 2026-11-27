@@ -9,7 +9,21 @@
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },
-    "artifacts": { "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true }] },
-    "budget": { "maxSteps": 25, "maxRepeatedCall": 4 }
+    "budget": { "maxSteps": 25, "maxRepeatedCall": 4 },
+    "anyOf": [
+      { "artifacts": { "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true }] } },
+      {
+        "artifacts": {
+          "mustInclude": [{ "kind": "visualization", "plugin": "vintent", "dataset": "$staged:health.csv" }]
+        }
+      }
+    ]
+  },
+  "targets": ["vega_dataset"],
+  "reachableWithout": {
+    "*": {
+      "via": "unknown",
+      "why": "The request names Vega-Lite. Galaxy renders Vega-Lite through the vintent plugin, but whether save_visualization can give it a layered scatter with a fit is unverified."
+    }
   }
 }

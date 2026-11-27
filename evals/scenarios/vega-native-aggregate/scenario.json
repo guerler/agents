@@ -7,7 +7,17 @@
   "assertions": {
     "events": { "mustInclude": ["turn_start"] },
     "messages": { "repliesInChat": true },
-    "artifacts": { "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true, "mark": "bar" }] },
-    "budget": { "maxSteps": 20, "maxRepeatedCall": 3 }
+    "budget": { "maxSteps": 20, "maxRepeatedCall": 3 },
+    "anyOf": [
+      { "artifacts": { "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true, "mark": "bar" }] } },
+      { "artifacts": { "mustInclude": [{ "kind": "visualization" }] } }
+    ]
+  },
+  "targets": ["vega_dataset"],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "Galaxy's Group tool through run_tool computes the means as a dataset, charted by a Galaxy visualization plugin saved or shown through save_visualization or show_visualization (plotly bar)."
+    }
   }
 }

@@ -31,9 +31,6 @@
         },
         {
           "name": "run_python"
-        },
-        {
-          "name": "vega_dataset"
         }
       ]
     },
@@ -43,24 +40,8 @@
         "\\b0[.,](?:44|45|46)"
       ]
     },
-    "artifacts": {
-      "mustInclude": [
-        {
-          "kind": "vega-lite",
-          "referencesDataset": true,
-          "encodes": [
-            "Healthy life expectancy",
-            "GDP per capita",
-            "Country or region"
-          ]
-        }
-      ]
-    },
     "record": {
       "notEmpty": true,
-      "mustMention": [
-        "```vega"
-      ],
       "mustNotMention": [
         "{{artifact}}"
       ]
@@ -68,6 +49,51 @@
     "budget": {
       "maxSteps": 60,
       "maxRepeatedCall": 40
+    },
+    "anyOf": [
+      {
+        "artifacts": {
+          "mustInclude": [
+            {
+              "kind": "vega-lite",
+              "referencesDataset": true,
+              "encodes": [
+                "Healthy life expectancy",
+                "GDP per capita",
+                "Country or region"
+              ]
+            }
+          ]
+        },
+        "record": {
+          "mustMention": [
+            "```vega"
+          ]
+        }
+      },
+      {
+        "artifacts": {
+          "mustInclude": [
+            {
+              "kind": "visualization"
+            }
+          ]
+        },
+        "record": {
+          "mustMention": [
+            "```visualization"
+          ]
+        }
+      }
+    ]
+  },
+  "targets": [
+    "vega_dataset"
+  ],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "The continent means are written as a dataset through run_python and upload_file, then charted by a Galaxy visualization plugin saved or shown through save_visualization or show_visualization (plotly)."
     }
   }
 }

@@ -52,13 +52,6 @@
         "\\bCsn1s2b\\b"
       ]
     },
-    "artifacts": {
-      "mustInclude": [
-        {
-          "kind": "vega-lite"
-        }
-      ]
-    },
     "page": {
       "chart": [
         "renders",
@@ -69,8 +62,7 @@
     "record": {
       "notEmpty": true,
       "mustMention": [
-        "Csn1s2b",
-        "```vega"
+        "Csn1s2b"
       ],
       "mustNotMention": [
         "{{artifact}}"
@@ -79,6 +71,45 @@
     "budget": {
       "maxSteps": 60,
       "maxRepeatedCall": 10
+    },
+    "anyOf": [
+      {
+        "artifacts": {
+          "mustInclude": [
+            {
+              "kind": "vega-lite"
+            }
+          ]
+        },
+        "record": {
+          "mustMention": [
+            "```vega"
+          ]
+        }
+      },
+      {
+        "artifacts": {
+          "mustInclude": [
+            {
+              "kind": "visualization"
+            }
+          ]
+        },
+        "record": {
+          "mustMention": [
+            "```visualization"
+          ]
+        }
+      }
+    ]
+  },
+  "targets": [
+    "vega_dataset"
+  ],
+  "reachableWithout": {
+    "*": {
+      "via": "agent",
+      "why": "A volcano plot is a scatter of log fold change against significance, which a Galaxy visualization plugin saved or shown through save_visualization or show_visualization (plotly) draws from the uploaded table."
     }
   }
 }

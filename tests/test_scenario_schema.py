@@ -29,3 +29,7 @@ def test_unread_families_and_keys_are_named():
 
 def test_every_committed_scenario_is_fully_graded():
     assert validate_scenarios(load_scenarios(str(HERE))) == []
+
+
+def test_a_record_check_can_be_one_branch_of_any_of():
+    assert unsupported({"anyOf": [{"record": {"mustMention": ["```vega"]}}]}) == []
