@@ -421,12 +421,15 @@ def demonstrated(ev):
             gained.append(
                 f"<li><code>{escape(s)}</code>: {pct(rw)} with, {pct(rwo) if rwo is not None else '—'} without.</li>"
             )
-        elif rw <= 0.5:
+        if rw < 1 or (rwo is not None and rw <= rwo):
             reasons = Counter(f["assertion"] for r in w for f in outcome_failures(r)) or Counter(
                 [excluded(r) or "error" for r in w if r.get("error")]
             )
             top = ", ".join(f"<code>{escape(a)}</code> ×{n}" for a, n in reasons.most_common(2))
-            unhelped.append(f"<li><code>{escape(s)}</code>: {pct(rw)} with the tool; most common: {top}.</li>")
+            why = f"; most common: {top}" if top else ""
+            unhelped.append(
+                f"<li><code>{escape(s)}</code>: {pct(rw)} with, {pct(rwo) if rwo is not None else '—'} without{why}.</li>"
+            )
     return "".join(gained) or "<li>None.</li>", "".join(unhelped) or "<li>None.</li>"
 
 
@@ -573,7 +576,7 @@ def render(ev):
 
 <div class="two">
   <section><h2>Demonstrated</h2><p>Target scenarios the tool turns from failing to passing.</p><ul>{gained}</ul></section>
-  <section><h2>Limitations</h2><p>Target scenarios that fail with the tool, and why.</p><ul>{unhelped}</ul>
+  <section><h2>Limitations</h2><p>Target scenarios that failed at least once with the tool, or did no better with it than without, and why.</p><ul>{unhelped}</ul>
     <p class="notes">Most common failed outcome checks on target scenarios:</p><ul class="notes">{failure_reasons(ev)}</ul></section>
 </div>
 

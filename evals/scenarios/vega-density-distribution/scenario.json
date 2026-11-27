@@ -10,14 +10,14 @@
     "budget": { "maxSteps": 20, "maxRepeatedCall": 3 },
     "anyOf": [
       { "artifacts": { "mustInclude": [{ "kind": "vega-lite", "referencesDataset": true }] } },
-      { "artifacts": { "mustInclude": [{ "kind": "visualization" }] } }
+      { "artifacts": { "mustInclude": [{ "kind": "visualization", "plugin": ["plotly"] }] } }
     ]
   },
   "targets": ["vega_dataset"],
   "reachableWithout": {
     "*": {
       "via": "unknown",
-      "why": "plotly_histogram bins rather than smooths; a smooth curve needs a density computed into a dataset first and then a Galaxy visualization plugin saved or shown through save_visualization or show_visualization, which no agent run has shown."
+      "why": "plotly_histogram bins rather than smooths, so it does not count; a smooth curve needs a density computed into a dataset first and drawn as a line by the plotly plugin, which no agent run has shown."
     }
   }
 }
